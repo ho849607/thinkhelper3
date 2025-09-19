@@ -1,429 +1,272 @@
-// server.js (Hardened + Offline Fallback + i18n + Express 5 safe)
-'use strict';
+// server.js — ThinkHelper (Express, EB-friendly, unified)
+// Node 18+ (global fetch)
 
+'use strict';
 require('dotenv').config();
+
 const express = require('express');
-const path = require('path');
-const axios = require('axios');
 const compression = require('compression');
+const cors = require('cors');
+const path = require('path');
+const { randomUUID } = require('crypto');
 
 const app = express();
-const PORT = process.env.PORT || 5500;
-const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
 
-// ───────────────────────── 기본 설정 ─────────────────────────
+// ====== Config ======
+const PORT = Number(process.env.PORT) || 8080;   // EB가 주는 PORT 사용
+const HOST = '0.0.0.0';                           // EB에서 외부 바인딩
+const PUBLIC_DIR = path.join(process.cwd(), 'public');
+const STATIC_DIR = path.join(PUBLIC_DIR, 'static');
+
+// 개발 편의: PLUS 강제
+const DEV_FORCE_PLUS = String(process.env.DEV_FORCE_PLUS || '1') === '1';
+
+// ====== Middlewares ======
 app.set('trust proxy', true);
 app.use(compression());
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// CORS (개발 편의)
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
-  next();
-});
+app.use(cors({
+  origin: true,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type','Accept-Language','X-Client-Timezone','X-Plus-Key']
+}));
 
-// 간단 로거
+// 간단 로그
 app.use((req, _res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.ip}`);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} <- ${req.ip}`);
   next();
 });
 
-// ──────────────────────── 보안/하드닝 ────────────────────────
-// (1) 금지어/금칙 패턴 (자체 1차 차단)
-const BANNED_WORDS = [
-  '해킹','폭탄','살인','자살','음란','마약','테러', // KO
-  'hack','hacking','bomb','explosive','kill','suicide','drugs','terror' // EN
-];
-
-// 위험한 조합(간단 예시) — 실제 서비스에서는 더 견고한 서버측 검증/분류기를 권장
-const DISALLOWED_PATTERNS = [
-  /\b(make|build|create|how to).{0,20}(bomb|explosive|weapon)\b/i,
-  /\b(ddos|botnet|backdoor|ransomware)\b/i,
-  /\b(credit\s*card|cc|cvv).{0,40}(steal|dump|generator)\b/i,
-  /\b(child|minor).{0,20}(sex|porn|explicit)\b/i,
-];
-
-function filterPrompt(text) {
-  if (!text || typeof text !== 'string') return true;
-  const lower = text.toLowerCase();
-  if (BANNED_WORDS.some(w => lower.includes(w))) return false;
-  if (DISALLOWED_PATTERNS.some(rgx => rgx.test(text))) return false;
-  return true;
-}
-
-// (2) 속도 제한 (메모리 기반 — 프로덕션은 Redis 등 권장)
-const rateLimitStore = {};
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1분
-const RATE_LIMIT_MAX_REQUESTS = 20;     // 1분 20회
-
-const rateLimiter = (req, res, next) => {
-  const ip = req.ip;
-  const now = Date.now();
-  const recent = (rateLimitStore[ip] || []).filter(ts => now - ts < RATE_LIMIT_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT_MAX_REQUESTS) {
-    console.warn(`[RateLimit] ${ip} blocked`);
-    return res.status(429).json({ ok: false, error: '요청이 너무 잦습니다. 잠시 후 다시 시도해주세요.' });
+// ====== Static ======
+app.use('/static', express.static(STATIC_DIR, {
+  maxAge: '1h',
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.js'))  res.type('application/javascript; charset=utf-8');
+    if (filePath.endsWith('.css')) res.type('text/css; charset=utf-8');
+    if (filePath.endsWith('.svg')) res.type('image/svg+xml');
   }
-  recent.push(now);
-  rateLimitStore[ip] = recent;
-  next();
-};
+}));
 
-// (3) 외부 네트워크 체크
-async function checkInternet() {
-  try {
-    await axios.get('https://clients3.google.com/generate_204', { timeout: 4000 });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// ──────────────────────── 정적 파일 서빙 ────────────────────────
-const ROOT = __dirname;
-const PUBLIC = path.join(ROOT, 'public');
-const ALT = path.join(ROOT, 'index.html2');
-
-app.use(express.static(ROOT,   { extensions: ['html'] }));
-app.use(express.static(PUBLIC, { extensions: ['html'] }));
-app.use(express.static(ALT,    { extensions: ['html'] }));
-
+// 루트 인덱스
 app.get('/', (_req, res) => {
-  res.sendFile(path.join(ROOT, 'index.html'));
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
-// ──────────────────────── 유틸/LLM 프롬프트 ────────────────────────
-function detectLang(txt = '') {
-  if (/[가-힣]/.test(txt)) return 'ko';
-  if (/[ぁ-んァ-ン]/.test(txt)) return 'ja';
-  if (/[一-龥]/.test(txt)) return 'zh';
-  if (/[A-Za-z]/.test(txt)) return 'en';
-  return 'en';
+// ====== Tiny NLP bits (로컬 추천용) ======
+function simpleKoTokenize(text){
+  if (!text) return [];
+  const RE = /(?:[가-힣]{2,}|[A-Za-z]+(?:'[A-Za-z]+)?|\d+(?:[.,]\d+)*|[가-힣]|[^\s])/g;
+  return (String(text).match(RE) || []).map(t=>t.trim()).filter(Boolean);
 }
-
-function suggestLangsFromHeaders(req) {
-  const header = String(req.headers['accept-language'] || '').toLowerCase();
-  const prefer = [];
-  if (header.includes('ko')) prefer.push('ko');
-  if (header.includes('ja')) prefer.push('ja');
-  if (header.includes('zh')) prefer.push('zh');
-  if (header.includes('es')) prefer.push('es');
-  if (header.includes('fr')) prefer.push('fr');
-  // 영어 항상 포함
-  prefer.push('en');
-  const set = new Set(); const out = [];
-  for (const l of prefer) { if (!set.has(l)) { set.add(l); out.push(l); if (out.length >= 6) break; } }
-  return out;
-}
-
-function buildSummaryPrompt(lang, text) {
-  if (lang === 'ko') return `다음 텍스트를 한국어로 간결하게 핵심만 요약해줘:\n---\n${text}\n---`;
-  if (lang === 'ja') return `次の文章を日本語で簡潔に要点だけ要約してください:\n---\n${text}\n---`;
-  if (lang === 'zh') return `请用中文简要概括下面文本的要点：\n---\n${text}\n---`;
-  return `Summarize the following text concisely in English:\n---\n${text}\n---`;
-}
-
-function buildReviewPrompt(lang, text, mode = 'user') {
-  let hint = '';
-  if (mode === 'research') {
-    hint = (lang === 'ko') ? '연구 관점에서 근거/인용/한계/추가 참고문헌 제안(불릿):'
-      : (lang === 'ja') ? '研究の観点で根拠/引用/限界/参考文献を箇条書きで:'
-      : (lang === 'zh') ? '从研究角度给出证据/引用/局限/参考文献（要点）:'
-      : 'From a research view, suggest evidence/citations/limitations/references (bullets):';
-  } else if (mode === 'developer') {
-    hint = (lang === 'ko') ? '코드/기술문서 관점: 정확성/예외/예시/복잡도/테스트 항목(불릿):'
-      : (lang === 'ja') ? 'コード/技術文書の観点：正確性/例外/例/複雑度/テスト項目:'
-      : (lang === 'zh') ? '从代码/技术文档角度：准确性/异常/示例/复杂度/测试点:'
-      : 'From a code/tech-doc view: accuracy/edge cases/examples/complexity/tests (bullets):';
-  } else if (mode === 'legal') {
-    hint = (lang === 'ko') ? '법률 관점: 쟁점/관련 법령/리스크/권고(법률 자문 아님):'
-      : (lang === 'ja') ? '法的観点：争点/関連法令/リスク/推奨（法的助言ではありません）:'
-      : (lang === 'zh') ? '法律角度：争点/相关法规/风险/建议（非法律意见）:'
-      : 'Legal view: issues/statutes/risks/recommendations (not legal advice):';
-  } else {
-    hint = (lang === 'ko') ? '일반 글쓰기: 명확성/구조/톤/맞춤법 개선 포인트(불릿):'
-      : (lang === 'ja') ? '一般文書：明確性/構成/トーン/誤字（箇条書き）:'
-      : (lang === 'zh') ? '一般写作：清晰度/结构/语气/错别字（要点）:'
-      : 'General writing: clarity/structure/tone/grammar (bullets):';
+function buildNgrams(tokens){
+  const uni=new Map(), bi=new Map(), tri=new Map();
+  for (let i=0;i<tokens.length;i++){
+    const w1=tokens[i]; if(!w1) continue;
+    uni.set(w1,(uni.get(w1)||0)+1);
+    const w2=tokens[i+1];
+    if (w2){ if(!bi.has(w1)) bi.set(w1,new Map()); const m=bi.get(w1); m.set(w2,(m.get(w2)||0)+1); }
+    const p1=tokens[i-2], p2=tokens[i-1];
+    if (p1&&p2){ const k=p1+' '+p2; if(!tri.has(k)) tri.set(k,new Map()); const m=tri.get(k); m.set(w1,(m.get(w1)||0)+1); }
   }
-
-  if (lang === 'ko') return `다음 텍스트를 검토해 개선 제안을 불릿으로 요약:\n---\n${text}\n---\n${hint}`;
-  if (lang === 'ja') return `次の文章をレビューし、改善提案を箇条書きでまとめてください:\n---\n${text}\n---\n${hint}`;
-  if (lang === 'zh') return `请审阅以下文本，并用要点列出改进建议：\n---\n${text}\n---\n${hint}`;
-  return `Review the text and summarize improvement suggestions as bullets:\n---\n${text}\n---\n${hint}`;
+  return { uni, bi, tri };
+}
+function mle(map){ const tot=[...map.values()].reduce((a,b)=>a+b,0)||1; return new Map([...map.entries()].map(([w,c])=>[w,c/tot])); }
+function nextBackoff(p1,p2, bi,tri,uni, k=8){
+  const L3=0.7, L2=0.2, L1=0.1, score=new Map();
+  const triKey=(p1&&p2)?(p1+' '+p2):null;
+  const add=(dist,w)=>{ for(const [t,p] of dist) score.set(t,(score.get(t)||0)+w*p); };
+  if (triKey && tri.has(triKey)) add(mle(tri.get(triKey)), L3);
+  if (p2 && bi.has(p2))         add(mle(bi.get(p2)),      L2);
+  add(mle(uni), L1);
+  return [...score.entries()].sort((a,b)=>b[1]-a[1]).slice(0,k).map(([w])=>w);
 }
 
-function greetingBlock() {
-  return [
-    '안녕하세요! 무엇을 도와드릴까요?',
-    'Hello! How can I help you?',
-    'こんにちは！何をお手伝いできますか？',
-    '你好！我能为你做些什么？',
-    '¡Hola! ¿En qué puedo ayudarte?',
-    'Bonjour ! Comment puis-je vous aider ?'
-  ].join('\n');
+// ====== In-memory state (demo) ======
+const docs = new Map();             // id -> {id,title,html,tags,ts}
+const chatLogs = new Map();         // docId -> [{id,role,text,ts}]
+const pendingOrders = new Map();    // PayPal stub
+
+let usageRemaining = 8;
+
+// ====== Plan helpers ======
+function isPlus(req){
+  if (DEV_FORCE_PLUS) return true;
+  const key = (req.headers['x-plus-key']||'').toString().trim();
+  return !!key;
 }
 
-// 키워드 → 링크
-function keywordLinks(text = '', limit = 5) {
-  const words = text.toLowerCase()
-    .replace(/[^a-z0-9가-힣一-龥ぁ-んァ-ン\s]/g, ' ')
-    .split(/\s+/)
-    .filter(Boolean);
-  const freq = {};
-  for (const w of words) if (w.length >= 2) freq[w] = (freq[w] || 0) + 1;
-  const tops = Object.keys(freq).sort((a, b) => freq[b] - freq[a]).slice(0, limit);
-  return tops.map(k => {
-    const q = encodeURIComponent(k);
-    return [
-      { title: `Google: ${k}`, url: `https://www.google.com/search?q=${q}` },
-      { title: `Wikipedia: ${k}`, url: `https://ko.wikipedia.org/wiki/${q}` },
-    ];
-  }).flat();
-}
+// ====== Health ======
+app.get('/healthz', (_req,res)=>res.json({ok:true, ts:Date.now()}));
 
-// ──────────────────────── LLM 호출 ────────────────────────
-async function callGemini(prompt) {
-  if (!GEMINI_KEY) return null;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`;
-  const body = {
-    contents: [{ parts: [{ text: prompt }] }],
-    // 구글 안전 설정 (차단 임계 강화)
-    safetySettings: [
-      { category: 'HARM_CATEGORY_HARASSMENT',          threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-      { category: 'HARM_CATEGORY_HATE_SPEECH',         threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',   threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT',   threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-    ],
-  };
-  const { data } = await axios.post(url, body, { timeout: 20000 });
-
-  // 차단 여부 체크
-  if (data?.promptFeedback?.blockReason) {
-    console.warn(`[Gemini Safety Block] Reason: ${data.promptFeedback.blockReason}`);
-    throw new Error('Google Safety Policy Violation');
-  }
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-}
-
-// ──────────────────────── 오프라인 폴백 ────────────────────────
-function fallbackAnswer(message) {
-  // 매우 간단한 규칙 기반 응답(네트워크/LLM 불가 시)
-  const L = detectLang(message);
-  const base = (L === 'ko') ? '지금은 네트워크가 불안정하거나 AI 서버에 연결할 수 없습니다.'
-    : (L === 'ja') ? '現在ネットワークが不安定、またはAIサーバーに接続できません。'
-    : (L === 'zh') ? '当前网络不稳定或无法连接到AI服务器。'
-    : 'The network is unstable or the AI server is unreachable.';
-  const promptEcho = message.slice(0, 240);
-  const follow = (L === 'ko') ? '간단 요약/키워드만 제안합니다:'
-    : (L === 'ja') ? '簡単な要約/キーワードのみ提案します:'
-    : (L === 'zh') ? '仅提供简单摘要/关键词建议：'
-    : 'Providing a simple summary/keywords only:';
-  const words = promptEcho.toLowerCase().replace(/[^a-z0-9가-힣一-龥ぁ-んァ-ン\s]/g,' ').split(/\s+/).filter(Boolean);
-  const uniq = Array.from(new Set(words)).slice(0, 8).join(', ');
-  return `${base}\n\n${follow}\n• ${uniq || '(키워드가 부족합니다)'}`;
-}
-
-// ───────────────────────── API ─────────────────────────
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', ts: Date.now() });
+// ====== /whoami /usage ======
+app.get('/whoami', (req,res)=>{
+  const plan = isPlus(req) ? 'plus' : 'free';
+  res.json({ ok:true, plan, is_admin_key:false });
+});
+app.get('/usage', (req,res)=>{
+  const plan = isPlus(req) ? 'plus' : 'free';
+  if (plan==='plus') return res.json({ plan, usage:{ remaining: 999999, reset_at: Math.floor(Date.now()/1000)+3600 }});
+  res.json({ plan, usage:{ remaining: usageRemaining, reset_at: Math.floor(Date.now()/1000)+3600 }});
 });
 
-app.get('/api/netcheck', async (_req, res) => {
-  const online = await checkInternet();
-  res.json({ ok: true, online });
-});
+// ====== /ac (autocomplete) ======
+app.post('/ac', async (req, res) => {
+  try{
+    const { prefix='', context='', k=8, doc='' } = req.body || {};
+    const K = Math.max(1, +k || 8);
 
-app.get('/api/ip', (req, res) => {
-  const ip = req.headers['cf-connecting-ip']
-    || (Array.isArray(req.headers['x-forwarded-for']) ? req.headers['x-forwarded-for'][0] : req.headers['x-forwarded-for'])
-    || req.socket?.remoteAddress
-    || req.ip;
-  res.json({
-    ip,
-    ua: req.headers['user-agent'] || '',
-    lang: req.headers['accept-language'] || '',
-  });
-});
+    const toks = simpleKoTokenize(doc||'');
+    const { uni, bi, tri } = buildNgrams(toks);
+    const ctx = simpleKoTokenize(context||'').slice(-2);
+    const [p1, p2] = [ctx[0]||null, ctx[1]||null];
 
-app.get('/api/suggest-langs', (req, res) => {
-  res.json({ ok: true, langs: suggestLangsFromHeaders(req) });
-});
-
-// 채팅 (필터 + 속도 제한 + LLM + 폴백)
-app.post('/api/chat', rateLimiter, async (req, res) => {
-  try {
-    const message = String(req.body?.message || '').trim();
-    const langs = suggestLangsFromHeaders(req);
-    const isGreeting = /^ *(hi|hello|hey|안녕|안녕하세요|ㅎㅇ|하이|こんにちわ|こんにちは|こんばんは|你好|您好|嗨|hola|bonjour)\b/i.test(message);
-
-    if (!message || isGreeting) {
-      const online = await checkInternet();
-      return res.json({ ok: true, mode: 'greeting', reply: greetingBlock(), langs, internet: online, llm_online: !!GEMINI_KEY });
-    }
-
-    // 1차 자체 필터
-    if (!filterPrompt(message)) {
-      console.warn(`[Filter Block] ${req.ip} → "${message}"`);
-      return res.status(400).json({ ok: false, error: '부적절한 내용이 포함되어 처리할 수 없습니다.' });
-    }
-
-    // LLM 호출 시도
-    let answer = null;
-    let errorMsg = null;
-    const L = detectLang(message);
-    const prompt =
-      (L === 'ko') ? `다음 질문에 한국어로 명확하고 책임감 있게 답하세요(정책 위반/위험한 내용은 답변 거부):\nQ: ${message}`
-    : (L === 'ja') ? `次の質問に日本語で明確かつ責任を持って回答してください（ポリシー違反・危険な内容は拒否）：\nQ: ${message}`
-    : (L === 'zh') ? `请用中文清晰且负责任地回答以下问题（违反政策/危险内容应拒绝）：\nQ: ${message}`
-    : `Answer clearly and responsibly in English (refuse unsafe/policy-violating content):\nQ: ${message}`;
-
-    if (GEMINI_KEY) {
-      try {
-        answer = await callGemini(prompt);
-      } catch (e) {
-        errorMsg = e?.message || 'llm error';
+    // completions
+    let completions = [];
+    if (prefix) {
+      const pfx = prefix.toLowerCase();
+      const arr = [];
+      for (const [tok,cnt] of uni.entries()){
+        if (tok.toLowerCase().startsWith(pfx) && tok.toLowerCase()!==pfx) arr.push([tok,cnt]);
       }
+      arr.sort((a,b)=>b[1]-a[1]);
+      completions = arr.slice(0, K).map(([w])=>w);
+    }
+    // next
+    let next = (bi.size||tri.size||uni.size) ? nextBackoff(p1,p2, bi,tri,uni, Math.max(2, Math.floor(K/3))) : [];
+    // phrases (간단 템플릿)
+    const TEMPLATES = {
+      ko: ['요약하면, ','핵심은 다음과 같습니다: ','예를 들어, ','결론적으로, ','추가로, '],
+      en: ['In short, ','Key points are: ','For example, ','In conclusion, ','Additionally, '],
+      ja: ['要するに、','ポイントは以下の通りです：','例えば、','結論として、','加えて、']
+    };
+    const phrases = prefix ? [] : TEMPLATES.ko.slice(0, Math.max(2, Math.floor(K/3)));
+
+    res.json({ completions, next, phrases });
+  }catch(e){
+    res.status(500).json({ error:'ac_failed', detail:String(e?.message||e) });
+  }
+});
+
+// ====== /ask (chat demo) ======
+app.post('/ask', async (req, res) => {
+  try{
+    const { question='', docId='' } = req.body || {};
+    const plan = isPlus(req) ? 'plus' : 'free';
+
+    if (plan==='free'){
+      if (usageRemaining<=0){
+        return res.status(429).json({
+          error:'limit_reached',
+          usage:{ remaining:0, reset_at: Math.floor(Date.now()/1000)+3600 },
+          plan
+        });
+      }
+      usageRemaining = Math.max(0, usageRemaining-1);
     }
 
-    if (!answer) {
-      const online = await checkInternet();
-      return res.json({
-        ok: true,
-        mode: 'fallback',
-        reply: fallbackAnswer(message),
-        langs,
-        internet: online,
-        llm_online: false,
-        error: errorMsg || 'offline'
-      });
-    }
+    // LLM 호출 대신 데모 응답 (원하면 여기서 openai/gemini/ollama 호출 넣기)
+    const text = `질문 잘 받았어요: “${question}” (데모 응답${plan==='plus'?' · PLUS':''})`;
 
-    return res.json({
-      ok: true,
-      mode: 'llm',
-      reply: answer,
-      langs,
-      internet: true,
-      llm_online: true
+    const id = (docId || '_global').toString();
+    if (!chatLogs.has(id)) chatLogs.set(id, []);
+    const arr = chatLogs.get(id);
+    const now = Date.now();
+    arr.push({ id: randomUUID(), role:'user',      text: question, ts: now-1 });
+    arr.push({ id: randomUUID(), role:'assistant', text,           ts: now   });
+    if (arr.length > 200) arr.splice(0, arr.length - 200);
+
+    res.json({
+      answer: text,
+      plan,
+      usage:{
+        remaining: plan==='plus' ? 999999 : usageRemaining,
+        reset_at: Math.floor(Date.now()/1000)+3600
+      }
     });
-  } catch (e) {
-    console.error(`Chat Error: ${e.message}`);
-    if (e.message === 'Google Safety Policy Violation') {
-      return res.status(400).json({ ok: false, error: '요청이 안전 정책에 의해 차단되었습니다.' });
-    }
-    res.status(500).json({ ok: false, error: 'chat failed' });
+  }catch(e){
+    res.status(500).json({ error:'ask_failed', detail:String(e?.message||e) });
   }
 });
 
-// 요약 (필터 + 속도 제한 + LLM + 폴백)
-app.post('/api/summarize', rateLimiter, async (req, res) => {
-  try {
-    const { text = '', lang } = req.body || {};
-    if (!text.trim()) return res.status(400).json({ ok: false, error: 'text required' });
+// ====== Chat list / append (sidebar) ======
+app.post('/chat/append', (req,res)=>{
+  const { docId='', role='', text='' } = req.body || {};
+  const id = (docId || '_global').toString();
+  if (!chatLogs.has(id)) chatLogs.set(id, []);
+  const arr = chatLogs.get(id);
+  arr.push({ id: randomUUID(), role: String(role||'user'), text: String(text||''), ts: Date.now() });
+  if (arr.length > 200) arr.splice(0, arr.length - 200);
+  res.json({ ok:true, count: arr.length });
+});
+app.get('/chat/list', (req,res)=>{
+  const id = (req.query.docId || '_global').toString();
+  const arr = (chatLogs.get(id) || []).slice(-50);
+  arr.sort((a,b)=>a.ts-b.ts);
+  res.json({ ok:true, list: arr });
+});
 
-    if (!filterPrompt(text)) {
-      console.warn(`[Filter Block] ${req.ip} (summarize)`);
-      return res.status(400).json({ ok: false, error: '부적절한 내용이 포함되어 처리할 수 없습니다.' });
-    }
+// ====== Docs ======
+app.post('/doc/save', (req,res)=>{
+  const { id, title, html, tags } = req.body || {};
+  const now = Date.now();
+  const docId = id || randomUUID();
+  const rec = {
+    id: docId,
+    title: String(title||'Untitled'),
+    html: String(html||''),
+    tags: Array.isArray(tags)? tags.slice(0,50) : [],
+    ts: now
+  };
+  docs.set(docId, rec);
+  if (!chatLogs.has(docId)) chatLogs.set(docId, []);
+  res.json({ ok:true, id:docId, ts: now });
+});
+app.get('/doc/list', (_req,res)=>{
+  const list = [...docs.values()].sort((a,b)=>b.ts-a.ts).map(d=>({id:d.id, title:d.title, tags:d.tags, ts:d.ts}));
+  res.json({ ok:true, list });
+});
+app.get('/doc/:id', (req,res)=>{
+  const d = docs.get(req.params.id);
+  if (!d) return res.status(404).json({ ok:false, error:'not_found' });
+  res.json({ ok:true, doc:d });
+});
+app.post('/doc/clear', (_req,res)=>{
+  docs.clear(); chatLogs.clear();
+  res.json({ ok:true });
+});
 
-    const L = lang || detectLang(text);
-    const prompt = buildSummaryPrompt(L, text);
-
-    let out = null; let errorMsg = null;
-    if (GEMINI_KEY) {
-      try { out = await callGemini(prompt); } catch (e) { errorMsg = e?.message || 'llm error'; }
-    }
-    if (!out) {
-      // 간단 폴백 요약(문장 추출)
-      const sents = (text.replace(/\s+/g, ' ').match(/[^.!?。！？]+[.!?。！？]?/g) || []).slice(0, 4);
-      out = sents.join(' ') || text.slice(0, 500);
-    }
-    res.json({ ok: true, lang: L, summary: out, llm_online: !!GEMINI_KEY, error: errorMsg || null });
-  } catch (e) {
-    console.error(`Summarize Error: ${e.message}`);
-    if (e.message === 'Google Safety Policy Violation') {
-      return res.status(400).json({ ok: false, error: '요청이 안전 정책에 의해 차단되었습니다.' });
-    }
-    res.status(500).json({ ok: false, error: 'summarize failed' });
+// ====== PayPal (stub) ======
+app.post('/paypal/create-order', (req,res)=>{
+  const { plan='monthly', return_url='', cancel_url='' } = req.body || {};
+  const id = 'ORDER-' + randomUUID().slice(0,8).toUpperCase();
+  pendingOrders.set(id, { plan, created_at: Date.now(), return_url, cancel_url });
+  let approve = '';
+  if (return_url){
+    const u = new URL(return_url);
+    u.searchParams.set('token', id);
+    u.searchParams.set('ppreturn','1');
+    u.searchParams.set('PayerID','FAKEPAYER');
+    approve = u.toString();
   }
+  res.json({ ok:true, id, approve });
+});
+app.post('/paypal/capture/:orderId', (req,res)=>{
+  const { orderId } = req.params || {};
+  if (!pendingOrders.has(orderId)) return res.status(400).json({ ok:false, error:'invalid_order' });
+  pendingOrders.delete(orderId);
+  res.json({ ok:true, order_id: orderId, plan:'plus' });
 });
 
-// 검토 (필터 + 속도 제한 + LLM + 폴백)
-app.post('/api/review', rateLimiter, async (req, res) => {
-  try {
-    const { text = '', mode = 'user', lang } = req.body || {};
-    if (!text.trim()) return res.status(400).json({ ok: false, error: 'text required' });
-
-    if (!filterPrompt(text)) {
-      console.warn(`[Filter Block] ${req.ip} (review)`);
-      return res.status(400).json({ ok: false, error: '부적절한 내용이 포함되어 처리할 수 없습니다.' });
-    }
-
-    const L = lang || detectLang(text);
-    const prompt = buildReviewPrompt(L, text, mode);
-
-    let out = null; let errorMsg = null;
-    if (GEMINI_KEY) {
-      try { out = await callGemini(prompt); } catch (e) { errorMsg = e?.message || 'llm error'; }
-    }
-    if (!out) {
-      // 간단 폴백 불릿
-      const bullets = [];
-      if (text.length > 120) bullets.push('문단을 더 짧게 나눠 가독성 개선');
-      if (!/[0-9]/.test(text)) bullets.push('핵심 주장에 수치/사례 추가');
-      if (!/,/.test(text)) bullets.push('접속사/쉼표로 문장 흐름 정리');
-      bullets.push('맞춤법/띄어쓰기 점검');
-      out = bullets.map(b => `• ${b}`).join('\n');
-    }
-    res.json({ ok: true, lang: L, review: out, llm_online: !!GEMINI_KEY, error: errorMsg || null });
-  } catch (e) {
-    console.error(`Review Error: ${e.message}`);
-    if (e.message === 'Google Safety Policy Violation') {
-      return res.status(400).json({ ok: false, error: '요청이 안전 정책에 의해 차단되었습니다.' });
-    }
-    res.status(500).json({ ok: false, error: 'review failed' });
-  }
+// ====== SPA Fallback ======
+app.get(/^\/(?!static\/|healthz|whoami|usage|ac|ask|chat\/|doc\/|paypal\/).*/, (_req,res)=>{
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
-// 자동 링크
-app.post('/api/autolinks', (req, res) => {
-  const { text = '' } = req.body || {};
-  if (!text.trim()) return res.status(400).json({ ok: false, error: 'text required' });
-  const links = keywordLinks(text, 5);
-  res.json({ ok: true, links });
-});
-
-// (옵션) 비트코인 트랜잭션 상태 확인
-app.post('/api/bitcoin/verify', async (req, res) => {
-  try {
-    const tx = String(req.body?.tx || '').trim();
-    if (!tx) return res.status(400).json({ ok: false, error: 'tx required' });
-    const { data } = await axios.get(`https://blockstream.info/api/tx/${tx}/status`, { timeout: 12000 });
-    res.json({ ok: true, confirmed: !!data?.confirmed, data });
-  } catch (e) {
-    console.warn('bitcoin verify fail', e?.message);
-    res.status(502).json({ ok: false, error: 'lookup failed or offline' });
-  }
-});
-
-// API 404
-app.use('/api', (_req, res) => res.status(404).json({ ok: false, error: 'unknown endpoint' }));
-
-// ─────────────────── SPA Fallback (Express 5 안전형) ───────────────────
-// 정적/API에 매치되지 않은 나머지는 index.html
-app.get(/^\/(?!api\/).*/, (_req, res) => {
-  res.sendFile(path.join(ROOT, 'index.html'));
-});
-
-// ───────────────────────── 서버 시작 ─────────────────────────
-app.listen(PORT, () => {
-  console.log(`🚀 ThinkHelper Fortress server listening on http://localhost:${PORT}`);
-  if (!GEMINI_KEY) {
-    console.warn('⚠️  GEMINI_API_KEY 미설정 — LLM 호출은 폴백(오프라인 규칙 기반)으로 대응합니다.');
-  }
+// ====== Start ======
+app.listen(PORT, HOST, () => {
+  console.log(`🚀 ThinkHelper server on http://${HOST}:${PORT}`);
+  console.log(` - static  : /static`);
+  console.log(` - api     : /whoami /usage /ac /ask /doc/* /chat/* /paypal/* /healthz`);
 });
