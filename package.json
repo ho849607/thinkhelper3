@@ -2,11 +2,8 @@
   "name": "thinkhelper",
   "version": "1.0.0",
   "private": true,
-  "main": "server.mjs",
+  "engines": { "node": ">=18 <21" },
   "scripts": {
-    "dev:server": "node server.mjs",
-    "dev:front": "vite",
-    "dev": "concurrently -k \"npm:dev:*\"",
     "start": "node server.mjs"
   },
   "dependencies": {
@@ -16,13 +13,5 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "qs": "^6.12.1"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.2",
-    "vite": "^5.4.10"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  }
 }
