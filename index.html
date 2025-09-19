@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="color-scheme" content="light dark"/>
+  <title>ThinkHelper 4.0 — Document</title>
+  <link rel="icon" href="data:,"/>
+
+  <!-- libs (defer 로딩) -->
+  <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+  <script src="https://unpkg.com/html-docx-js/dist/html-docx.js" defer></script>
+  <!-- Google Identity Services (로그인) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    :root{--bg:#f6f7fb;--fg:#222;--box:#fff;--border:#cfd8e3;--hover:#eaf2ff;--muted:#6b7280;--btn-fg:#111;--strong:#111}
+    body.dark{--bg:#0f172a;--fg:#e2e8f0;--box:#0b1220;--border:#2a3550;--hover:#111a2e;--muted:#93a0b3;--btn-fg:#f59e0b;--strong:#f8fafc}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;display:flex;flex-direction:column}
+
+    #menubar{height:48px;display:flex;align-items:center;gap:.6rem;padding:0 .6rem;border-bottom:1px solid var(--border);background:var(--box);position:sticky;top:0;z-index:50}
+    .menu-left{display:flex;gap:.3rem;align-items:center}
+    .mitem{padding:.28rem .55rem;border-radius:6px;cursor:pointer;position:relative;user-select:none;color:var(--btn-fg);font-weight:700}
+    .mitem:hover{background:var(--hover)}
+    .dropdown{display:none;position:absolute;left:0;top:36px;background:var(--box);color:var(--fg);border:1px solid var(--border);border-radius:10px;min-width:240px;box-shadow:0 12px 24px rgba(0,0,0,.12);z-index:60}
+    .dropdown .item{padding:.55rem .75rem;border-bottom:1px dashed var(--border);cursor:pointer;white-space:nowrap}
+    .dropdown .item:last-child{border-bottom:none}
+    .dropdown .item:hover{background:var(--hover)}
+    .toolbar-right{display:flex;gap:.35rem;margin-left:auto;align-items:center}
+    .btn{border:1px solid var(--border);background:var(--box);border-radius:8px;padding:.38rem .65rem;cursor:pointer;color:var(--btn-fg);font-weight:800}
+    .btn:hover{background:var(--hover)}
+    .only-mobile{display:none}
+    .badge{border:1px solid var(--border);border-radius:999px;padding:.2rem .5rem;font-size:.8rem}
+
+    main{flex:1;display:flex;min-height:0}
+    aside#sidebar{width:300px;background:#eef4ff;padding:.6rem;border-right:1px solid var(--border)}
+    #newDocBtn{width:100%}
+    #docSearch{width:100%;padding:.7rem .9rem;border:2px solid var(--border);border-radius:12px;background:#fff;margin-top:.6rem;font-size:16px;line-height:1.4;height:48px}
+    #docList{list-style:none;margin-top:.6rem;background:var(--box);border:1px solid var(--border);border-radius:10px;overflow:auto;max-height:calc(100vh - 260px)}
+    #docList li{padding:.55rem .7rem;border-bottom:1px dashed var(--border)}
+    #docList li:last-child{border-bottom:none}
+    .doc-title{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--strong)}
+
+    #wrap{flex:1;display:flex;flex-direction:column;gap:.7rem;padding:.8rem}
+    #tagRow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+    #tagInput{flex:1;min-width:180px;padding:.55rem .7rem;border:1px solid var(--border);border-radius:10px;background:var(--box);color:var(--fg)}
+    #tagChips{display:flex;gap:.3rem;flex-wrap:wrap}
+    .chip{background:#eef2ff;border:1px solid var(--border);border-radius:999px;padding:.2rem .5rem;font-size:.85rem}
+    #editor{border:1px solid var(--border);border-radius:10px;background:var(--box);min-height:60vh;padding:.8rem}
+    .ck-editor__editable_inline{min-height:54vh!important}
+
+    #inlineSearch{display:flex;gap:.6rem;align-items:center}
+    #searchInput{flex:1;padding:.75rem 1rem;border:2px solid var(--border);border-radius:12px;background:var(--box);color:var(--fg);font-size:16px;line-height:1.4;height:48px}
+
+    #suggList{position:fixed;display:none;z-index:70;background:var(--box);color:var(--fg);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 24px rgba(0,0,0,.18);min-width:220px;max-width:70vw;max-height:240px;overflow:auto;padding:6px;font-size:14px}
+    #suggList li{list-style:none;padding:6px 10px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:.5rem}
+    #suggList li[data-active="1"]{background:var(--hover);outline:2px solid #8ab4ff66}
+    #suggList .kind{opacity:.65;font-size:.85em;width:42px;flex:0 0 auto}
+    #suggList a{color:inherit;text-decoration:underline}
+
+    #chatPanel{position:fixed;right:16px;bottom:16px;width:420px;height:520px;border:1px solid var(--border);border-radius:12px;background:var(--box);display:none;flex-direction:column;box-shadow:0 12px 24px rgba(0,0,0,.15);z-index:40}
+    #chatHeader{display:flex;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border)}
+    #chatHeader b{color:var(--strong)}
+    #chatLog{flex:1;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
+    #chatInput{border:1px solid var(--border);border-radius:8px;padding:10px;margin:10px;background:var(--box);color:var(--fg);resize:vertical}
+    .msg{position:relative;max-width:80%;padding:8px 10px;border-radius:12px;white-space:pre-wrap}
+    .user{align-self:flex-end;background:#dbeafe;color:#111}
+    .ai{align-self:flex-start;background:#eceff1;color:#111}
+    body.dark .ai{background:#1f2937;color:#e5e7eb}
+    .msg .copy{display:none;position:absolute;top:6px;right:6px;border:1px solid var(--border);background:var(--box);border-radius:6px;padding:.15rem .35rem;cursor:pointer;font-size:.8rem}
+    .msg:hover .copy{display:block}
+
+    #status{position:fixed;left:12px;bottom:12px;min-width:140px;z-index:45;border:1px solid var(--border);border-radius:8px;background:var(--box);padding:.25rem .5rem;color:var(--fg);box-shadow:0 6px 12px rgba(0,0,0,.12);display:none}
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:80}
+    .modal .card{width:min(92vw,820px);border:1px solid var(--border);border-radius:12px;background:var(--box);color:var(--fg)}
+    .modal header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border)}
+    .close{border:1px solid var(--border);background:var(--box);font-size:18px;cursor:pointer;border-radius:8px;width:34px;height:34px;line-height:30px;color:var(--btn-fg);font-weight:900}
+    .close:hover{background:var(--hover)}
+    .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px}
+    .plan{border:1px solid var(--border);border-radius:12px;background:var(--box);padding:12px}
+    .plan h4{margin-bottom:.25rem}
+    .price{font-size:1.6rem;font-weight:800;margin:.25rem 0;color:var(--strong)}
+    .muted{color:var(--muted);font-size:.9rem}
+
+    @media (max-width:960px){aside#sidebar{display:none}.only-mobile{display:inline-flex}}
+    @media (max-width:480px){.toolbar-right .btn:not(.only-mobile){display:none}.plans{grid-template-columns:1fr}}
+  </style>
+</head>
+
+<body
+  data-terms-url="https://docs.google.com/document/d/1TLZ2m52s1mAd8BPzXDBQuXF6QZ_hLDZOyX6Y8TKALnE/edit?usp=sharing"
+  data-privacy-url="https://docs.google.com/document/d/1kmFzmp3ddJOKOp1TPsvsNzAuBKt6M0Vm0N_G5BIOZEE/edit?usp=sharing"
+  data-paypal-env="sandbox"
+  data-paypal-client-id="AcHMVeTQyr-kXqpjBVWiy1gJY1IRzpALdZz3YjBwxDQkbg7Zuh8bm-cj9JDdswRfZNQNviuXvm7Ixkw0"
+  data-paypal-plan="P-69U17091C61761516NDCUBGA"
+  data-google-client-id="218460058831-pviq4afkn6ap9vtqovc480dh6rft6pqa.apps.googleusercontent.com"
+>
+
+  <!-- topbar -->
+  <div id="menubar">
+    <button class="btn only-mobile" id="hamburgerBtn">☰</button>
+    <div class="menu-left">
+      <div class="mitem" id="fileMenu"><span data-i18n="menu.file">파일</span> ▾
+        <div class="dropdown" id="fileDrop">
+          <div class="item" id="mPDF" data-i18n="menu.savePdf">📄 PDF로 저장</div>
+          <div class="item" id="mDOCX" data-i18n="menu.saveDocx">📝 DOCX로 내보내기</div>
+        </div>
+      </div>
+
+      <div class="mitem" id="insertMenu"><span data-i18n="menu.insert">삽입</span> ▾
+        <div class="dropdown" id="insertDrop">
+          <div class="item" id="mAutoLinks" data-i18n="menu.autoLinks">🔗 관련 하이퍼링크 자동삽입</div>
+          <div class="item" id="mSearch" data-i18n="menu.searchSelection">🔍 선택 텍스트 검색 삽입</div>
+        </div>
+      </div>
+
+      <div class="mitem" id="toolsMenu"><span data-i18n="menu.tools">도구</span> ▾
+        <div class="dropdown" id="toolsDrop">
+          <div class="item" id="mSumm" data-i18n="menu.aiSummary">🧾 AI 요약(선택/전체)</div>
+          <div class="item" id="mReview" data-i18n="menu.aiReview">✅ AI 검토하기</div>
+          <div class="item" id="mMask" data-i18n="menu.mask">🔒 개인정보 마스킹</div>
+          <div class="item" id="mModeTitle">⚙️ <span data-i18n="menu.modeLabel">모드</span>: <span id="modeLabel">일반</span></div>
+          <div class="item" id="mModeUser" data-i18n="menu.modeUser">→ 일반 사용자 모드</div>
+          <div class="item" id="mModeResearch" data-i18n="menu.modeResearch">→ 리서치 모드</div>
+          <div class="item" id="mModeDev" data-i18n="menu.modeDev">→ 개발자 모드</div>
+          <div class="item" id="mModeLegal" data-i18n="menu.modeLegal">→ 법률 모드</div>
+        </div>
+      </div>
+
+      <div class="mitem" id="langMenu"><span id="langMenuLabel">언어</span> ▾
+        <div class="dropdown" id="langDrop">
+          <div class="item" data-lang="ko">한국어</div>
+          <div class="item" data-lang="en">English</div>
+          <div class="item" data-lang="ja">日本語</div>
+        </div>
+      </div>
+
+      <div class="mitem" id="settingsMenu"><span data-i18n="menu.settings">설정</span> ▾
+        <div class="dropdown" id="settingsDrop">
+          <div class="item" id="toggleSugOn">
+            <div class="switch">
+              <span data-i18n="settings.suggest">추천어 자동완성</span>
+              <span class="badge" id="badgeSugOn">—</span>
+            </div>
+          </div>
+          <div class="item" id="toggleSugPersonal">
+            <div class="switch">
+              <span data-i18n="settings.personal">맞춤형 추천(캐시)</span>
+              <span class="badge" id="badgeSugPersonal">—</span>
+            </div>
+          </div>
+          <div class="item" id="engineHybrid">추천 엔진: 하이브리드</div>
+          <div class="item" id="engineLocal">추천 엔진: 로컬 전용</div>
+          <div class="item" id="engineLLM">추천 엔진: LLM 전용</div>
+        </div>
+      </div>
+
+      <div class="mitem" id="helpBtn" data-i18n="menu.help">도움말</div>
+    </div>
+
+    <div class="toolbar-right">
+      <span id="quotaBadge" class="badge">—</span>
+      <button class="btn" id="googleBtn">🔑 Google</button>
+      <button class="btn" id="openBillingNow" data-i18n="toolbar.subscribe">💳 카드</button>
+      <button class="btn" id="chatBtn" data-i18n="toolbar.chat">💬 채팅</button>
+      <button class="btn" id="themeBtn" data-i18n="toolbar.theme">🌙 테마</button>
+      <button class="btn" id="saveBtn" data-i18n="toolbar.save">💾 저장</button>
+      <button class="btn" id="toolbarShareNaver" data-i18n="toolbar.shareNaver">네이버 블로그</button>
+      <button class="btn" id="toolbarShareX" data-i18n="toolbar.shareX">X</button>
+    </div>
+  </div>
+
+  <main>
+    <aside id="sidebar">
+      <button class="btn" id="newDocBtn" data-i18n="sidebar.newDoc">➕ 새 문서</button>
+
+      <input id="docSearch" data-i18n-ph="sidebar.searchPh" placeholder="문서 제목/태그 검색"/>
+      <ul id="docList"></ul>
+
+      <button class="btn" id="newChatBtn">➕ 새 채팅</button>
+      <ul id="chatList"></ul>
+    </aside>
+
+    <section id="wrap">
+      <div id="tagRow">
+        <input id="tagInput" data-i18n-ph="editor.tagPh" placeholder="태그 입력 후 Enter (쉼표 가능)"/>
+        <div id="tagChips"></div>
+      </div>
+
+      <div id="editor" aria-label="에디터"></div>
+
+      <div id="inlineSearch">
+        <input id="searchInput" data-i18n-ph="editor.searchPh" placeholder="검색어 입력 (Ctrl/Cmd+K) 또는 선택 텍스트"/>
+        <button class="btn" id="searchBtn" data-i18n="editor.searchBtn">🔍 검색</button>
+      </div>
+    </section>
+  </main>
+
+  <ul id="suggList" role="listbox" aria-hidden="true" style="display:none"></ul>
+
+  <div id="chatPanel" role="dialog" aria-label="Chat" style="display:none">
+    <div id="chatHeader"><b id="chatTitle" data-i18n="chat.title">Chat</b><button class="close" id="chatClose" title="닫기">✖</button></div>
+    <div id="chatLog"></div>
+    <textarea id="chatInput" rows="3" data-i18n-ph="chat.inputPh" placeholder="Enter로 전송 (Shift+Enter 줄바꿈)"></textarea>
+  </div>
+
+  <div id="status"><span id="statusText">준비됨</span></div>
+
+  <div id="helpModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="card" role="document">
+      <header>
+        <h3 id="helpTitle" data-i18n="help.title">도움말 • ThinkHelper</h3>
+        <button class="close" id="helpClose" aria-label="창 닫기">✕</button>
+      </header>
+      <div class="content" id="helpContent" style="padding:12px 14px; line-height:1.7">
+        <h4 style="margin:.2rem 0 .5rem 0">이건 뭐예요?</h4>
+        <p><b>ThinkHelper</b>는 글을 쉽게 쓰도록 도와주는 도구예요. 글을 쓰면 <b>다음에 올 단어</b>나 <b>자주 쓰는 문장</b>을 추천해줘요. 필요한 건 <b>키보드로 쓰기</b>뿐! 😊</p>
+        <h4 style="margin:.9rem 0 .4rem 0">이렇게 써요</h4>
+        <ol style="margin-left:1rem">
+          <li><b>큰 흰 칸</b>에 글을 쓰기 시작해요.</li>
+          <li>작은 추천 상자가 뜨면 <b>위/아래</b>로 고르고 <b>Tab</b> 키로 넣어요.</li>
+          <li><b>검색칸</b>에 브랜드(예: 나이키, 쿠팡)를 쓰면 <b>가격 비교</b>를 바로 볼 수 있어요.</li>
+          <li>완성한 글은 <b>파일 ▸ PDF/DOCX로 저장</b>해서 제출하거나 공유해요.</li>
+        </ol>
+        <h4 style="margin:.9rem 0 .4rem 0">채팅은요?</h4>
+        <p>오른쪽 아래 <b>💬 채팅</b>을 누르면 질문을 할 수 있어요. 무료는 <b>5회/24h</b>까지. 더 많이 쓰고 싶으면 <b>PLUS</b>로 업그레이드!</p>
+        <h4 style="margin:.9rem 0 .4rem 0">알아두면 좋아요</h4>
+        <ul style="margin-left:1rem">
+          <li>추천어는 설정에서 <b>끄기/켜기</b> 할 수 있어요.</li>
+          <li>가격 비교 링크는 <b>네이버/Google/쿠팡/Amazon</b>으로 바로 열려요.</li>
+          <li><b>개인정보</b>는 글에 적지 않도록 조심해요.</li>
+        </ul>
+        <h4 style="margin:.9rem 0 .4rem 0">약속</h4>
+        <ul style="margin-left:1rem">
+          <li><a id="termsLink" href="https://docs.google.com/document/d/1TLZ2m52s1mAd8BPzXDBQuXF6QZ_hLDZOyX6Y8TKALnE/edit?usp=sharing" target="_blank" rel="noopener">이용약관</a></li>
+          <li><a id="privacyLink" href="https://docs.google.com/document/d/1kmFzmp3ddJOKOp1TPsvsNzAuBKt6M0Vm0N_G5BIOZEE/edit?usp=sharing" target="_blank" rel="noopener">개인정보 처리방침</a></li>
+        </ul>
+        <h4 style="margin:.9rem 0 .4rem 0">단축키 ✨</h4>
+        <ul style="margin-left:1rem">
+          <li><b>Ctrl/Cmd + K</b> : 검색칸으로 이동</li>
+          <li><b>Tab</b> : 추천어 넣기</li>
+          <li><b>Esc</b> : 추천창 닫기</li>
+          <li><b>화살표 위/아래</b> : 추천 선택</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 구독/결제 모달 -->
+  <div id="billingModal" class="modal" aria-hidden="true">
+    <div class="card">
+      <header>
+        <h3 id="billingTitle" data-i18n="billing.title">구독 • ThinkHelper</h3>
+        <button class="close" id="billingClose" title="닫기">✖</button>
+      </header>
+      <div class="content">
+        <p class="muted" id="billingDesc" data-i18n="billing.desc">AI 요약·검토·링크·모드 등 모든 기능 무제한 사용</p>
+
+        <div class="plans">
+          <div class="plan">
+            <h4 id="planMonthlyTitle" data-i18n="billing.mTitle">월간 플랜</h4>
+            <div class="price" data-i18n="billing.mPrice">$7 / month</div>
+            <div class="muted" id="planMonthlySub" data-i18n="billing.mNote">취소 전까지 매월 자동 결제</div>
+          </div>
+          <div class="plan">
+            <h4 id="plan6mTitle" data-i18n="billing.hTitle">6개월 플랜</h4>
+            <div class="price" data-i18n="billing.hPrice">$40 / 6 months</div>
+            <div class="muted" id="plan6mSub" data-i18n="billing.hNote">PayPal 콘솔 플랜 ID 사용</div>
+          </div>
+          <div class="plan">
+            <h4 id="planYearlyTitle" data-i18n="billing.yTitle">연간 플랜</h4>
+            <div class="price" data-i18n="billing.yPrice">$79 / year</div>
+            <div class="muted" id="planYearlySub" data-i18n="billing.yNote">PayPal 플랜 ID 필요</div>
+          </div>
+        </div>
+
+        <div id="paypal-button-container" style="margin-top:12px;"></div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="btn" id="payOnceBtn">💳 지금 결제(일회성)</button>
+          <button class="btn" id="cancelSubBtn" style="display:none;">⛔ 구독 취소</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 개인정보 동의 모달(접속 즉시 노출) -->
+  <div id="consentModal" class="modal" aria-hidden="true">
+    <div class="card">
+      <header>
+        <h3>개인정보 동의 안내</h3>
+        <button class="close" id="consentClose" title="닫기">✖</button>
+      </header>
+      <div class="content">
+        <p style="margin-bottom:.5rem">서비스 이용을 위해 아래 항목에 동의해주세요.</p>
+        <label style="display:block;margin:.35rem 0;">
+          <input type="checkbox" id="chkTerms"/>
+          <span>서비스 이용약관 동의</span>
+          <a href="https://docs.google.com/document/d/1TLZ2m52s1mAd8BPzXDBQuXF6QZ_hLDZOyX6Y8TKALnE/edit?usp=sharing" target="_blank" rel="noopener">자세히 보기</a>
+        </label>
+        <label style="display:block;margin:.35rem 0;">
+          <input type="checkbox" id="chkPrivacy"/>
+          <span>개인정보 처리방침 동의</span>
+          <a href="https://docs.google.com/document/d/1kmFzmp3ddJOKOp1TPsvsNzAuBKt6M0Vm0N_G5BIOZEE/edit?usp=sharing" target="_blank" rel="noopener">자세히 보기</a>
+        </label>
+        <label style="display:block;margin:.35rem 0;">
+          <input type="checkbox" id="chkBilling"/>
+          <span>결제/정기구독 안내 동의</span>
+        </label>
+        <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:.5rem">
+          <button class="btn" id="consentCancel">취소</button>
+          <button class="btn" id="consentAgree">동의하고 시작</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 추가: 외부 섹션에도 구독 버튼 컨테이너 사용 가능 -->
+  <div id="paypal-button-container-P-69U17091C61761516NDCUBGA" style="max-width:420px;margin:16px auto;"></div>
+
+  <script src="/static/app.js?v=20250917-gis" defer></script>
+</body>
+</html>
