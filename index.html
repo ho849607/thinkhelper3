@@ -1,109 +1,154 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>ThinkHelper — Offline Editor (Safe Minimal)</title>
-<link rel="icon" href="data:,"/>
-<style>
-:root{--bg:#fff;--fg:#0b1020;--muted:#6b7280;--panel:#f6f8fc;--border:#d7deea;--hover:#eef3ff;--blue:#2b4acb}
-*{box-sizing:border-box}html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Arial,sans-serif;display:flex;flex-direction:column}
-.top{display:flex;gap:8px;align-items:center;padding:6px 10px;background:#f1f5ff;border-bottom:1px solid var(--border)}
-.logo{width:18px;height:18px;border-radius:5px;background:linear-gradient(135deg,#60a5fa,#34d399)}
-.badge{background:#edf2ff;border:1px solid #cbdafc;color:var(--blue);border-radius:999px;padding:.25rem .6rem;font-size:.85rem;cursor:pointer}
-.sep{width:1px;height:24px;background:var(--border);margin:0 6px}
-.top select,.top button,.top input[type="text"]{height:30px;border:1px solid var(--border);border-radius:8px;background:#fff;padding:0 8px}
-.top input[type="text"]{min-width:260px}
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ThinkHelper — Offline Editor</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root{--bg:#fff;--fg:#0b1020;--muted:#5b6479;--panel:#f6f8fc;--border:#d7deea;--hover:#eef3ff;--accent:#2b4acb;--editor-bg:#fff}
+    :root.dev{--bg:#0f172a;--fg:#e5e7eb;--muted:#94a3b8;--panel:#0b1222;--border:#25324a;--hover:#151e34;--accent:#60a5fa;--editor-bg:#0b1222}
+    *{box-sizing:border-box}html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Noto Sans JP,Arial,sans-serif;display:flex;flex-direction:column;padding-bottom:42px}
 
-.ribbon{background:#fff;border-bottom:1px solid var(--border)}
-.rrow{display:flex;align-items:center;gap:10px;padding:8px 10px;flex-wrap:wrap}
-.rbtn{display:flex;flex-direction:column;align-items:center;gap:4px;width:64px;padding:8px 4px;border-radius:8px;cursor:pointer;border:1px solid transparent}
-.rbtn:hover{background:var(--hover)}
-.rbtn .ico{width:22px;height:22px;border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff}
+    /* Top */
+    .top{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#f1f5ff;border-bottom:1px solid var(--border)}
+    :root.dev .top{background:#0b1222}
+    .logo{width:18px;height:18px;border-radius:5px;background:linear-gradient(135deg,#60a5fa,#34d399)}
+    .badge{background:#edf2ff;border:1px solid #cbdafc;color:var(--accent);border-radius:999px;padding:.25rem .6rem;font-size:.85rem;cursor:pointer}
+    :root.dev .badge{background:#101a2e;border-color:#1f2b45}
+    .sep{width:1px;height:24px;background:var(--border);margin:0 6px}
+    input[type="text"],select{height:30px;border:1px solid var(--border);border-radius:8px;background:#fff;padding:0 8px;color:#0b1020}
+    :root.dev input[type="text"],:root.dev select{background:#0b1222;color:#e5e7eb;border-color:#24324b}
 
-main{flex:1;min-height:0;display:grid;grid-template-columns:200px 1fr 360px;gap:10px;padding:10px}
-@media (max-width:1200px){main{grid-template-columns:0 1fr 0} #left,#right{display:none}}
-aside{border:1px solid var(--border);border-radius:10px;background:#fff;min-height:0}
-#docList{padding:10px;display:flex;flex-direction:column;gap:8px}
-.doc{padding:8px;border:1px solid var(--border);border-radius:10px;display:flex;justify-content:space-between;gap:8px}
-.doc:hover{background:var(--hover)}
+    /* Ribbon */
+    .ribbon{background:#fff;border-bottom:1px solid var(--border)}
+    :root.dev .ribbon{background:#0b1222}
+    .rrow{display:flex;align-items:center;gap:10px;padding:8px 10px;flex-wrap:wrap}
+    .rbtn{display:flex;flex-direction:column;align-items:center;gap:4px;width:64px;padding:8px 4px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+    .rbtn:hover{background:var(--hover)}
+    .rbtn .ico{width:22px;height:22px;border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff}
+    :root.dev .rbtn .ico{background:#0b1222}
 
-#canvasWrap{border:1px solid var(--border);border-radius:12px;background:#fff;min-height:68vh;display:flex;flex-direction:column}
-#editor{min-height:60vh;padding:18px;outline:0}
-#statusBar{display:flex;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding:6px 10px;color:var(--muted);font-size:.9rem}
+    /* Layout */
+    main{flex:1;min-height:0;display:grid;grid-template-columns:220px 1fr 360px;gap:10px;padding:10px}
+    @media (max-width:1240px){main{grid-template-columns:0 1fr 0}#left,#right{display:none}}
+    aside#left,aside#right{border:1px solid var(--border);border-radius:10px;background:#fff;min-height:0;display:flex;flex-direction:column}
+    :root.dev aside#left,:root.dev aside#right{background:#0b1222}
+    #docList{padding:10px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+    .doc{padding:8px;border:1px solid var(--border);border-radius:10px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+    .doc:hover{background:var(--hover)}
+    #rightHead{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border)}
+    #preview{border:0;width:100%;height:100%}
 
-#rightHead{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border)}
-#preview{border:0;width:100%;height:100%}
+    /* Editor */
+    #canvasWrap{position:relative;border:1px solid var(--border);border-radius:12px;background:var(--editor-bg);min-height:68vh;display:flex;flex-direction:column}
+    #editor{min-height:60vh;padding:18px;outline:none;white-space:pre-wrap}
+    .toolbar{display:flex;gap:10px;align-items:center;padding:6px 10px;border-top:1px solid var(--border);color:var(--muted);font-size:.9rem}
 
-.mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:80}
-.card{width:min(92vw,760px);background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
-.card input[type="text"],.card select{height:34px;border:1px solid var(--border);border-radius:8px;padding:0 10px}
+    /* Suggest */
+    #hintPanel{position:absolute;z-index:30;display:none;min-width:300px;max-width:520px;max-height:260px;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 24px rgba(0,0,0,.18);padding:6px}
+    :root.dev #hintPanel{background:#0b1222}
+    .hint-item{padding:6px 8px;border-radius:6px;cursor:pointer}
+    .hint-item:hover,.hint-item.active{background:var(--hover)}
 
-#chatFab{position:fixed;right:14px;bottom:14px;width:54px;height:54px;border-radius:50%;background:#2b4acb;color:#fff;border:none;box-shadow:0 8px 20px rgba(0,0,0,.25);cursor:pointer;z-index:75}
-#chatDock{position:fixed;right:12px;bottom:82px;width:min(92vw,720px);height:70vh;background:#fff;border:1px solid var(--border);border-radius:12px;display:none;flex-direction:column;box-shadow:0 12px 28px rgba(0,0,0,.2);z-index:74}
-#chatHead{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border)}
-#chatBody{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--panel)}
-.bubble{max-width:85%;padding:.65rem .85rem;border:1px solid var(--border);border-radius:12px;background:#fff;line-height:1.55}
-.me{margin-left:auto;background:#edf2ff;border-color:#cad6ff}.ai{margin-right:auto}
-#chatForm{display:flex;gap:8px;padding:8px;border-top:1px solid var(--border)}
-#chatInput{flex:1;border:1px solid var(--border);border-radius:10px;padding:.7rem .9rem}
+    /* Chat FAB */
+    #fab{position:fixed;right:16px;bottom:60px;width:44px;height:44px;border-radius:999px;background:#111827;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 24px rgba(0,0,0,.25);z-index:60}
+    #chatDock{position:fixed;right:12px;bottom:110px;width:min(92vw,720px);height:70vh;background:#fff;border:1px solid var(--border);border-radius:12px;display:none;flex-direction:column;box-shadow:0 12px 28px rgba(0,0,0,.2);z-index:70}
+    :root.dev #chatDock{background:#0b1222}
+    #chatHead{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border)}
+    #chatBody{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff}
+    :root.dev #chatBody{background:#0b1222}
+    .bubble{max-width:85%;padding:.65rem .85rem;border:1px solid var(--border);border-radius:12px;background:#fff;line-height:1.55}
+    .me{margin-left:auto;background:#edf2ff;border-color:#cad6ff}
+    .ai{margin-right:auto}
 
-footer{padding:8px 10px;border-top:1px solid var(--border);color:var(--muted);background:#fff;display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-#geoCell{opacity:.9}
-</style>
+    /* Gaze / reading line */
+    #gazeDot{position:fixed;left:0;top:0;width:14px;height:14px;border-radius:50%;
+      background:rgba(37,99,235,.9);box-shadow:0 0 0 6px rgba(37,99,235,.15);
+      pointer-events:none;z-index:90;transform:translate(-50%,-50%);display:none}
+    body.gaze-on #gazeDot{display:block}
+    #readLine{position:absolute;left:0;right:0;height:22px;background:rgba(99,102,241,.15);
+      border-top:1px solid rgba(99,102,241,.35);border-bottom:1px solid rgba(99,102,241,.35);
+      pointer-events:none;display:none}
+
+    /* Modals */
+    .mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:80}
+    .card{width:min(92vw,780px);background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px}
+    .card h3{margin:0 0 8px}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+    .card input[type="text"],.card input[type="password"],.card select{height:34px;border:1px solid var(--border);border-radius:8px;padding:0 10px}
+
+    /* Footer */
+    footer{position:fixed;left:0;right:0;bottom:0;padding:8px 10px;border-top:1px solid var(--border);color:var(--muted);background:#fff;display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;z-index:5}
+    :root.dev footer{background:#0b1222}
+  </style>
 </head>
 <body>
+  <!-- Top -->
   <div class="top">
     <div style="display:flex;gap:8px;align-items:center">
       <span class="logo"></span><b>ThinkHelper</b>
     </div>
     <span class="sep"></span>
-    <button id="btnSettings" class="badge">설정</button>
     <button id="btnTools" class="badge">도구</button>
+    <button id="btnSettings" class="badge">설정</button>
     <span class="sep"></span>
     <select id="langSel" title="언어">
       <option value="ko">한국어</option><option value="en">English</option><option value="ja">日本語</option>
     </select>
+    <select id="modeSel" title="모드" style="margin-left:6px">
+      <option value="general">일반</option>
+      <option value="research">리서치</option>
+      <option value="legal">리걸</option>
+      <option value="dev">개발자</option>
+    </select>
     <span class="sep"></span>
-    <button id="btnPrint" class="badge">인쇄</button>
-    <span style="flex:1"></span>
     <input id="quickSearch" type="text" placeholder="검색 또는 URL (⌘/Ctrl+K)"/>
     <button id="btnGo" class="badge">이동</button>
   </div>
 
+  <!-- Ribbon -->
   <div class="ribbon">
     <div class="rrow">
       <div class="rbtn" id="bNew"><div class="ico">📝</div><div>새문서</div></div>
       <div class="rbtn" id="bOpen"><div class="ico">📂</div><div>불러오기</div></div>
       <div class="rbtn" id="bSave"><div class="ico">💾</div><div>저장</div></div>
+      <div class="rbtn" id="bPrint"><div class="ico">🖨️</div><div>인쇄</div></div>
       <div class="sep"></div>
       <div class="rbtn" id="expPDF"><div class="ico">PDF</div><div>PDF</div></div>
       <div class="rbtn" id="expDOCX"><div class="ico">DOCX</div><div>DOCX</div></div>
-      <div class="rbtn" id="expPPT"><div class="ico">PPT</div><div>PPTX</div></div>
+      <div class="rbtn" id="expPPT"><div class="ico">PPT</div><div>PPT</div></div>
       <div class="rbtn" id="expHWP"><div class="ico">HWP</div><div>HWP</div></div>
-      <div class="rbtn" id="nl2ppt"><div class="ico">🪄</div><div>자연어→PPT</div></div>
+    </div>
+    <div class="rrow">
+      <div>글꼴</div>
+      <select id="fontSel"><option>나눔고딕</option><option>맑은 고딕</option><option>Apple SD Gothic Neo</option><option selected>Roboto</option></select>
+      <div>크기</div>
+      <select id="sizeSel"><option>13</option><option selected>16</option><option>18</option><option>22</option><option>28</option></select> pt
+      <span style="flex:1"></span>
+      <input id="findBox" type="text" placeholder="문서 내 찾기 ( / )" style="width:220px">
     </div>
   </div>
 
   <main>
-    <aside id="left">
-      <div style="padding:10px;border-bottom:1px solid var(--border)"><b id="t_docs">문서</b></div>
+    <aside id="left" aria-label="문서목록">
+      <div style="padding:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px"><b>문서</b></div>
       <div id="docList"></div>
     </aside>
 
     <section id="center">
       <div id="canvasWrap">
-        <div id="editor" contenteditable="true" spellcheck="false"></div>
-        <div id="statusBar">
+        <div id="editor" contenteditable="true" spellcheck="false" placeholder="여기에 작성하세요…"></div>
+        <div class="toolbar">
           <span id="langNow">KR</span>
-          <span id="zoomWrap">줌:
+          <span style="margin-left:auto">줌:
             <select id="zoomSel">
-              <option>100%</option><option selected>120%</option><option>160%</option><option>200%</option>
+              <option>100%</option><option selected>120%</option><option>140%</option><option>160%</option><option>200%</option>
             </select>
           </span>
         </div>
+        <div id="readLine" aria-hidden="true"></div>
       </div>
     </section>
 
@@ -113,12 +158,43 @@ footer{padding:8px 10px;border-top:1px solid var(--border);color:var(--muted);ba
     </aside>
   </main>
 
-  <footer>
-    <div>© ThinkHelper — 저장 ⌘/Ctrl+S · 검색 ⌘/Ctrl+K</div>
-    <div id="geoCell">📍 IP 확인 중…</div>
-  </footer>
+  <!-- Chat -->
+  <div id="fab" title="채팅">💬</div>
+  <div id="chatDock" role="dialog" aria-hidden="true">
+    <div id="chatHead">
+      <span>채팅</span>
+      <div style="display:flex;gap:6px">
+        <button id="chatExport" class="badge">⤴︎ 내보내기</button>
+        <button id="chatClose" class="badge">✖</button>
+      </div>
+    </div>
+    <div id="chatBody"></div>
+    <form id="chatForm" style="display:flex;gap:8px;padding:8px;border-top:1px solid var(--border)">
+      <input id="chatInput" placeholder="메시지를 입력하세요 (Enter)" style="flex:1"/>
+      <button class="badge" type="submit">전송</button>
+    </form>
+    <div style="padding:0 10px 10px;color:var(--muted)">오프라인 로컬 메모용 채팅입니다.</div>
+  </div>
 
-  <!-- 설정 모달 -->
+  <!-- Hint panel -->
+  <div id="hintPanel"></div>
+
+  <!-- Tools Modal -->
+  <div id="toolsMask" class="mask">
+    <div class="card">
+      <h3>도구</h3>
+      <div class="row">
+        <button id="t_pdf"  class="badge">PDF 내보내기</button>
+        <button id="t_docx" class="badge">DOCX 내보내기</button>
+        <button id="t_ppt"  class="badge">PPT 내보내기</button>
+        <button id="t_hwp"  class="badge">HWP 내보내기</button>
+        <span style="flex:1"></span>
+        <button id="closeTools">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
   <div id="settingsMask" class="mask">
     <div class="card">
       <h3>설정</h3>
@@ -128,154 +204,35 @@ footer{padding:8px 10px;border-top:1px solid var(--border);color:var(--muted);ba
             <option value="ko">한국어</option><option value="en">English</option><option value="ja">日本語</option>
           </select>
         </label>
-        <label style="margin-left:12px">추천어 <input type="checkbox" id="optSugg" checked/></label>
+        <label style="margin-left:12px">모드
+          <select id="m_modeSel">
+            <option value="general">일반</option><option value="research">리서치</option><option value="legal">리걸</option><option value="dev">개발자</option>
+          </select>
+        </label>
       </div>
-      <div class="row" style="justify-content:flex-end">
-        <button id="closeSettings" class="badge">닫기</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 도구 모달 -->
-  <div id="toolsMask" class="mask">
-    <div class="card">
-      <h3>도구</h3>
       <div class="row">
-        <button id="t_pdf" class="badge">PDF</button>
-        <button id="t_docx" class="badge">DOCX</button>
-        <button id="t_ppt" class="badge">PPTX</button>
-        <button id="t_hwp" class="badge">HWP</button>
+        <label>API Base <input id="apiBase" type="text" style="min-width:280px" value="http://127.0.0.1:1234"></label>
+        <input id="apiKey" type="password" placeholder="API Key(선택)" style="min-width:200px">
+        <button id="saveModel" class="badge">저장</button>
       </div>
       <div class="row" style="justify-content:flex-end">
-        <button id="closeTools" class="badge">닫기</button>
+        <button id="closeSettings">닫기</button>
       </div>
     </div>
   </div>
 
-  <!-- 채팅 -->
-  <button id="chatFab" title="채팅">💬</button>
-  <div id="chatDock" role="dialog" aria-hidden="true">
-    <div id="chatHead">
-      <span>채팅</span>
-      <div style="display:flex;gap:6px">
-        <button id="chatExport">⤴︎ 내보내기(JSON)</button>
-        <button id="chatClose">✖</button>
-      </div>
-    </div>
-    <div id="chatBody"></div>
-    <form id="chatForm">
-      <input id="chatInput" placeholder="메시지를 입력하세요 (Enter)"/>
-      <button class="badge" type="submit">전송</button>
-    </form>
-  </div>
+  <!-- Footer -->
+  <footer>
+    <div>© ThinkHelper — 저장 ⌘/Ctrl+S · 검색 ⌘/Ctrl+K · 추천 ⌘/Ctrl+Space</div>
+    <div id="geoCell">📍 IP 확인 중…</div>
+    <div>제안/문의: <a href="mailto:ho849607@gmail.com">ho849607@gmail.com</a></div>
+  </footer>
 
-  <!-- 메인 스크립트 (순수 JS, IIFE로 끝까지 닫힘) -->
-  <script>
-  (function(){
-    const qs=(s)=>document.querySelector(s), qa=(s)=>document.querySelectorAll(s);
-    const I18N={ko:{searchPh:"검색 또는 URL (⌘/Ctrl+K)",docs:"문서"},en:{searchPh:"Search or URL (⌘/Ctrl+K)",docs:"Documents"},ja:{searchPh:"検索/URL (⌘/Ctrl+K)",docs:"ドキュメント"}};
-    const CONF={lang:localStorage.getItem("th.lang")||"ko",sugg:localStorage.getItem("th.sugg")==="0"?0:1};
+  <div id="gazeDot" aria-hidden="true"></div>
 
-    // i18n
-    function applyLang(lc){
-      qs("#quickSearch").placeholder=I18N[lc]?.searchPh||I18N.ko.searchPh;
-      qs("#langNow").textContent=(lc==="ko"?"KR":lc.toUpperCase());
-      qs("#t_docs").textContent=I18N[lc]?.docs||I18N.ko.docs;
-      renderList();
-    }
-    qs("#langSel").value=CONF.lang; qs("#m_langSel").value=CONF.lang; applyLang(CONF.lang);
-    function setLang(v){CONF.lang=v;localStorage.setItem("th.lang",v);qs("#langSel").value=v;qs("#m_langSel").value=v;applyLang(v);}
-    qs("#langSel").onchange=(e)=>setLang(e.target.value);
-    qs("#m_langSel").onchange=(e)=>setLang(e.target.value);
-    qs("#optSugg").checked=!!CONF.sugg; qs("#optSugg").onchange=(e)=>{CONF.sugg=e.target.checked?1:0;localStorage.setItem("th.sugg",CONF.sugg);};
-
-    // 위치/IP
-    (async function geo(){
-      try{
-        const r=await fetch("https://ipapi.co/json/"); const j=await r.json();
-        const city=j?.city||"", cc=(j?.country_code||"").toUpperCase(), ip=j?.ip||"";
-        qs("#geoCell").textContent=(city||cc)?`📍 ${city}${city&&cc?" · ":""}${cc} (IP ${ip})`:"📍 확인 실패";
-      }catch{ qs("#geoCell").textContent="📍 확인 실패(오프라인)"; }
-    })();
-
-    // Editor helpers
-    function getHTML(){ return qs("#editor").innerHTML || ""; }
-    function setHTML(h){ qs("#editor").innerHTML=h||""; }
-
-    // Docs(localStorage)
-    const store={listKey:"th.docs",docKey:id=>`th.doc.${id}`};
-    function listDocs(){try{return JSON.parse(localStorage.getItem(store.listKey)||"[]");}catch{return[];}}
-    function saveList(a){localStorage.setItem(store.listKey,JSON.stringify(a));}
-    function renderList(){
-      const L=listDocs();
-      qs("#docList").innerHTML=L.map(d=>`<div class="doc" data-id="${d.id}"><span>${d.title||"Untitled"}</span><span style="color:#6b7280;font-size:.85rem">${new Date(d.updatedAt||Date.now()).toLocaleString()}</span></div>`).join("")||`<div style="padding:8px;color:#6b7280">저장된 ${I18N[CONF.lang].docs} 없음</div>`;
-      qa("#docList .doc").forEach(n=> n.onclick=()=>openDoc(n.dataset.id));
-    }
-    function openDoc(id){const d=JSON.parse(localStorage.getItem(store.docKey(id))||"null"); if(!d)return; setHTML(d.html||""); currentId=id;}
-    let currentId="";
-    function saveDoc(){
-      const id=currentId||("d_"+Date.now());
-      const html=getHTML(); const title=(html.replace(/<[^>]+>/g,"").trim().split(/\n/)[0]||"Untitled").slice(0,60);
-      const doc={id,html,title,updatedAt:Date.now()};
-      localStorage.setItem(store.docKey(id),JSON.stringify(doc));
-      const L=listDocs().filter(x=>x.id!==id); L.unshift({id,title:doc.title,updatedAt:doc.updatedAt}); saveList(L); currentId=id; renderList();
-    }
-    qs("#bNew").onclick=()=>{currentId="d_"+Date.now(); setHTML("");};
-    qs("#bOpen").onclick=()=>{const L=listDocs(); if(!L.length){alert("저장된 문서가 없습니다.");return;} const t=prompt("열 문서 ID:\n"+L.map(d=>`${d.id}: ${d.title}`).join("\n")); if(t) openDoc(t.trim());};
-    qs("#bSave").onclick=saveDoc;
-    renderList();
-
-    // Export / Print
-    qs("#btnPrint").onclick=()=>window.print();
-    function needsServer(){ alert("이 기능은 서버(app.js)가 필요합니다."); }
-    qs("#expPDF").onclick=()=>window.print(); // 브라우저 인쇄→PDF
-    qs("#t_pdf").onclick=()=>window.print();
-    qs("#expDOCX").onclick=()=> (window.App?.exportDOCX ? window.App.exportDOCX(getHTML()) : needsServer());
-    qs("#t_docx").onclick=()=> (window.App?.exportDOCX ? window.App.exportDOCX(getHTML()) : needsServer());
-    qs("#expPPT").onclick =()=> (window.App?.exportPPT  ? window.App.exportPPT(getHTML())   : needsServer());
-    qs("#t_ppt").onclick  =()=> (window.App?.exportPPT  ? window.App.exportPPT(getHTML())   : needsServer());
-    qs("#expHWP").onclick =()=> (window.App?.exportHWP  ? window.App.exportHWP(getHTML())   : needsServer());
-    qs("#t_hwp").onclick  =()=> (window.App?.exportHWP  ? window.App.exportHWP(getHTML())   : needsServer());
-    qs("#nl2ppt").onclick =()=> { const t=prompt("자연어 입력 → PPT 생성"); if(!t)return; (window.App?.nlToPPT ? window.App.nlToPPT(t) : needsServer()); };
-
-    // 검색/리서치
-    const preview=qs("#preview");
-    const EMBED_BLOCK=[/google\./i,/naver\./i,/amazon\./i,/coupang\./i,/instagram\./i,/twitter\.com|x\.com/i,/accounts\.google\.com/i];
-    function toReaderURL(u){const url=/^https?:\/\//i.test(u)?u:("https://"+u.replace(/^\/+/,"")); return "https://r.jina.ai/http/"+url.replace(/^https?:\/\//,"");}
-    function openPreview(input){
-      const q=(input||"").trim(); if(!q) return;
-      if(/^https?:\/\//i.test(q)){ if(EMBED_BLOCK.some(re=>re.test(q))){ window.open(q,"_blank","noopener"); preview.src=toReaderURL(q); } else { preview.src=q; } }
-      else{
-        if(/형법.*\d+조/.test(q)){ const url="https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=61603#J"+encodeURIComponent(q.match(/\d+/)[0]); preview.src=toReaderURL(url); return; }
-        const url="https://www.google.com/search?q="+encodeURIComponent(q); window.open(url,"_blank","noopener"); preview.src=toReaderURL(url);
-      }
-    }
-    qs("#btnGo").onclick=()=>openPreview(qs("#quickSearch").value);
-    qs("#openNewTab").onclick=()=>{const src=preview.src||"about:blank"; if(src) window.open(src,"_blank","noopener");};
-    document.addEventListener("keydown",(e)=>{const k=(e.key||"").toLowerCase(); if((e.metaKey||e.ctrlKey)&&k==="k"){e.preventDefault(); qs("#quickSearch").focus();} if((e.metaKey||e.ctrlKey)&&k==="s"){e.preventDefault(); saveDoc();}});
-
-    // 모달
-    qs("#btnSettings").onclick=()=>{qs("#m_langSel").value=CONF.lang; qs("#optSugg").checked=!!CONF.sugg; qs("#settingsMask").style.display="flex";};
-    qs("#closeSettings").onclick=()=> (qs("#settingsMask").style.display="none");
-    qs("#btnTools").onclick=()=> (qs("#toolsMask").style.display="flex");
-    qs("#closeTools").onclick=()=> (qs("#toolsMask").style.display="none");
-
-    // 채팅
-    const chatDock=qs("#chatDock"), chatBody=qs("#chatBody");
-    function addBubble(who,text){const d=document.createElement("div"); d.className="bubble "+who; d.textContent=text; chatBody.appendChild(d); chatBody.scrollTop=chatBody.scrollHeight;}
-    function saveLocalChat(role,content){const msgs=JSON.parse(localStorage.getItem("th.chatLocal")||"[]"); msgs.push({role,content,ts:Date.now()}); localStorage.setItem("th.chatLocal",JSON.stringify(msgs));}
-    function loadChat(){chatBody.innerHTML=""; (JSON.parse(localStorage.getItem("th.chatLocal")||"[]")).forEach(m=>addBubble(m.role==="user"?"me":"ai",m.content));}
-    qs("#chatFab").onclick=()=>{chatDock.style.display=chatDock.style.display==="flex"?"none":"flex"; if(chatDock.style.display==="flex") loadChat();};
-    qs("#chatClose").onclick=()=> (chatDock.style.display="none");
-    qs("#chatExport").onclick=()=>{const msgs=localStorage.getItem("th.chatLocal")||"[]"; const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([msgs],{type:"application/json"})); a.download="thinkhelper_chat.json"; a.click(); URL.revokeObjectURL(a.href);};
-    qs("#chatForm").addEventListener("submit",(e)=>{e.preventDefault(); const i=qs("#chatInput"); const msg=i.value.trim(); if(!msg)return; i.value=""; addBubble("me",msg); saveLocalChat("user",msg); const reply="오프라인 모드: 서버(app.js) 연결 시 정교 답변/추천 활성화됩니다."; addBubble("ai",reply); saveLocalChat("assistant",reply);});
-
-    // 줌
-    qs("#zoomSel").onchange=(e)=>{const v=parseInt(e.target.value); qs("#editor").style.zoom=(v/100);};
-
-    // 검색 단축키 포커스
-    console.log("[ThinkHelper Minimal] ready");
-  })();
-  </script>
+  <!-- 분리된 스크립트 -->
+  <script defer src="./app.js"></script>
+  <!-- Optional: html-docx-js (DOCX 품질 향상) -->
+  <script defer src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 </body>
 </html>
