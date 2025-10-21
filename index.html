@@ -103,7 +103,7 @@ section#center{display:flex;flex-direction:column;gap:10px;min-width:0}
 #suggPopup li[data-active="1"]{background:var(--hover);outline:1.5px solid #8ab4ff66}
 .kind{opacity:.75;font-size:.75rem;width:120px;flex:0 0 auto;color:#ffd58a}
 
-/* Search — sticky (항상 보이게) */
+/* Search — sticky */
 #searchRow{
   display:flex;gap:10px;padding:10px;background:var(--panel);
   border:1px solid var(--border);border-radius:12px;align-items:flex-start;
@@ -145,10 +145,11 @@ body.dev #searchBox{background:#1f1f1f; border-color:#333; color:#e6e6e6}
 .threadRow[data-active="1"]{outline:2px solid #9bbcff}
 #chatMain{display:flex;flex-direction:column;min-width:0}
 #chatBody{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
-.bubble{max-width:85%;padding:.75rem 1rem;border:1px solid var(--border);border-radius:14px;background:var(--card);word-break:break-word;font-size:1.02rem;line-height:1.55;white-space:pre-wrap}
+.bubble{max-width:85%;padding:.75rem 1rem;border:1px solid var(--border);border-radius:14px;background:var(--card);word-break:break-word;font-size:1.02rem;line-height:1.55;white-space:pre-wrap;position:relative}
 .me{margin-left:auto;background:#143763;color:#fff;border-color:#143763}
 .ai{margin-right:auto;border-color:#3b4b72;background:#15284f;color:#fff}
 .sys{margin:0 auto;background:#eef2ff;border-style:dashed;color:#111}
+.bAct{position:absolute;right:6px;top:6px;opacity:.85}
 #chatForm{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border)}
 #chatInput{flex:1;border:1px solid var(--border);border-radius:10px;background:var(--card);color:#000;padding:.75rem .9rem;font-size:1.02rem;resize:vertical}
 #quota{position:absolute;left:12px;bottom:12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.25rem .55rem;font-size:.85rem;color:#666}
@@ -373,8 +374,8 @@ body.dev #searchBox{background:#1f1f1f; border-color:#333; color:#e6e6e6}
 const LINKS = {
   terms: "https://docs.google.com/document/d/1TLZ2m52s1mAd8BPzXDBQuXF6QZ_hLDZOyX6Y8TKALnE/edit?usp=sharing",
   privacy: "https://docs.google.com/document/d/1kmFzmp3ddJOKOp1TPsvsNzAuBKt6M0Vm0N_G5BIOZEE/edit?usp=sharing",
-  payment: "https://example.com/payments", // 필요시 실제 결제 안내 링크로 교체
-  email: "ho849607@gmail.com"             // 문의 이메일(요청 반영)
+  payment: "https://example.com/payments",
+  email: "ho849607@gmail.com"
 };
 
 /* ===================== i18n ===================== */
@@ -393,7 +394,6 @@ const I18N={
       export_title:"내보내기 / 인쇄", coming:"준비중",
       placeholder_editor:"여기서 작성하세요…", placeholder_search:"검색(Enter) / Ctrl+K", placeholder_chat:"메시지를 입력하세요 (Enter)",
       untitled:"무제",
-      // Consent
       c_title:"베타 서비스 안내 및 동의",
       c_desc:"ThinkHelper는 베타 서비스이며 로그인 없이 사용할 수 있습니다. 계속 이용하려면 아래 항목에 동의해 주세요.",
       c_auto:"자동 제안 표시(에디터 제안, 검색 자동완성 포함)에 동의합니다. (필수)",
@@ -417,7 +417,6 @@ const I18N={
       export_title:"Export / Print", coming:"Coming soon",
       placeholder_editor:"Start writing…", placeholder_search:"Search (Enter) / Ctrl+K", placeholder_chat:"Type & Enter",
       untitled:"Untitled",
-      // Consent
       c_title:"Beta notice & consent",
       c_desc:"ThinkHelper is in beta and can be used without login. To continue, please consent to the following:",
       c_auto:"I agree to show suggestions (editor hints and search autocomplete). (Required)",
@@ -441,7 +440,6 @@ const I18N={
       export_title:"書き出し / 印刷", coming:"準備中",
       placeholder_editor:"ここに入力…", placeholder_search:"検索（Enter） / Ctrl+K", placeholder_chat:"入力して Enter",
       untitled:"無題",
-      // Consent
       c_title:"ベータ通知と同意",
       c_desc:"ThinkHelperはベータ版で、ログイン不要で利用できます。続行するには以下に同意してください。",
       c_auto:"サジェスト表示（エディタ提案・検索の自動補完）に同意します。（必須）",
@@ -559,11 +557,11 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 
   await initEditor();
   await applyI18N();
-  openConsentIfNeeded();              // ✅ 들어오자마자 동의창 표시(최초 1회)
-  await detectGeoAndMaybeSetLang();   // 이후 IP 기반 언어 자동 전환
+  openConsentIfNeeded();
+  await detectGeoAndMaybeSetLang();
 });
 
-/* ===================== 메뉴 토글(닫힘 방지) ===================== */
+/* ===================== 메뉴 토글 ===================== */
 (function(){
   const menus=[...document.querySelectorAll('[data-menu]')];
   function closeAll(){ document.querySelectorAll('.dropdown').forEach(d=> d.style.display='none'); }
@@ -735,42 +733,10 @@ searchBox.addEventListener('keydown',(e)=>{
 });
 suggBox.addEventListener('click',(e)=>{ const it=e.target.closest('.sugg'); if(!it) return; const i=+it.dataset.i; searchBox.value=sItems[i]; suggBox.style.display='none'; });
 
-/* ===================== (개선) 한글 초성/쌍자음 추천 + 일반 사전 ===================== */
-const DICT_KO_INIT = {
-  "ㄱ":["가치","가능","가이드","가속","가상","검색","결과","계정","공유","구독","구성","기능","기록","기도","기본","기억","기준","기획"],
-  "ㄲ":["깨짐","꺼짐","끄기","끝내기","꾸미기","꼼꼼","껍질","끊김"],
-  "ㄴ":["내용","내보내기","네트워크","노트","노출","높임","누적","뉴스","뉴럴"],
-  "ㄷ":["다운로드","다듬기","다시","단축키","닫기","대시보드","대화","도구","도움말","동기화"],
-  "ㄸ":["따라쓰기","때문","떠오기","또는","똑똑"],
-  "ㄹ":["라벨","라인","랜드","로그","로딩","로컬","리스트","리뷰","라이선스","리셋","리소스"],
-  "ㅁ":["마크다운","만들기","메일","메모","메모리","메뉴","메시지","모드","모델","문서","미리보기"],
-  "ㅂ":["바꾸기","반복","발견","버전","번역","백업","변수","변환","보내기","보안","복사","부분","분석","불러오기","뷰어"],
-  "ㅃ":["빨리","뼈대","뿐만"],
-  "ㅅ":["사전","설정","서식","서브","서명","선택","성능","세부","소셜","송신","수동","수정","스크립트","스냅샷","스마트","시작","시스템","신규","신뢰","실행"],
-  "ㅆ":["쌍자음","써보기","쓰레드","쓰임새"],
-  "ㅇ":["아카이브","알림","액션","에디터","연결","연동","열기","예약","오류","옵션","완료","외부","요약","우선순위","위젯","위치","유지","유틸","의견","이력","이용","임시","입력"],
-  "ㅈ":["자막","자동","자료","작업","잘라내기","잠금","저장","전송","전환","정렬","정보","제거","제안","제를","조정","주석","중단","즐겨찾기"],
-  "ㅉ":["짜임새","쪼개기","쭉"],
-  "ㅊ":["차단","차트","참고","찾기","처리","첨부","체크","초기화","최적화","추가","추천","축약","취소"],
-  "ㅋ":["카드","카메라","캐시","캘린더","커서","커스텀","컬럼","케어","코드","코멘트","콘텐츠","쿼리","퀵","클라우드","클립","키보드","키워드"],
-  "ㅌ":["타겟","타임라인","태그","탐색","통계","통합","투명","트래픽","트리거","특징"],
-  "ㅍ":["파일","파트","패널","패치","패턴","팝업","평가","페이지","편집","표시","프롬프트","프로필","플러그인","플로우"],
-  "ㅎ":["하이라이트","하기","학습","확인","환경","활성화","회수","회전","효율","후기","휴지통"]
-};
-// 기본 영/일/한 단어 예시(유지)
-const DICT_KO = ["인간","인공","인공지능","인권","인구","인감","인증","인식","인자","인재","인터넷","인터페이스","인체","인쇄","인수","인용","인프라","인턴","인상","인하"];
-const DICT_EN = {a:["apple","array","algorithm","analysis","assistant","automation","authority"],b:["banana","binary","browser","backend","balance","behavior","buffer"],c:["cat","cache","client","cloud","compile","control","cursor"],d:["data","debug","design","device","docker","domain"],e:["edge","email","encode","engine","error","event"],f:["file","filter","frontend","function","framework"],g:["game","gateway","general","graphic","guide","gpu"],h:["hash","header","helper","history","host","hyperlink"],i:["image","index","input","interface","internet","issue","iteration"],j:["javascript","job","json","judge","join"],k:["kernel","key","keyword","knowledge"],l:["lambda","language","latency","library","link","load","logic","loop"],m:["machine","memory","message","method","model","module","monitor"],n:["name","namespace","network","node","notion","number"],o:["object","observer","offline","open","option","output"],p:["package","page","parse","pattern","performance","policy","prompt"],q:["query","queue","quick","quote"],r:["random","react","reasoning","record","redirect","request","response","router"],s:["sample","scale","schema","script","search","security","server","stream"],t:["table","task","template","thread","token","tool","type"],u:["unit","update","upload","user","utility"],v:["validate","value","variable","vector","version","visualization"],w:["web","window","worker","workflow","write"],x:["xml","xrange","xgboost"],y:["yaml","yield"],z:["zero","zip"]};
-const DICT_JA = ["インターネット","インデックス","インフラ","インサイト","インポート","人工知能","認識","印刷","引用","入力","改善","開発","学習","検索"];
+/* ===================== (업그레이드) 지능형 추천 ===================== */
 const TOKEN_RE=/[A-Za-z0-9가-힣ぁ-ゔァ-ヴー一-龠々〆ヵヶー]+/g;
-
-// 초성 계산(가~힣 범위)
 const CHO_LIST = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
-function getChoseongOfChar(ch){
-  const code=ch.charCodeAt(0);
-  if(code<0xAC00 || code>0xD7A3) return ""; // 한글 음절 아님
-  const idx = Math.floor((code-0xAC00)/588);
-  return CHO_LIST[idx] || "";
-}
+function getChoseongOfChar(ch){const code=ch.charCodeAt(0);if(code<0xAC00||code>0xD7A3)return "";const idx=Math.floor((code-0xAC00)/588);return CHO_LIST[idx]||"";}
 function getPlain(){ return getHTML().replace(/<[^>]+>/g," "); }
 function currentToken(){
   const t=getPlain(); const parts=t.match(TOKEN_RE)||[];
@@ -780,43 +746,87 @@ function langOfToken(tok){
   if(/[가-힣ㄱ-ㅎ]/.test(tok)) return "ko";
   if(/[ぁ-ゔァ-ヴー一-龠々〆ヵヶ]/.test(tok)) return "ja";
   if(/^[A-Za-z0-9]+$/.test(tok)) return "en";
-  return "en";
+  return conf.lang || "ko";
 }
-function suggestFromDict(tok){
+
+/* 간단 사전 */
+const DICT_KO_INIT = {
+  "ㄱ":["가치","가능","가이드","가속","가상","검색","결과","계정","공유","구독","구성","기능","기록","기본","기획","계약","검토"],
+  "ㄴ":["내용","내보내기","네트워크","노트","뉴스","논점","논리"],
+  "ㄷ":["다운로드","다듬기","단축키","대화","도구","도움말","동기화","답변","대비","대책"],
+  "ㄹ":["리뷰","리서치","리스크","라이선스","로직"],
+  "ㅁ":["문서","모드","모델","메모","문제","민법","민사소송법"],
+  "ㅂ":["백업","번역","보안","보완","분석","보고서","법령","변론","변호"],
+  "ㅅ":["설정","선택","수정","시작","시스템","사실관계","상법","소장"],
+  "ㅇ":["알림","에디터","연동","오류","옵션","요약","의견","의뢰인","의심","증거"],
+  "ㅈ":["자동","자료","작업","저장","정보","정리","주장","증거능력","증거조사"],
+  "ㅊ":["차단","참고","찾기","처리","청구취지","청구원인"],
+  "ㅋ":["코드","콘텐츠","클라우드","가격비교"],
+  "ㅌ":["태그","탐색","통계","통합","특징","특약"],
+  "ㅍ":["파일","페이지","편집","표시","프롬프트","피고인","피의자","피고"],
+  "ㅎ":["학습","확인","환경","화해권고","항고","항소","합의"]
+};
+const DICT_KO = ["인공지능","요약","설명","계약서","합의서","의견서","준비서면","변론요지서","업무보고","브리핑","로드맵","시장분석","리서치","실험계획","프롬프트","포맷"];
+const DICT_EN = {a:["analysis","assistant","automation","argument","appeal","answer"],b:["brief","browser","backend","benchmark"],c:["contract","complaint","case","claim","counterclaim"],d:["defense","discovery","design"],e:["evidence","exhibit","error"],f:["framework","flow","function"],g:["guide","google","graph"],h:["hypothesis","hearsay"],i:["issue","introduction"],j:["judgment","jurisdiction"],k:["knowledge"],l:["law","liability","logic"],m:["memo","motion"],n:["news","note"],o:["objection","offer"],p:["pleading","policy","price"],q:["question","quote"],r:["research","remedy","relief","request"],s:["summary","settlement","shop"],t:["test","template","theory"],u:["update"],v:["verdict","value"],w:["warranty","witness"],y:["yield"],z:["zip"]};
+const DICT_JA = ["リサーチ","契約書","要約","価格比較","ニュース","証拠","主張","反論","準備書面","メモ","設計","フロー"];
+
+function baseDictSuggest(tok){
   const L=langOfToken(tok);
   const max=10;
   if(!tok) return [];
-
   if(L==="ko"){
-    // 1) 초성만 입력 시(ㄱ~ㅎ/쌍자음 포함) → 해당 초성 사전 제안
     if(/^[ㄱ-ㅎ]$/.test(tok)){
       return (DICT_KO_INIT[tok]||[]).slice(0,max);
     }
-    // 2) 한글 음절 입력 시 → 해당 단어 시작 초성과 일반 사전을 함께 추천
     const ch0 = tok[0];
     const cho = /[가-힣]/.test(ch0) ? getChoseongOfChar(ch0) : "";
     const fromCho = cho ? (DICT_KO_INIT[cho]||[]).filter(w=>w.startsWith(tok[0])) : [];
     const fromWhole = DICT_KO.filter(w=>w.startsWith(tok));
-    // 중복 제거 후 합치기
     const seen=new Set(), out=[];
     for(const arr of [fromWhole, fromCho]){
-      for(const w of arr){
-        if(!seen.has(w)){ out.push(w); seen.add(w); if(out.length>=max) break; }
-      }
+      for(const w of arr){ if(!seen.has(w)){ out.push(w); seen.add(w); if(out.length>=max) break; } }
       if(out.length>=max) break;
     }
-    return out.length?out: (DICT_KO_INIT[cho]||[]).slice(0,max);
+    return out.length?out:(DICT_KO_INIT[cho]||[]).slice(0,max);
   }else if(L==="en"){
     const t=tok.toLowerCase();
     const pool=(DICT_EN[t[0]]||[]).concat(...Object.values(DICT_EN));
     const seen=new Set(), res=[];
-    for(const w of pool){
-      if(w.startsWith(t) && !seen.has(w)){ res.push(w); seen.add(w); if(res.length>=max) break; }
-    }
+    for(const w of pool){ if(w.startsWith(t) && !seen.has(w)){ res.push(w); seen.add(w); if(res.length>=max) break; } }
     return res;
   }else{
     return DICT_JA.filter(w=>w.startsWith(tok)).slice(0,max);
   }
+}
+
+/* 대화/모드 기반 지능형 추천 */
+function smartSuggest(){
+  const items=[];
+  const mode=conf.mode;
+  const curThread = curThreadId && JSON.parse(localStorage.getItem(CHAT_THREAD_KEY(curThreadId))||'{"messages":[]}');
+  const recentMsg = (curThread?.messages||[]).slice(-6).map(m=>m.content).join(" ");
+  const docText = getPlain().slice(-2000);
+
+  if(mode==="legal"){
+    items.push("검사 측 논지 정리","피고인 유죄 입증 포인트","변호인 반박 논리","증거능력 다툼","자백 보강법칙 검토",
+               "위법수집증거 배제 주장","양형 사유 정리","판례 유사사건 비교","청구취지/청구원인 구성");
+  }else if(mode==="research"){
+    items.push(
+      "뉴스: 최신 트렌드",
+      "뉴스: [선택 영역] 키워드",
+      "가격비교: [선택 영역] 키워드",
+      "아마존 최저가: [선택 영역] 키워드",
+      "쿠팡 최저가: [선택 영역] 키워드",
+      "핵심 논문 3편",
+      "경쟁사 비교표",
+      "시장 규모/성장률"
+    );
+    const kw = (recentMsg||docText||"").trim().split(/\s+/).slice(-3).join(" ");
+    if(kw) items.push(`뉴스: ${kw}`, `가격비교: ${kw}`, `아마존 최저가: ${kw}`, `쿠팡 최저가: ${kw}`);
+  }else{
+    items.push("요약문 먼저 쓰기","목차 자동 생성","장단점 표로 정리","ToC(목차) 추가","결론부터 작성");
+  }
+  return [...new Set(items)].slice(0,10);
 }
 
 /* VSCode 스타일 팝업 */
@@ -831,13 +841,15 @@ function openSuggest(force){
   if(!conf.sugg) return closeSuggest();
   if(hideUntilNextType){ hideUntilNextType=false; return; }
   const token=currentToken();
-  if(!token && !force) return closeSuggest();
-  const items=suggestFromDict(token);
+  const base = baseDictSuggest(token);
+  const smart = smartSuggest();
+  const items = (token||force) ? [...smart, ...base] : smart;
   if(!items.length) return closeSuggest();
-  eItems=items; eSel=-1;
-  const L=langOfToken(token);
-  const kindLabel=(L==="ko"?"국어사전":L==="en"?"English":"日本語");
-  suggList.innerHTML=items.map((it,i)=>`<li data-i="${i}"><span class="kind">${kindLabel}</span><span>${escapeHtml(it)}</span></li>`).join("");
+  eItems=items.slice(0,12); eSel=-1;
+  const kindLabel= conf.mode==="legal" ? "리걸 추천"
+                   : conf.mode==="research" ? "리서치 추천"
+                   : "추천";
+  suggList.innerHTML=eItems.map((it,i)=>`<li data-i="${i}"><span class="kind">${kindLabel}</span><span>${escapeHtml(it)}</span></li>`).join("");
   Array.from(suggList.children).forEach(li=> li.onclick=()=> choose(+li.dataset.i));
   const r=caretRect(); if(!r){ closeSuggest(); return; }
   const host=document.getElementById("editorWrap").getBoundingClientRect();
@@ -855,13 +867,155 @@ document.addEventListener("keydown",(e)=>{
   else if(e.key==="Escape"){ e.preventDefault(); closeSuggest(); }
 });
 function markSel(){ Array.from(document.querySelectorAll("#suggList li")).forEach((li,i)=> li.setAttribute("data-active", i===eSel? "1":"0")); }
+
+/* ====== 간단 토스트 ====== */
+function toast(msg){
+  const t=document.createElement("div");
+  t.style.cssText="position:fixed;right:12px;bottom:12px;background:var(--panel);border:1px solid var(--border);padding:8px 10px;border-radius:10px;z-index:9999";
+  t.textContent=msg; document.body.appendChild(t);
+  setTimeout(()=>document.body.removeChild(t), 2500);
+}
+
+/* ====== 추천을 액션으로 실행 ====== */
+function mapSuggestionToAction(text){
+  const plain = (text||"").toLowerCase();
+  const body  = getHTML().replace(/<[^>]+>/g," ").trim();
+
+  // 리서치 모드: 추천어 클릭 = 멀티탭 검색
+  if (conf.mode === "research") {
+    if (plain.startsWith("뉴스") || plain.startsWith("가격") || plain.includes("아마존") || plain.includes("쿠팡")) {
+      return { intent:"open_web_multi", params:{ q: text } };
+    }
+    return { intent:"open_web_multi", params:{ q: text } };
+  }
+
+  if (plain.includes("오늘") && plain.includes("뉴스")) {
+    return { intent:"news_today", params:{} };
+  }
+  if (plain.includes("목차") || plain.includes("toc")) {
+    return { intent:"outline", params:{ title: document.title || "문서", body } };
+  }
+  if (plain.includes("요약")) {
+    return { intent:"summarize", params:{ body } };
+  }
+  if (plain.includes("장단점") || plain.includes("pros")) {
+    return { intent:"pros_cons", params:{ body } };
+  }
+  if (plain.includes("검사") || plain.includes("변호") || plain.includes("양측") || plain.includes("리걸")) {
+    return { intent:"legal_dual", params:{ issue:"주요 쟁점", body } };
+  }
+  if (plain.includes("최저가") || plain.includes("아마존") || plain.includes("쿠팡")) {
+    const sel = (window.getSelection()?.toString() || "").trim();
+    return { intent:"research_deals", params:{ product: sel || "관심 제품" } };
+  }
+  return { intent:"summarize", params:{ body } };
+}
+
+/* ====== Host & Provider detection ====== */
+const isLocalHost = ["localhost","127.0.0.1"].includes(location.hostname);
+const isProdHost  = /\.?thinkhelper\.store$/i.test(location.hostname);
+const CHAT_ENDPOINT = isLocalHost ? "http://localhost:5050" : "/api";
+const DEFAULT_PROVIDER = isProdHost ? "gptoss" : "mistral";
+
+/* ====== Perplexity-like multi search openers ====== */
+function openUrls(urls){
+  const opened = [];
+  for (let i=0;i<urls.length;i++){
+    try{
+      const w = window.open(urls[i], "_blank", "noopener,noreferrer");
+      if (w) opened.push(w);
+    }catch{
+      if (i===0) location.href = urls[i];
+    }
+  }
+  return opened;
+}
+function buildResearchUrls(raw){
+  const q = (raw||"").trim();
+  const kw = q.replace(/^뉴스\s*:\s*/i,"")
+              .replace(/^가격비교\s*:\s*/i,"")
+              .replace(/^아마존\s*최저가\s*:\s*/i,"")
+              .replace(/^쿠팡\s*최저가\s*:\s*/i,"")
+              .trim() || q;
+
+  const base = [
+    `https://www.google.com/search?q=${encodeURIComponent(kw)}`,
+    `https://news.google.com/search?q=${encodeURIComponent(kw)}`
+  ];
+  const shop = [
+    `https://www.amazon.com/s?k=${encodeURIComponent(kw)}&s=price-asc-rank`,
+    `https://www.coupang.com/np/search?q=${encodeURIComponent(kw)}`
+  ];
+  const scholar = [
+    `https://scholar.google.com/scholar?q=${encodeURIComponent(kw)}`
+  ];
+  return { kw, urls: [...base, ...shop, ...scholar] };
+}
+function openPerplexityStyleSearch(raw){
+  const { kw, urls } = buildResearchUrls(raw);
+  const wins = openUrls(urls);
+  if (!wins || wins.length === 0) {
+    toast(conf.lang==="ko" ? "팝업이 차단된 것 같아요. 브라우저에서 팝업 허용 후 다시 시도하세요."
+         :conf.lang==="ja" ? "ポップアップがブロックされた可能性があります。許可して再試行してください。"
+                           : "Looks like popups were blocked. Allow popups and try again.");
+  }
+  if (DEFAULT_PROVIDER === "gptoss") {
+    try { window.open(`https://gptoss.com/?q=${encodeURIComponent(kw)}`, "_blank", "noopener,noreferrer"); } catch {}
+  }
+}
+
+/* 선택 시: 텍스트 삽입 + 액션 실행 */
 function choose(i){
   const it=eItems[i]; if(!it) return;
   const tok=currentToken();
-  // 현재 토큰 이어붙이기
-  editor.model.change(w=> editor.model.insertContent(w.createText(it.slice(tok.length)+" ")));
+  const toInsert = tok ? it.slice(tok.length) : it;
+  editor.model.change(w=> editor.model.insertContent(w.createText(toInsert+" ")));
   closeSuggest(); hideUntilNextType=true;
+  runSuggestionAction(it).catch(()=>{});
 }
+
+async function runSuggestionAction(text){
+  const { intent, params } = mapSuggestionToAction(text);
+
+  // 리서치 모드: 서버 왕복 없이 즉시 멀티탭 오픈
+  if (intent === "open_web_multi" && params?.q) {
+    openPerplexityStyleSearch(params.q);
+    return;
+  }
+
+  // 서버 액션
+  const payload = { intent, params, mode: conf.mode, lang: conf.lang };
+  const r = await fetch(CHAT_ENDPOINT + "/action", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(payload)
+  });
+  const j = await r.json().catch(()=>null);
+
+  if (j && j.needs && j.needs.topics) {
+    const topics = j.needs.topics;
+    openTopicsModal(topics, async (picked)=>{
+      const r2 = await fetch(CHAT_ENDPOINT + "/action", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ intent:"news_today", params:{ topics:picked }, mode: conf.mode, lang: conf.lang })
+      });
+      const j2 = await r2.json().catch(()=>null);
+      if (j2 && j2.reply) insertResult(j2.reply);
+    });
+    return;
+  }
+  if (j && j.reply) insertResult(j.reply);
+}
+
+function insertResult(text){
+  const cur = getHTML();
+  const block = `<hr/><div>${(text||"").replace(/\n/g,"<br/>")}</div>`;
+  setHTML(cur + block);
+  const ci=document.getElementById("chatInput");
+  if (ci) ci.value = text;
+}
+
 function onType(){ if(conf.sugg) openSuggest(false); }
 
 /* ===================== 내보내기 ===================== */
@@ -895,10 +1049,7 @@ async function startGaze(){
   try{
     if(!window.webgazer){ alert("WebGazer 로드 전입니다."); return; }
     emaX=null; emaY=null;
-
-    // ★ 마우스 커서 숨김
     document.body.classList.add('hide-cursor');
-
     await webgazer.setRegression('ridge').setGazeListener((data)=>{
       if(!data) return;
       if(emaX===null){ emaX=data.x; emaY=data.y; }
@@ -911,17 +1062,13 @@ async function startGaze(){
     gazeRunning=true;
   }catch(e){ alert("카메라 권한 필요: "+e.message); }
 }
-
 async function stopGaze(){
   const c=document.getElementById("gazeCursor");
   c.style.display="none";
   try{ if(window.webgazer){ await webgazer.end(); } }catch{}
   gazeRunning=false;
-
-  // ★ 시선 커서 종료 시 마우스 커서 다시 보이기
   document.body.classList.remove('hide-cursor');
 }
-
 
 /* ===================== 위치/IP & 언어 자동설정 + 푸터 표기 ===================== */
 async function detectGeoAndMaybeSetLang(){
@@ -930,7 +1077,6 @@ async function detectGeoAndMaybeSetLang(){
     const r=await fetch("https://ipapi.co/json/");
     const j=await r.json();
     el.textContent = `📍 ${[j.city,j.region,j.country_name].filter(Boolean).join(', ')} (IP: ${j.ip}) · `;
-    // 언어 저장이 없을 때만 자동 설정
     if(!localStorage.getItem("th.lang")){
       const mapByCC={KR:"ko", JP:"ja"};
       const next=mapByCC[j.country_code] || "en";
@@ -944,7 +1090,6 @@ async function detectGeoAndMaybeSetLang(){
   }catch{
     el.textContent="📍 "+(I18N[conf.lang]||I18N.ko).loc_hidden+" · ";
   }
-  // 푸터 링크 다시 덧붙이기(위치 텍스트 덮어쓴 후)
   const suffix = document.createElement('span');
   suffix.innerHTML = `<a id="lnk_terms2" target="_blank" rel="noopener">${conf.lang==="ja"?"利用規約":(conf.lang==="en"?"Terms":"이용약관")}</a> ·
                       <a id="lnk_privacy2" target="_blank" rel="noopener">${conf.lang==="ja"?"プライバシー":(conf.lang==="en"?"Privacy":"개인정보처리방침")}</a> ·
@@ -958,59 +1103,6 @@ async function detectGeoAndMaybeSetLang(){
   e2.textContent=LINKS.email;
 }
 
-/* ===================== 동의(최초 1회만) ===================== */
-function hasConsent(){ return !!localStorage.getItem("th.consent.v1"); }
-function openConsentIfNeeded(){
-  if(hasConsent()) return;
-  // 동의창 열기
-  const mask=document.getElementById("consentMask");
-  mask.style.display="flex";
-
-  const chkAuto=document.getElementById("chkAuto");
-  const chkPrivacy=document.getElementById("chkPrivacy");
-  const chkThird=document.getElementById("chkThird");
-  const chkPay=document.getElementById("chkPay");
-  const agreeBtn=document.getElementById("btnConsentAgree");
-  const allBtn=document.getElementById("btnConsentAll");
-
-  function updateBtn(){
-    const ok = chkAuto.checked && chkPrivacy.checked && chkThird.checked;
-    agreeBtn.disabled = !ok;
-  }
-  ["change","input"].forEach(ev=>{
-    chkAuto.addEventListener(ev,updateBtn);
-    chkPrivacy.addEventListener(ev,updateBtn);
-    chkThird.addEventListener(ev,updateBtn);
-    chkPay.addEventListener(ev,updateBtn);
-  });
-  allBtn.onclick=()=>{ chkAuto.checked=chkPrivacy.checked=chkThird.checked=chkPay.checked=true; updateBtn(); };
-
-  agreeBtn.onclick=()=>{
-    // 저장: 동의 상태 & 선택 사항
-    const geo = window.__geo||{};
-    const payload={
-      agreedAt: Date.now(),
-      lang: conf.lang,
-      country: geo.country || geo.country_name || "",
-      ip: geo.ip || "",
-      autoSuggest:true, privacy:true, thirdParty:true, paymentOptIn: !!chkPay.checked
-    };
-    localStorage.setItem("th.consent.v1", JSON.stringify(payload));
-
-    // 옵션과 연동(자동제안, 검색 자동완성)
-    conf.sugg = true;
-    localStorage.setItem("th.sugg","1");
-    document.getElementById("optSugg").checked=true;
-
-    // 닫기
-    mask.style.display="none";
-  };
-
-  // 외부 링크
-  document.getElementById("c_priv_link").href=LINKS.privacy;
-  document.getElementById("c_pay_link").href=LINKS.payment;
-}
-
 /* ===================== 채팅(저장/스트리밍 폴백) ===================== */
 const CHAT_LIST_KEY="th.chat.threads";
 const CHAT_THREAD_KEY=(id)=>`th.chat.thread.${id}`;
@@ -1021,10 +1113,7 @@ const chatSend=document.getElementById("t_send");
 const chatThreadsEl=document.getElementById("chatThreads");
 let curThreadId=null;
 
-// 개발(로컬)만 5050, 배포는 /api 사용
-const isLocal = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
-const CHAT_ENDPOINT = isLocal ? 'http://127.0.0.1:5050' : '/api';
-const CHAT_CHAT = CHAT_ENDPOINT + '/chat';
+const CHAT_CHAT = CHAT_ENDPOINT + "/chat";
 
 document.getElementById("chatBtn").onclick=()=>{ chatDock.style.display="flex"; renderThreadList(); if(!curThreadId) newThread(); };
 document.getElementById("chatClose").onclick=()=> chatDock.style.display="none";
@@ -1092,6 +1181,13 @@ function addBubble(who,text,cls=""){
   const d=document.createElement("div");
   d.className=`bubble ${who} ${cls}`.trim();
   d.textContent=text;
+  const btn=document.createElement("button");
+  btn.className="iconbtn bAct";
+  btn.title="입력창으로 가져오기";
+  btn.textContent="↩";
+  btn.onclick=(e)=>{ e.stopPropagation(); chatInput.value = (chatInput.value?chatInput.value+"\n":"") + d.textContent; chatInput.focus(); };
+  d.appendChild(btn);
+
   chatBody.appendChild(d);
   scrollBottom();
   return d;
@@ -1109,6 +1205,27 @@ chatInput.addEventListener("keydown",(e)=>{
     document.getElementById("chatForm").dispatchEvent(new Event("submit",{cancelable:true}));
   }
 });
+
+/* --- OpenAI 호환 메시지 구성(언어 고정 & 이력 포함) --- */
+function langName(code){
+  return code==="ko"?"Korean":code==="ja"?"Japanese":"English";
+}
+function buildMessages(userText){
+  const sys=[
+    `You are a helpful assistant.`,
+    `Always reply in ${langName(conf.lang)}.`,
+    `If user writes in another language, mirror the user's language.`,
+    `Keep answers concise unless explicitly asked for long form.`,
+    conf.mode==="legal" ? `When mode=legal, proactively consider BOTH prosecutor and defense viewpoints, list relevant issues and likely statutes/cases. Mark clearly which side each point belongs to.` : ``,
+    conf.mode==="research" ? `When mode=research, surface useful links: recent news (Google News), price-compare (Amazon/Coupang) with sensible query URLs. Present bullet points.` : ``,
+  ].filter(Boolean).join(" ");
+  const sysMsg={role:"system", content:sys};
+
+  const key=curThreadId && CHAT_THREAD_KEY(curThreadId);
+  const data=key? JSON.parse(localStorage.getItem(key)||'{"messages":[]}') : {messages:[]};
+  const hist=(data.messages||[]).slice(-10).map(m=>({role:m.role==="user"?"user":"assistant", content:m.content}));
+  return [sysMsg, ...hist, {role:"user", content:userText}];
+}
 
 /* --- 통신 유틸 --- */
 async function sendNonStream(payload){
@@ -1169,7 +1286,7 @@ document.getElementById("chatForm").addEventListener("submit", async (e)=>{
 
   const aiBubble = addBubble("ai","");
   let acc="";
-  const payload = { message: v, mode: conf.mode, lang: conf.lang, provider: "mistral", thread_id: curThreadId };
+  const payload = { messages: buildMessages(v), mode: conf.mode, lang: conf.lang, provider: DEFAULT_PROVIDER, thread_id: curThreadId };
 
   try{
     setSending(true);
@@ -1202,16 +1319,15 @@ document.getElementById("chatForm").addEventListener("submit", async (e)=>{
   }
 });
 
-/* ===================== 검색 실행(새 탭) ===================== */
+/* ===================== 검색 실행 ===================== */
 function routeSearch(q){
   const low=q.toLowerCase().trim();
-  const is=(re)=> re.test(low);
   const law=parseLaw(q);
-  if(is(/쿠팡|coupang/)) return {title:"쿠팡", url:`https://www.coupang.com/np/search?q=${encodeURIComponent(q.replace(/쿠팡|coupang/ig,"").trim()||"")}`};
-  if(is(/아마존|amazon/)) return {title:"Amazon", url:`https://www.amazon.com/s?k=${encodeURIComponent(q.replace(/아마존|amazon/ig,"").trim()||"")}`};
-  if(is(/네이버|naver/)) return {title:"네이버", url:`https://search.naver.com/search.naver?query=${encodeURIComponent(q.replace(/네이버|naver/ig,"").trim()||"")}`};
+  if(/쿠팡|coupang/.test(low)) return {title:"쿠팡", url:`https://www.coupang.com/np/search?q=${encodeURIComponent(q.replace(/쿠팡|coupang/ig,"").trim()||"")}`};
+  if(/아마존|amazon/.test(low)) return {title:"Amazon", url:`https://www.amazon.com/s?k=${encodeURIComponent(q.replace(/아마존|amazon/ig,"").trim()||"")}&s=price-asc-rank`};
+  if(/네이버|naver/.test(low)) return {title:"네이버", url:`https://search.naver.com/search.naver?query=${encodeURIComponent(q.replace(/네이버|naver/ig,"").trim()||"")}`};
   if(law) return {title:`${law.code} 제${law.article}조`, url:law.url};
-  if(is(/뉴스|news/)) return {title:"뉴스",url:`https://news.google.com/search?q=${encodeURIComponent(q.replace(/뉴스|news/ig,"").trim()||"")}`};
+  if(/뉴스|news/.test(low)) return {title:"뉴스",url:`https://news.google.com/search?q=${encodeURIComponent(q.replace(/뉴스|news/ig,"").trim()||"")}`};
   return {title:"웹검색", url:`https://www.google.com/search?q=${encodeURIComponent(q)}`};
 }
 function parseLaw(q){
@@ -1220,10 +1336,50 @@ function parseLaw(q){
 }
 document.getElementById("searchBtn").onclick=()=> runSearch();
 document.getElementById("searchBox").addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); runSearch(); }});
+
 function runSearch(){
   const q=(document.getElementById("searchBox").value||"").trim(); if(!q) return;
+
+  if(conf.mode==="research"){
+    const kw=q.replace(/뉴스|news|쿠팡|coupang|아마존|amazon/ig,"").trim();
+    const urls=[
+      `https://news.google.com/search?q=${encodeURIComponent(kw||q)}`,
+      `https://www.amazon.com/s?k=${encodeURIComponent(kw||q)}&s=price-asc-rank`,
+      `https://www.coupang.com/np/search?q=${encodeURIComponent(kw||q)}`
+    ];
+    for(const u of urls){ try{ window.open(u,"_blank","noopener,noreferrer"); }catch{ location.href=u; } }
+    return;
+  }
+
   const r=routeSearch(q);
   try{ window.open(r.url,"_blank","noopener,noreferrer"); }catch{ location.href=r.url; }
+}
+
+/* ===================== 동의모달 로직 ===================== */
+function openConsentIfNeeded(){
+  const agreed = localStorage.getItem("th.consent.v1")==="1";
+  if(agreed) return;
+  const mask=document.getElementById("consentMask");
+  mask.style.display="flex";
+  const chkAll=()=> {
+    const canAgree = document.getElementById("chkAuto").checked &&
+                     document.getElementById("chkPrivacy").checked &&
+                     document.getElementById("chkThird").checked;
+    document.getElementById("btnConsentAgree").disabled = !canAgree;
+  };
+  document.getElementById("chkAuto").onchange=chkAll;
+  document.getElementById("chkPrivacy").onchange=chkAll;
+  document.getElementById("chkThird").onchange=chkAll;
+  document.getElementById("btnConsentAll").onclick=()=>{
+    document.getElementById("chkAuto").checked=true;
+    document.getElementById("chkPrivacy").checked=true;
+    document.getElementById("chkThird").checked=true;
+    chkAll();
+  };
+  document.getElementById("btnConsentAgree").onclick=()=>{
+    localStorage.setItem("th.consent.v1","1");
+    mask.style.display="none";
+  };
 }
 
 /* ===================== 부트스트랩 ===================== */
