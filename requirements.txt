@@ -1,7 +1,14 @@
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
-httpx==0.27.2
+# 런타임
+pydantic==2.9.2
 python-dotenv==1.0.1
-flask==3.0.3
-flask-cors==4.0.0
-gunicorn==21.2.0
+
+# HTTP 클라이언트
+requests==2.32.3
+urllib3==2.2.3
+
+# 모델 프로바이더 SDK
+openai==1.51.2
+google-generativeai==0.7.2
+
+# Lambda 컨테이너로 돌릴 때(선택)
+awslambdaric==2.0.11
