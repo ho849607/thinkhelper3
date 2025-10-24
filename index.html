@@ -137,7 +137,8 @@ body.dev #searchBox{background:#1f1f1f; border-color:#333; color:#e6e6e6}
 
 /* Chat dock */
 #chatBtn{position:fixed;right:16px;bottom:80px;z-index:60}
-#chatDock{position:fixed;right:16px;bottom:16px;width:min(92vw,880px);height:74vh;display:none;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 36px rgba(0,0,0,.28);z-index:70}
+/* 항상 보이게 */
+#chatDock{position:fixed;right:16px;bottom:16px;width:min(92vw,880px);height:74vh;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 36px rgba(0,0,0,.28);z-index:70}
 #chatHead{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:12px;border-bottom:1px solid var(--border);font-weight:900}
 #chatWrap{flex:1;display:grid;grid-template-columns:220px 1fr;min-height:0}
 #chatThreads{border-right:1px solid var(--border);padding:10px;overflow:auto}
@@ -223,23 +224,6 @@ body.dev #searchBox{background:#1f1f1f; border-color:#333; color:#e6e6e6}
           </select>
         </div>
         <div class="item" id="toggleTheme">🌓 <span id="t_theme">테마 전환</span></div>
-      </div>
-    </div>
-
-    <!-- 도움말 -->
-    <div class="menu" data-menu>
-      <button class="btn" id="t_help">도움말 ▾</button>
-      <div class="dropdown">
-        <div class="item"><span id="t_keys">단축키</span><span>⌘/Ctrl+K, ⌘/Ctrl+Space</span></div>
-        <div class="item"><span id="t_note">주의</span><span id="t_note_body">AI 결과는 항상 검토</span></div>
-        <div class="item">
-          <span>서비스 이용약관</span>
-          <a href="https://docs.google.com/document/d/1TLZ2m52s1mAd8BPzXDBQuXF6QZ_hLDZOyX6Y8TKALnE/edit?usp=sharing" target="_blank" rel="noopener">열기 ↗</a>
-        </div>
-        <div class="item">
-          <span>개인정보처리방침</span>
-          <a href="https://docs.google.com/document/d/1kmFzmp3ddJOKOp1TPsvsNzAuBKt6M0Vm0N_G5BIOZEE/edit?usp=sharing" target="_blank" rel="noopener">열기 ↗</a>
-        </div>
       </div>
     </div>
 
@@ -360,14 +344,15 @@ body.dev #searchBox{background:#1f1f1f; border-color:#333; color:#e6e6e6}
   </div>
 
   <!-- Chat Dock -->
-  <div id="chatDock" role="dialog" aria-hidden="true">
+  <div id="chatDock" role="dialog" aria-hidden="false">
     <div id="chatHead">
       <span id="t_chatTitle">AI 채팅</span>
       <div class="actions" style="display:flex;gap:8px;align-items:center">
         <button class="btn" id="btnNewThread" title="새 채팅">＋ 새 채팅</button>
-        <select id="chatProvider" class="btn" disabled title="람다 우선, 실패 시 로컬">
-          <option value="lambda" selected>Lambda</option>
-          <option value="local">Local-fallback</option>
+        <select id="chatStyle" class="btn" title="응답 스타일">
+          <option value="auto" selected>auto</option>
+          <option value="fast">즉시응답</option>
+          <option value="think">생각중</option>
         </select>
         <button class="btn" id="chatClose" aria-label="Close">✖</button>
       </div>
@@ -382,10 +367,13 @@ body.dev #searchBox{background:#1f1f1f; border-color:#333; color:#e6e6e6}
         </form>
       </section>
     </div>
-    <div id="quota">apigw · lambda → local fallback</div>
   </div>
 
 <script>
+/* =========================
+   ThinkHelper front script
+   ========================= */
+
 /* ===== 기본 링크 ===== */
 const LINKS = {
   terms: "https://docs.google.com/document/d/1TLZ2m52s1mAd8BPzXDBQuXF6QZ_hLDZOyX6Y8TKALnE/edit?usp=sharing",
@@ -394,23 +382,172 @@ const LINKS = {
   email: "ho849607@gmail.com"
 };
 
-/* ===== i18n (간결 버전) ===== */
-const I18N={
-  ko:{brand:"ThinkHelper",tools:"도구 ▾",settings:"설정 ▾",help:"도움말 ▾",
-      new:"새 문서", export:"내보내기/인쇄", vscode:"VSCode로 열기",
-      lang:"언어", deep:"심층 리서치", sugg:"제안어 표시", personal:"맞춤형 제안 표시",
-      gaze:"시선 커서(웹캠)", mode:"모드", theme:"테마 전환",
-      mode_normal:"일반 모드", mode_research:"리서치 모드", mode_legal:"리걸 모드", mode_dev:"개발자 모드",
-      keys:"단축키", note:"주의", note_body:"AI 결과는 항상 검토", chat:"채팅",
-      docs:"문서", sort1:"최근 수정순", sort2:"제목순", sort3:"생성순",
-      search:"검색", sugg_header:"추천", close:"닫기",
-      disclaimer:"인공지능 모델은 실수할 수 있습니다. 중요한 정보는 반드시 재차 확인하세요.",
-      chatTitle:"AI 채팅", send:"전송",
-      loc_wait:"위치 확인 중…", loc_hidden:"위치 비공개",
-      export_title:"내보내기 / 인쇄", coming:"준비중",
-      placeholder_editor:"여기서 작성하세요…", placeholder_search:"검색(Enter) / Ctrl+K", placeholder_chat:"메시지를 입력하세요 (Enter)",
-      untitled:"무제"}
+/* ===== 다국어 문자열(I18N) ===== */
+const I18N = {
+  ko: {
+    brand:"ThinkHelper", tools:"도구", settings:"설정", help:"도움말", new:"새 문서", export:"내보내기/인쇄",
+    vscode:"VSCode로 열기", lang:"언어", deep:"심층 리서치", sugg:"제안어 표시", personal:"맞춤형 제안 표시",
+    gaze:"시선 커서(웹캠)", mode:"모드", theme:"테마 전환", keys:"단축키", note:"주의", note_body:"AI 결과는 항상 검토",
+    chat:"채팅", docs:"문서", sort1:"최근 수정순", sort2:"제목순", sort3:"생성순", search:"검색", sugg_header:"추천",
+    disclaimer:"인공지능 모델은 실수할 수 있습니다. 중요한 정보는 반드시 재차 확인하세요.",
+    chatTitle:"AI 채팅", send:"전송", export_title:"내보내기 / 인쇄", coming:"준비중", close:"닫기",
+    loc_wait:"위치 확인 중…", placeholder_search:"검색(Enter) / Ctrl+K",
+    placeholder_chat:"메시지를 입력하세요 (Enter=전송, Shift+Enter=줄바꿈)",
+    loc_hidden:"위치 비공개", untitled:"무제"
+  },
+  en: {
+    brand:"ThinkHelper", tools:"Tools", settings:"Settings", help:"Help", new:"New", export:"Export/Print",
+    vscode:"Open in VSCode", lang:"Language", deep:"Deep research", sugg:"Show suggestions", personal:"Personalized suggestions",
+    gaze:"Gaze cursor (webcam)", mode:"Mode", theme:"Toggle theme", keys:"Shortcuts", note:"Note", note_body:"Always review AI results",
+    chat:"Chat", docs:"Docs", sort1:"Recently updated", sort2:"Title", sort3:"Created", search:"Search", sugg_header:"Suggestions",
+    disclaimer:"AI can make mistakes. Please verify important information.",
+    chatTitle:"AI Chat", send:"Send", export_title:"Export / Print", coming:"Coming soon", close:"Close",
+    loc_wait:"Detecting location…", placeholder_search:"Search (Enter) / Ctrl+K",
+    placeholder_chat:"Type a message (Enter=send, Shift+Enter=newline)",
+    loc_hidden:"Location hidden", untitled:"Untitled"
+  },
+  ja: {
+    brand:"ThinkHelper", tools:"ツール", settings:"設定", help:"ヘルプ", new:"新規", export:"エクスポート/印刷",
+    vscode:"VSCodeで開く", lang:"言語", deep:"リサーチ強化", sugg:"サジェスト表示", personal:"パーソナライズ",
+    gaze:"視線カーソル(カメラ)", mode:"モード", theme:"テーマ切替", keys:"ショートカット", note:"注意", note_body:"AI結果は必ず確認",
+    chat:"チャット", docs:"ドキュメント", sort1:"更新順", sort2:"タイトル順", sort3:"作成順", search:"検索", sugg_header:"おすすめ",
+    disclaimer:"AIは誤ることがあります。重要情報は必ず確認してください。",
+    chatTitle:"AIチャット", send:"送信", export_title:"エクスポート / 印刷", coming:"準備中", close:"閉じる",
+    loc_wait:"位置情報を取得中…", placeholder_search:"検索(Enter) / Ctrl+K",
+    placeholder_chat:"メッセージを入力 (Enter=送信, Shift+Enter=改行)",
+    loc_hidden:"位置は非公開", untitled:"無題"
+  }
 };
+
+/* ===== i18n 사전(추천어용) ===== */
+const DICTS = {
+  ko: {
+    "ㄱ": ["개요","경영","경제","개발","교육","검색","기획","가이드","견적","검증"],
+    "ㄴ": ["네트워크","농업","뉴스","넛지","능률"],
+    "ㄷ": ["데이터","디자인","동기부여","동작원리","대안","대시보드"],
+    "ㄹ": ["레퍼런스","리뷰","로드맵","라이브러리","리스크"],
+    "ㅁ": ["모델","마케팅","문제정의","메트릭","모범사례"],
+    "ㅂ": ["보고서","비교","백엔드","보안","분석","브랜딩"],
+    "ㅅ": ["설계","사양","사용법","성과","사례","스펙"],
+    "ㅇ": ["원리","요약","옵션","요구사항","예시","운영"],
+    "ㅈ": ["전략","절차","자료","정책","지표","제안"],
+    "ㅊ": ["체크리스트","출시","추천","참고","최적화"],
+    "ㅋ": ["코드","컴파일","캘린더","캐시","크롤링"],
+    "ㅌ": ["테스트","트러블슈팅","튜토리얼","타임라인"],
+    "ㅍ": ["프로세스","프롬프트","프레임워크","표준","평가"],
+    "ㅎ": ["핵심","효율","활용","회고","흐름도"]
+  },
+  en: {
+    a:["algorithm","api","architecture","analysis","agenda","ablation"],
+    b:["benchmark","best practices","budget","backlog","business case"],
+    c:["checklist","comparison","constraints","contract","cache","cloud"],
+    d:["design","docs","debugging","data model","discovery"],
+    e:["example","estimate","evaluation","experiment","etl"],
+    f:["framework","faq","flowchart","features","forecast"],
+    g:["guide","goals","glossary","governance","growth"],
+    h:["how to","hypothesis","heuristics","handoff","history"],
+    i:["intro","impact","implementation","issues","integration"],
+    j:["jira tickets","jobs to be done","justification"],
+    k:["key points","kpis","knowledge base"],
+    l:["lessons learned","limitations","licensing","launch plan"],
+    m:["metrics","milestones","mockups","modeling"],
+    n:["notes","next steps","naming","network"],
+    o:["overview","objectives","ops","observability"],
+    p:["plan","proposal","pros & cons","protocol","prompt"],
+    q:["quickstart","quality","questions"],
+    r:["requirements","roadmap","risks","retrospective"],
+    s:["spec","strategy","summary","sample","security"],
+    t:["tutorial","timeline","test cases","trade-offs"],
+    u:["use cases","user story","ux notes"],
+    v:["validation","vision","versioning"],
+    w:["workflow","workaround","why","wireframe"],
+    x:["xml snippet","x-headers"],
+    y:["yardstick","yaml","y-axis labels"],
+    z:["zero-shot","z-score","zip steps"]
+  },
+  ja: {
+    "あ":["案内","要約","挨拶","安全","アイデア","アーキテクチャ"],
+    "か":["課題","改善","価格","考え方","カタログ","開発"],
+    "さ":["作成手順","参考資料","仕様","事例","差分","サマリー"],
+    "た":["対応策","体制","体験談","タスク","対比","テスト"],
+    "な":["流れ(ながれ)","内容","名前付け","ナレッジ","内訳"],
+    "は":["背景","方法","反省","比較","発見","バージョン"],
+    "ま":["目的","まとめ","マニュアル","モデル","マイルストーン"],
+    "や":["やり方","役割","要件","ユーザー調査"],
+    "ら":["理由","リスク","レビュー","ロードマップ","例"],
+    "わ":["ワークフロー","割当","わかりやすく説明","枠組み"]
+  }
+};
+
+function T(k){return (I18N[conf.lang]||I18N.ko)[k];}
+
+/* ===== 언어 감지 ===== */
+function detectLang(str){
+  const s = (str||"").trim();
+  if (/[ぁ-ゔァ-ヴー一-龠々〆ヵヶ]/.test(s)) return "ja";
+  if (/[가-힣]/.test(s)) return "ko";
+  return "en";
+}
+
+/* ===== 한글 초성 계산 ===== */
+function getKoInitial(ch){
+  const code = ch.charCodeAt(0);
+  if (code < 0xAC00 || code > 0xD7A3) return null;
+  const CHOSEONG = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+  const idx = Math.floor((code - 0xAC00) / (21 * 28));
+  return CHOSEONG[idx] || null;
+}
+
+/* ===== 일본어 행 판별 ===== */
+function getJaRow(ch){
+  const rows={あ:"あ",い:"あ",う:"あ",え:"あ",お:"あ",
+    か:"か",き:"か",く:"か",け:"か",こ:"か",
+    さ:"さ",し:"さ",す:"さ",せ:"さ",そ:"さ",
+    た:"た",ち:"た",つ:"た",て:"た",と:"た",
+    な:"な",に:"な",ぬ:"な",ね:"な",の:"な",
+    は:"は",ひ:"は",ふ:"は",へ:"は",ほ:"は",
+    ま:"ま",み:"ま",む:"ま",め:"ま",も:"ま",
+    や:"や",ゆ:"や",よ:"や",
+    ら:"ら",り:"ら",る:"ら",れ:"ら",ろ:"ら",
+    わ:"わ",を:"わ",ん:"わ",
+    ア:"あ",イ:"あ",ウ:"あ",エ:"あ",オ:"あ",
+    カ:"か",キ:"か",ク:"か",ケ:"か",コ:"か",
+    サ:"さ",シ:"さ",ス:"さ",セ:"さ",ソ:"さ",
+    タ:"た",チ:"た",ツ:"た",テ:"た",ト:"た",
+    ナ:"な",ニ:"な",ヌ:"な",ネ:"な",ノ:"な",
+    ハ:"は",ヒ:"は",フ:"は",ヘ:"は",ホ:"は",
+    マ:"ま",ミ:"ま",ム:"ま",メ:"ま",モ:"ま",
+    ヤ:"や",ユ:"や",ヨ:"や",
+    ラ:"ら",リ:"ら",ル:"ら",レ:"ら",ロ:"ら",
+    ワ:"わ",ヲ:"わ",ン:"わ"};
+  return rows[ch] || null;
+}
+
+/* ===== 사전 조회 ===== */
+function dictLookup(lang, token){
+  if(!token) return [];
+  const first = token[0];
+
+  if (lang === "ko"){
+    if (/[ㄱ-ㅎ]/.test(first)) return (DICTS.ko[first] || []).slice(0, 10);
+    const cho = getKoInitial(first);
+    if (cho) return (DICTS.ko[cho] || []).slice(0, 10);
+    return [];
+  }
+  if (lang === "en"){
+    const k = first.toLowerCase();
+    if (/[a-z]/.test(k)) return (DICTS.en[k] || []).slice(0, 10);
+    return [];
+  }
+  if (lang === "ja"){
+    const row = getJaRow(first);
+    if (row) return (DICTS.ja[row] || []).slice(0, 10);
+    return [];
+  }
+  return [];
+}
+
+/* ===== 설정값 ===== */
 const conf={
   lang: localStorage.getItem("th.lang")||"ko",
   mode: localStorage.getItem("th.mode")||"normal",
@@ -419,21 +556,13 @@ const conf={
   personal: localStorage.getItem("th.personal")!=="0",
   gaze: localStorage.getItem("th.gaze")==="1"
 };
-function T(k){return (I18N[conf.lang]||I18N.ko)[k];}
-
-/* ===== 새로 추가: 타이핑 디바운스 ===== */
-let _typeTimer=null;
-function onType(){
-  clearTimeout(_typeTimer);
-  _typeTimer=setTimeout(()=>openSuggest(false), 400);
-}
 
 /* ===== CKEditor ===== */
-let editor=null, _rebuilding=false;
+let editor=null, _rebuilding=false, _typeTimer=null;
 async function initEditor(restoreHtml){
   editor = await ClassicEditor.create(
     document.getElementById('editor'),
-    { placeholder: (I18N[conf.lang]||I18N.ko).placeholder_editor }
+    { placeholder: T('placeholder_editor') || '' }
   );
   if(restoreHtml!=null){ editor.setData(restoreHtml); }
   editor.model.document.on("change:data", onType);
@@ -444,6 +573,7 @@ async function initEditor(restoreHtml){
     if((data.ctrlKey||data.metaKey)&&k===" "){ data.preventDefault(); openSuggest(true); }
   });
 }
+function onType(){ clearTimeout(_typeTimer); _typeTimer=setTimeout(()=>openSuggest(false), 350); }
 function getHTML(){ return editor ? editor.getData() : ""; }
 function setHTML(h){ if(editor) editor.setData(h||""); }
 
@@ -451,22 +581,22 @@ function setHTML(h){ if(editor) editor.setData(h||""); }
 async function applyI18N(){
   const t=I18N[conf.lang]||I18N.ko;
   document.title = `${t.brand} — Editor`;
-  const map={
-    t_brand:t.brand,t_tools:t.tools,t_settings:t.settings,t_help:t.help,t_new:t.new,t_export:t.export,
+  const map={ t_brand:t.brand,t_tools:t.tools,t_settings:t.settings,t_help:t.help,t_new:t.new,t_export:t.export,
     t_vscode:t.vscode,t_lang:t.lang,t_deep:t.deep,t_sugg:t.sugg,t_personal:t.personal,t_gaze:t.gaze,
     t_mode:t.mode,t_theme:t.theme,t_keys:t.keys,t_note:t.note,t_note_body:t.note_body,t_chat:t.chat,
     t_docs:t.docs,t_sort1:t.sort1,t_sort2:t.sort2,t_sort3:t.sort3,t_search:t.search,t_sugg_header:t.sugg_header,
     t_disclaimer:t.disclaimer,t_chatTitle:t.chatTitle,t_send:t.send,t_export_title:t.export_title,
-    t_coming:t.coming,t_close:t.close,t_loc_wait:t.loc_wait
-  };
+    t_coming:t.coming,t_close:t.close,t_loc_wait:t.loc_wait };
   for(const id in map){ const el=document.getElementById(id); if(el) el.textContent=map[id]; }
   document.getElementById("searchBox").placeholder=t.placeholder_search;
   const ci=document.getElementById("chatInput"); if(ci) ci.placeholder=t.placeholder_chat;
 
-  const terms=document.getElementById("lnk_terms"), privacy=document.getElementById("lnk_privacy"), email=document.getElementById("lnk_email");
-  terms.href=LINKS.terms; privacy.href=LINKS.privacy;
-  email.href=`mailto:${LINKS.email}?subject=ThinkHelper%20${encodeURIComponent(conf.lang==="ko"?"문의":"Support")}`;
+  // 링크
+  document.getElementById("lnk_terms").href=LINKS.terms;
+  document.getElementById("lnk_privacy").href=LINKS.privacy;
+  document.getElementById("lnk_email").href=`mailto:${LINKS.email}?subject=ThinkHelper%20${encodeURIComponent(conf.lang==="ko"?"문의":"Support")}`;
 
+  // 에디터 다시 붙이기(placeholder 반영)
   if(editor && !_rebuilding){
     _rebuilding=true;
     const htmlBefore=getHTML();
@@ -478,6 +608,8 @@ async function applyI18N(){
   }
   renderList(true);
 }
+
+/* ===== 초기화 ===== */
 document.addEventListener('DOMContentLoaded', async ()=>{
   document.getElementById("langSel").value=conf.lang;
   document.getElementById("modeSel").value=conf.mode;
@@ -524,7 +656,10 @@ applyMode();
 
 /* ===== 언어 변경 ===== */
 document.getElementById("langSel").addEventListener('change', async (e)=>{
-  conf.lang=e.target.value; localStorage.setItem("th.lang",conf.lang); await applyI18N();
+  conf.lang=e.target.value; localStorage.setItem("th.lang",conf.lang);
+  localStorage.setItem("th.lang.manual","1"); // 사용자가 직접 바꾼 흔적
+  await applyI18N();
+  openSuggest(false);
 });
 
 /* ===== 로컬 저장소(문서) ===== */
@@ -629,17 +764,29 @@ document.addEventListener("keydown",(e)=>{
 });
 
 /* ===== 검색 자동완성 + 라우팅 ===== */
-const suggBox = document.getElementById('suggestList');
-let sIndex=-1, sItems=[];
+const suggBox=document.getElementById('suggestList');
+let sItems=[], sIndex=-1;
 async function fetchSuggest(q){
   if(!q){ suggBox.style.display='none'; return; }
+
+  const lang = detectLang(q);
+  const local = dictLookup(lang, q);
+  if (local.length) {
+    sItems = local.slice(0,8);
+    renderSuggest();
+    return;
+  }
+
   try{
     const r = await fetch('https://suggestqueries.google.com/complete/search?client=firefox&q='+encodeURIComponent(q));
     const j = await r.json();
     sItems = (j && j[1]) ? j[1].slice(0,8) : [];
     renderSuggest();
-  }catch{ sItems=[]; suggBox.style.display='none'; }
+  }catch{
+    sItems=[]; suggBox.style.display='none';
+  }
 }
+
 function renderSuggest(){
   if(!sItems.length){ suggBox.style.display='none'; return; }
   suggBox.innerHTML = sItems.map((t,i)=>`<div class="sugg" data-i="${i}" ${i===sIndex?'data-active="1"':''}>${escapeHtml(t)}</div>`).join("");
@@ -664,10 +811,10 @@ function routeSearch(q){
   const law=parseLaw(q);
   if(/쿠팡|coupang/.test(low)) return {title:"쿠팡", url:`https://www.coupang.com/np/search?q=${encodeURIComponent(q.replace(/쿠팡|coupang/ig,"").trim()||"")}`};
   if(/아마존|amazon/.test(low)) return {title:"Amazon", url:`https://www.amazon.com/s?k=${encodeURIComponent(q.replace(/아마존|amazon/ig,"").trim()||"")}&s=price-asc-rank`};
-  if(/네이버|naver/.test(low)) return {title:"네이버", url:`https://search.naver.com/search.naver?query=${encodeURIComponent(q.replace(/네이버|naver/ig,"").trim()||"")}`};
+  if(/네이버|naver/.test(low)) return {title:"Naver", url:`https://search.naver.com/search.naver?query=${encodeURIComponent(q.replace(/네이버|naver/ig,"").trim()||"")}`};
   if(law) return {title:`${law.code} 제${law.article}조`, url:law.url};
-  if(/뉴스|news/.test(low)) return {title:"뉴스",url:`https://news.google.com/search?q=${encodeURIComponent(q.replace(/뉴스|news/ig,"").trim()||q)}`};
-  return {title:"구글", url:`https://www.google.com/search?q=${encodeURIComponent(q)}`};
+  if(/뉴스|news/.test(low)) return {title:"News",url:`https://news.google.com/search?q=${encodeURIComponent(q.replace(/뉴스|news/ig,"").trim()||q)}`};
+  return {title:"Google", url:`https://www.google.com/search?q=${encodeURIComponent(q)}`};
 }
 function parseLaw(q){
   const m=q.match(/(형법|민법|형사소송법|민사소송법|상법)\s*제?\s*(\d+)(조(?:의\d+)*)?/); if(!m) return null;
@@ -680,29 +827,53 @@ function runSearch(){
   try{ window.open(r.url,"_blank","noopener,noreferrer"); }catch{ location.href=r.url; }
 }
 
-/* ===== 추천어 (단어/문장만, 특정 프레이즈 제외) ===== */
-const BAN = /요약문|요약|목차|toc|장단점|결론|표|table|코드|code|스니펫|snippet/i;
+/* ===== 언어별 추천어 ===== */
 const TOKEN_RE=/[A-Za-z0-9가-힣ぁ-ゔァ-ヴー一-龠々〆ヵヶー]+/g;
 function getPlain(){ return getHTML().replace(/<[^>]+>/g," "); }
 function currentToken(){
   const t=getPlain(); const parts=t.match(TOKEN_RE)||[];
   return parts[parts.length-1]||"";
 }
-const WORDS = ["정의","원리","핵심","절차","전략","주의점","사례","한계","대안","비교","포인트"];
-const SENT_TEMPL = [
-  (t)=>`${t}를 쉽게 설명해 주세요.`,
-  (t)=>`${t}의 핵심만 한 단락으로 요약해 주세요.`,  /* '요약'은 BAN이라 최종 필터에서 빠짐 */
-  (t)=>`${t}의 단계별 절차와 주의할 점을 알려 주세요.`,
-  (t)=>`${t}의 장단점을 3개씩 간단히 적어 주세요.`  /* '장단점'은 BAN이라 빠짐 */
-];
+const WORDS = {
+  ko: ["정의","원리","핵심","절차","전략","주의점","사례","한계","대안","비교","포인트"],
+  en: ["definition","principle","key points","process","strategy","pitfalls","examples","limitations","alternatives","comparison","takeaways"],
+  ja: ["定義","仕組み","要点","手順","戦略","注意点","事例","限界","代替案","比較","ポイント"]
+};
+const TEMPL = {
+  ko: [
+    (t)=>`${t}를 쉽게 설명해 주세요.`,
+    (t)=>`${t}의 핵심만 한 단락으로 정리해 주세요.`,
+    (t)=>`${t}의 단계별 절차와 주의할 점을 알려 주세요.`
+  ],
+  en: [
+    (t)=>`Explain ${t} in simple terms.`,
+    (t)=>`Summarize the key points of ${t} in one paragraph.`,
+    (t)=>`List step-by-step process and pitfalls for ${t}.`
+  ],
+  ja: [
+    (t)=>`${t}を分かりやすく説明してください。`,
+    (t)=>`${t}の要点を1段落でまとめてください。`,
+    (t)=>`${t}の手順と注意点をステップごとに示してください。`
+  ]
+};
 function smartSuggest(){
-  const key=(currentToken()||"주제").slice(0,30);
-  const words = WORDS.filter(w=>!BAN.test(w));
-  const sents = SENT_TEMPL.map(f=>f(key)).filter(s=>!BAN.test(s));
-  return [...new Set([...words,...sents])].slice(0,10);
+  const inputVal = (document.getElementById('chatInput')?.value||"").trim();
+  const lang = detectLang(inputVal) || detectLang(getPlain()) || conf.lang;
+
+  const keyToken = (currentToken() || "").slice(0, 30);
+  const dictItems = dictLookup(lang, keyToken);
+  if (dictItems.length) return dictItems;
+
+  const key = keyToken || (lang==="ko"?"주제": lang==="ja"?"テーマ":"topic");
+  const wordList = WORDS[lang] || WORDS.ko;
+  const templ    = TEMPL[lang] || TEMPL.ko;
+  const words = wordList;
+  const sents = templ.map(f=>f(key));
+  const items = [...new Set([...words, ...sents])];
+  return items.slice(0,10);
 }
 
-/* VSCode 스타일 팝업 */
+/* VSCode 스타일 팝업 (에디터) */
 const suggPopup=document.getElementById("suggPopup"), suggList=document.getElementById("suggList");
 let eItems=[], eSel=-1, hideUntilNextType=false;
 function caretRect(){
@@ -710,13 +881,14 @@ function caretRect(){
   const r=sel.getRangeAt(0).cloneRange(); r.collapse(true);
   const rects=r.getClientRects(); if(!rects.length) return null; return rects[0];
 }
-function openSuggest(force){
+function openSuggest(){
   if(!conf.sugg) return closeSuggest();
   if(hideUntilNextType){ hideUntilNextType=false; return; }
   const items = smartSuggest();
   if(!items.length) return closeSuggest();
   eItems=items.slice(0,12); eSel=-1;
-  suggList.innerHTML=eItems.map((it,i)=>`<li data-i="${i}"><span class="kind">추천</span><span>${escapeHtml(it)}</span></li>`).join("");
+  const tagLabel = (detectLang((document.getElementById('chatInput')?.value||""))==="en")?"Suggest":"추천";
+  suggList.innerHTML=eItems.map((it,i)=>`<li data-i="${i}"><span class="kind">${tagLabel}</span><span>${escapeHtml(it)}</span></li>`).join("");
   Array.from(suggList.children).forEach(li=> li.onclick=()=> choose(+li.dataset.i));
   const r=caretRect(); if(!r){ closeSuggest(); return; }
   const host=document.getElementById("editorWrap").getBoundingClientRect();
@@ -746,7 +918,7 @@ function toast(msg){
   const t=document.createElement("div");
   t.style.cssText="position:fixed;right:12px;bottom:12px;background:var(--panel);border:1px solid var(--border);padding:8px 10px;border-radius:10px;z-index:9999";
   t.textContent=msg; document.body.appendChild(t);
-  setTimeout(()=>document.body.removeChild(t), 2500);
+  setTimeout(()=>document.body.removeChild(t), 2200);
 }
 
 /* ===== 내보내기 ===== */
@@ -761,7 +933,7 @@ document.getElementById('btnExportPDF').onclick=()=>{
   html2pdf().from(el).save('ThinkHelper_'+Date.now()+'.pdf');
 };
 
-/* ===== 옵션 ===== */
+/* ===== 옵션 스위치 ===== */
 document.getElementById('optDeep').onchange=e=>{ conf.deep=e.target.checked; localStorage.setItem("th.deep", conf.deep?'1':'0'); };
 document.getElementById('optSugg').onchange=e=>{ conf.sugg=e.target.checked; localStorage.setItem("th.sugg", conf.sugg?'1':'0'); };
 document.getElementById('optPersonal').onchange=e=>{ conf.personal=e.target.checked; localStorage.setItem("th.personal", conf.personal?'1':'0'); };
@@ -776,7 +948,7 @@ async function startGaze(){
   try{
     if(!window.webgazer){ alert("WebGazer 로드 전입니다."); return; }
     emaX=null; emaY=null;
-    document.body.classList.add('hide-cursor'); // 시선커서 ON → 마우스 숨김
+    document.body.classList.add('hide-cursor');
     await webgazer.setRegression('ridge').setGazeListener((data)=>{
       if(!data) return;
       if(emaX===null){ emaX=data.x; emaY=data.y; }
@@ -794,32 +966,69 @@ async function stopGaze(){
   c.style.display="none";
   try{ if(window.webgazer){ await webgazer.end(); } }catch{}
   gazeRunning=false;
-  document.body.classList.add('hide-cursor'); // 요구: 끄면 마우스커서도 숨김
+  document.body.classList.remove('hide-cursor');
 }
 
-/* ===== 위치/IP 표기 & 언어 제안 ===== */
+/* ===== 위치/IP 표기 & 언어 자동세팅 ===== */
 async function detectGeoAndMaybeSetLang(){
   const el=document.getElementById('loc');
   try{
     const r=await fetch("https://ipapi.co/json/");
     const j=await r.json();
     el.textContent = `📍 ${[j.city,j.region,j.country_name].filter(Boolean).join(', ')} (IP: ${j.ip}) · `;
+
+    const manual = localStorage.getItem("th.lang.manual")==="1";
+    const autoFlag = localStorage.getItem("th.lang.autoSet")==="1";
+    if(!manual && !autoFlag){
+      const cc=(j.country_code||"").toUpperCase();
+      const guess = cc==="KR" ? "ko" : cc==="JP" ? "ja" : "en";
+      if(conf.lang!==guess){
+        conf.lang=guess;
+        localStorage.setItem("th.lang",guess);
+        localStorage.setItem("th.lang.autoSet","1");
+        await applyI18N();
+      }else{
+        localStorage.setItem("th.lang.autoSet","1");
+      }
+    }
   }catch{
-    el.textContent="📍 위치 비공개 · ";
+    el.textContent="📍 "+(I18N[conf.lang]||I18N.ko).loc_hidden+" · ";
   }
   const suffix = document.createElement('span');
-  suffix.innerHTML = `<a id="lnk_terms2" target="_blank" rel="noopener">${"이용약관"}</a> ·
-                      <a id="lnk_privacy2" target="_blank" rel="noopener">${"개인정보처리방침"}</a> ·
-                      문의: <a id="lnk_email2"></a>`;
+  suffix.innerHTML = `<a id="lnk_terms" target="_blank" rel="noopener">${"이용약관"}</a> ·
+                      <a id="lnk_privacy" target="_blank" rel="noopener">${"개인정보처리방침"}</a> ·
+                      문의: <a id="lnk_email"></a>`;
   el.appendChild(suffix);
-  document.getElementById("lnk_terms2").href=LINKS.terms;
-  document.getElementById("lnk_privacy2").href=LINKS.privacy;
-  const e2=document.getElementById("lnk_email2");
+  document.getElementById("lnk_terms").href=LINKS.terms;
+  document.getElementById("lnk_privacy").href=LINKS.privacy;
+  const e2=document.getElementById("lnk_email");
   e2.href=`mailto:${LINKS.email}?subject=ThinkHelper%20Support`;
   e2.textContent=LINKS.email;
 }
 
-/* ===== 채팅 (Lambda 우선 → 로컬 대체) ===== */
+/* ===== 채팅: Lambda 우선, 실패 시 로컬 ===== */
+const CHAT_ENDPOINT = "https://tfmyjwi617.execute-api.ap-northeast-1.amazonaws.com/default/chat";
+
+async function callLambda(messages, timeoutMs=15000){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), timeoutMs);
+  try{
+    const r = await fetch(CHAT_ENDPOINT, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Accept":"application/json" },
+      body: JSON.stringify({ messages }),
+      signal: ctrl.signal
+    });
+    clearTimeout(t);
+    if(!r.ok) return "";
+    const j = await r.json().catch(()=>null);
+    return (j && (j.reply||j.text||j.output||j.message)) || "";
+  }catch{
+    clearTimeout(t);
+    return "";
+  }
+}
+
 const CHAT_LIST_KEY="th.chat.threads";
 const CHAT_THREAD_KEY=(id)=>`th.chat.thread.${id}`;
 const chatDock=document.getElementById("chatDock");
@@ -827,10 +1036,8 @@ const chatBody=document.getElementById("chatBody");
 const chatInput=document.getElementById("chatInput");
 const chatSend=document.getElementById("t_send");
 const chatThreadsEl=document.getElementById("chatThreads");
+const chatStyleSel=document.getElementById("chatStyle");
 let curThreadId=null;
-
-/* ▶︎ 실제 API 게이트웨이 엔드포인트 */
-const CHAT_ENDPOINT = "https://xs16vqqjmjf.execute-api.ap-northeast-1.amazonaws.com/chat";
 
 document.getElementById("chatBtn").onclick=()=>{ chatDock.style.display="flex"; renderThreadList(); if(!curThreadId) newThread(); };
 document.getElementById("chatClose").onclick=()=> chatDock.style.display="none";
@@ -838,6 +1045,7 @@ document.getElementById("btnNewThread").onclick=()=> newThread();
 
 function loadThreadList(){ try{ return JSON.parse(localStorage.getItem(CHAT_LIST_KEY)||"[]"); }catch{return[]}}
 function saveThreadList(list){ localStorage.setItem(CHAT_LIST_KEY, JSON.stringify(list)); }
+function getThreadData(id){ return JSON.parse(localStorage.getItem(CHAT_THREAD_KEY(id))||'{"messages":[]}'); }
 function newThread(){
   const id="c_"+Date.now();
   const item={id, title:"새 채팅", createdAt:Date.now(), updatedAt:Date.now()};
@@ -849,14 +1057,14 @@ function openThread(id){
   curThreadId=id;
   renderThreadList();
   chatBody.innerHTML="";
-  const data=JSON.parse(localStorage.getItem(CHAT_THREAD_KEY(id))||'{"messages":[]}');
+  const data=getThreadData(id);
   for(const m of (data.messages||[])){ addBubble(m.role==="user"?"me":"ai", m.content); }
   scrollBottom();
 }
 function saveMessage(role, content){
   if(!curThreadId) newThread();
   const key=CHAT_THREAD_KEY(curThreadId);
-  const data=JSON.parse(localStorage.getItem(key)||'{"messages":[]}');
+  const data=getThreadData(curThreadId);
   data.messages.push({role, content});
   localStorage.setItem(key, JSON.stringify(data));
   const list=loadThreadList();
@@ -876,7 +1084,7 @@ function renderThreadList(){
       <button class="iconbtn" data-open="${it.id}" title="열기">↩</button>
       <button class="iconbtn" data-del="${it.id}" title="삭제">✖</button>
     </div>
-  `).join("") || `<div class="notice">저장된 채팅이 없습니다.</div>`;
+  `).join("") || `<div class="notice">저장된 채팅이 없습니다。</div>`;
   chatThreadsEl.onclick=(e)=>{
     const o=e.target.closest("[data-open]"); const d=e.target.closest("[data-del]");
     if(o){ openThread(o.dataset.open); }
@@ -907,7 +1115,30 @@ function addBubble(who,text,cls=""){
   scrollBottom();
   return d;
 }
-function setSending(isSending){ chatSend.disabled = isSending; chatInput.disabled = isSending; chatSend.textContent = isSending ? "전송…" : "전송"; }
+function setSending(isSending){ chatSend.disabled = isSending; chatInput.disabled = isSending; chatSend.textContent = isSending ? T('send')+'…' : T('send'); }
+
+/* 로컬 응답기 */
+function respondLocal(userText, style="auto"){
+  const lang = detectLang(userText);
+  const greet = {
+    ko: ["안녕하세요! 도움이 필요하신가요?","좋아요, 간단히 정리해 드릴게요.","요청하신 내용을 바탕으로 답해 볼게요."],
+    en: ["Hi! How can I help?","Sure, let me summarize.","Got it. Here's a quick answer."],
+    ja: ["こんにちは。何をお手伝いしましょうか。","了解しました。簡潔にまとめます。","リクエストに基づいて回答します。"]
+  }[lang]||["안녕하세요! 도움이 필요하신가요?","좋아요, 간단히 정리해 드릴게요.","요청하신 내용을 바탕으로 답해 볼게요."];
+
+  if(style==="fast")  return `${greet[1]} ${userText}`;
+  if(style==="think"){
+    const tips = {
+      ko: `핵심 요점\n• 의도 파악: ${userText}\n• 바로 쓸 수 있는 한 문장: ${userText} — 핵심만 요약\n• 다음 행동: 추가로 궁금한 점을 알려 주세요.`,
+      en: `Key points\n• Intent: ${userText}\n• One-liner: concise summary of the above\n• Next step: tell me what you want next.`,
+      ja: `要点\n• 意図: ${userText}\n• 一言まとめ: 上記の簡潔な要約\n• 次の一手: 次に知りたいことを教えてください。`
+    }[lang];
+    return `${greet[2]}\n\n${tips}`;
+  }
+  if (userText.length <= 12) return respondLocal(userText, "fast");
+  if (/[?？]$/.test(userText)) return respondLocal(userText, "think");
+  return `${greet[0]} ${userText}`;
+}
 
 chatInput.addEventListener("keydown",(e)=>{
   if(e.key==="Enter" && !e.shiftKey){
@@ -916,52 +1147,6 @@ chatInput.addEventListener("keydown",(e)=>{
   }
 });
 
-/* ▷ 간단 명령 파서 (로컬 대체용) */
-function localFallbackAnswer(userText){
-  const text=getPlain().trim();
-  if(/요약/.test(userText)){
-    const sents=(text.replace(/\s+/g,' ').match(/[^.!?]+[.!?]?/g)||[]).slice(0,5);
-    const brief=sents.map(s=>s.trim()).join(' ');
-    return brief ? `요약: ${brief}` : "요약할 본문이 없습니다.";
-  }
-  if(/장단점|pros|cons/.test(userText)){
-    return `장점: • 명확성 • 속도 • 단순함\n단점: • 맥락손실 • 과도한 단순화 • 근거부족`;
-  }
-  return "로컬 대체 응답: "+userText;
-}
-
-/* ▷ Lambda 호출 */
-async function callLambda(messages){
-  const ctrl = new AbortController();
-  const t = setTimeout(()=>ctrl.abort(), 15000); // 15s 타임아웃
-  try{
-    const r = await fetch(CHAT_ENDPOINT, {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Accept":"application/json"
-      },
-      body: JSON.stringify({ messages }),
-      signal: ctrl.signal
-    });
-    clearTimeout(t);
-    if(!r.ok) throw new Error("HTTP "+r.status);
-    const j = await r.json().catch(()=>null);
-    return (j && (j.reply||j.text||j.output)) || "";
-  }catch(e){
-    clearTimeout(t);
-    console.warn("Lambda 호출 실패:", e);
-    return ""; // 실패 시 빈 문자열 → 로컬 대체
-  }
-}
-
-/* ▷ 메시지 빌드 */
-function buildMessages(userText){
-  const sys="You are a helpful assistant. Reply in Korean by default. Keep answers concise.";
-  return [{role:"system",content:sys},{role:"user",content:userText}];
-}
-
-/* 폼 전송 */
 document.getElementById("chatForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const v=(chatInput.value||"").trim();
@@ -971,18 +1156,32 @@ document.getElementById("chatForm").addEventListener("submit", async (e)=>{
   addBubble("me", v);
   saveMessage("user", v);
 
-  const aiBubble = addBubble("ai","...");
+  const aiBubble = addBubble("ai","…");
   setSending(true);
 
-  // 1) 람다 시도
-  let text = await callLambda(buildMessages(v));
-
-  // 2) 실패 시 로컬 대체
-  if(!text){
-    text = localFallbackAnswer(v);
+  const style = chatStyleSel.value; // auto | fast | think
+  if(style==="think"){
+    aiBubble.textContent = "";
+    const chunks = ["생각중","생각중.","생각중..","생각중..."];
+    for (let i=0;i<4;i++){ aiBubble.textContent = chunks[i]; await new Promise(r=>setTimeout(r,300)); }
   }
 
-  aiBubble.textContent = text;
+  let text = "";
+  if (style === "auto") {
+    const history = (getThreadData(curThreadId).messages||[]).slice(-10);
+    const sysBase = "You are ThinkHelper's assistant. Be concise and helpful.";
+    const lang = detectLang(v);
+    const sysLang =
+      lang==="ko" ? "항상 한국어로 간결히 답하세요." :
+      lang==="ja" ? "常に日本語で簡潔に答えてください。" :
+      "Answer concisely in English.";
+    const msgs = [{role:"system",content:`${sysBase} ${sysLang}`}, ...history, {role:"user",content:v}];
+    text = await callLambda(msgs, 15000);
+  }
+
+  if(!text) text = respondLocal(v, style);
+
+  aiBubble.textContent = text || "(빈 응답)";
   saveMessage("assistant", text);
   setSending(false);
   renderThreadList();
@@ -1018,7 +1217,12 @@ function openConsentIfNeeded(){
 /* ===== 부트스트랩 ===== */
 (function boot(){
   const cur=store.current(); if(cur && store.get(cur)) openDoc(cur); else newDoc(); renderList();
+
+  // 페이지 로드시 채팅창 보이기 + 입력창 포커스
+  chatDock.style.display = "flex";
+  setTimeout(()=> chatInput?.focus(), 0);
 })();
 </script>
+
 </body>
 </html>
