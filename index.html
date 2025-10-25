@@ -1,115 +1,198 @@
 <!DOCTYPE html>
 <html lang="ko" data-theme="light">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>ThinkHelper — Editor</title>
-  <link rel="icon" href="data:,"/>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>ThinkHelper — Editor</title>
+<link rel="icon" href="data:,"/>
 
-  <!-- Google Tag Manager -->
-  <script>
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-NXBQK43Z');
-  </script>
-  <!-- End Google Tag Manager -->
+<!-- CDN: CKEditor / html2pdf / QRCode -->
+<script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 
-  <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script>
-  <style>
-    :root{--bg:#f6f8fb;--fg:#0b1020;--muted:#6a7691;--panel:#fff;--card:#f2f5ff;--border:#d6deee;--hover:#e9effe;--accent:#2563eb}
-    :root[data-theme="dark"]{--bg:#0b1020;--fg:#f1f5ff;--muted:#a8b4cf;--panel:#0f172a;--card:#101a30;--border:#273453;--hover:#16213b;--accent:#60a5fa}
-    *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;display:flex;flex-direction:column}
-    .topbar{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1000}
-    .brand{display:flex;align-items:center;gap:8px;font-weight:900}.logo{width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,#60a5fa,#34d399)}
-    .btn{border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:8px;padding:.45rem .7rem;font-weight:900;cursor:pointer}
-    .btn:hover{background:var(--hover)} .iconbtn{border:1px solid var(--border);background:transparent;color:var(--fg);border-radius:6px;padding:.25rem .45rem;cursor:pointer}
-    .iconbtn:hover{background:var(--hover)} .selectlike{height:34px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--fg);padding:.25rem .5rem}
-    .menu{position:relative;z-index:1001}.dropdown{display:none;position:absolute;top:42px;left:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:320px;box-shadow:0 12px 24px rgba(0,0,0,.12)}
-    .dropdown .item{padding:.55rem .7rem;border-bottom:1px dashed var(--border);cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}
-    .dropdown .item:last-child{border-bottom:none}.dropdown .item:hover{background:var(--hover)} .dropdown a.item{text-decoration:none;color:inherit}
+<style>
+:root{--bg:#f6f8fb;--fg:#0b1020;--muted:#6a7691;--panel:#fff;--card:#f2f5ff;--border:#d6deee;--hover:#e9effe;--accent:#2563eb}
+:root[data-theme="dark"]{--bg:#0b1020;--fg:#f1f5ff;--muted:#a8b4cf;--panel:#0f172a;--card:#101a30;--border:#273453;--hover:#16213b;--accent:#60a5fa}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;display:flex;flex-direction:column;padding-bottom:70px}
 
-    main{flex:1;min-height:0;display:grid;grid-template-columns:260px 1fr 380px;gap:10px;padding:10px}
-    @media (max-width:1200px){main{grid-template-columns:0 1fr 360px}#left{display:none}}
-    @media (max-width:900px){main{grid-template-columns:0 1fr 0}#left,#right{display:none}}
+.topbar{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1000}
+.brand{display:flex;align-items:center;gap:8px;font-weight:900}
+.logo{width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,#60a5fa,#34d399)}
+.btn{border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:8px;padding:.45rem .7rem;font-weight:900;cursor:pointer}
+.btn:hover{background:var(--hover)} .btn[disabled]{opacity:.6;cursor:not-allowed}
+.iconbtn{border:1px solid var(--border);background:transparent;color:var(--fg);border-radius:6px;padding:.25rem .45rem;cursor:pointer}
+.iconbtn:hover{background:var(--hover)}
+.selectlike{height:34px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--fg);padding:.25rem .5rem}
+.menu{position:relative;z-index:1001}
+.menu>.btn{font-weight:900}
+.dropdown{display:none;position:absolute;top:42px;left:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:320px;box-shadow:0 12px 24px rgba(0,0,0,.12)}
+.dropdown .item{padding:.55rem .7rem;border-bottom:1px dashed var(--border);cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.dropdown .item:last-child{border-bottom:none}
+.dropdown .item:hover{background:var(--hover)}
+.dropdown a.item{text-decoration:none;color:inherit}
+.dropdown .item label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.9em}
+.dropdown .item input[type="checkbox"]{margin:0;transform:scale(.9)}
 
-    aside#left{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column;min-height:0;position:sticky;top:70px;height:calc(100vh - 90px)}
-    .listHead{display:flex;align-items:center;gap:8px}
-    #docList{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-top:10px}
-    .doc{display:flex;gap:8px;align-items:center;padding:8px;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:pointer}
-    .doc:hover{background:var(--hover)} .doc .title{flex:1;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.doc .time{font-size:.78rem;color:var(--muted)} .doc .act{display:none;gap:6px}.doc:hover .act{display:inline-flex}
+main{flex:1;min-height:0;display:grid;grid-template-columns:260px 1fr;gap:10px;padding:10px;position:relative;z-index:2}
+main[data-mode="research"]{grid-template-columns:260px 1fr 340px}
+@media (max-width:1200px){main{grid-template-columns:0 1fr;padding:6px} main[data-mode="research"]{grid-template-columns:0 1fr 340px} #left{display:none}}
+@media (max-width:900px){main{grid-template-columns:0 1fr} main[data-mode="research"]{grid-template-columns:0 1fr} #left{display:none} aside#right{display:none!important}}
 
-    section#center{display:flex;flex-direction:column;gap:10px;min-width:0}
-    #editorWrap{flex:1;border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:8px;position:relative}
-    #editor{min-height:62vh}
-    .ck-balloon-panel,.ck-powered-by-balloon{display:none!important}
-    .ck-editor__editable_inline{min-height:58vh!important;color:#222;background:#fff;padding:12px 12px;border-radius:8px;position:relative}
-    [data-theme="dark"] .ck-editor__editable_inline{color:#ffe7b3;background:#0b1327}
+aside#left{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column;min-height:0;position:sticky;top:70px;height:calc(100vh - 90px)}
+.listHead{display:flex;align-items:center;gap:8px}
+#docList{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.doc{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card)}
+.doc:hover{background:var(--hover)}
+.doc .title{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;padding:2px 4px}
+.doc .title[contenteditable="true"]{outline:1.5px solid var(--accent);background:#fff;border-radius:4px;padding:2px 4px}
+.doc .time{font-size:.78rem;color:var(--muted)}
+.doc .act{display:none}.doc:hover .act{display:inline-flex}
 
-    #ghostSuggest{position:absolute;right:14px;top:14px;font-size:.92rem;color:#9aa3b2;opacity:.7;pointer-events:none;max-width:40%;text-align:right}
+section#center{display:flex;flex-direction:column;gap:10px;min-width:0}
+#editorWrap{flex:1;border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:8px;position:relative}
+#editor{min-height:62vh}
+.ck-balloon-panel,.ck-powered-by-balloon{display:none!important}
+.ck-editor__editable_inline{min-height:58vh!important;color:#222;background:#fff;padding:12px 12px 140px;border-radius:8px;position:relative;z-index:1}
+[data-theme="dark"] .ck-editor__editable_inline{color:#ffe7b3;background:#0b1327}
+#ghostSuggest{position:absolute;right:14px;top:10px;font-size:.9rem;color:#9aa3b2;opacity:.7;pointer-events:none;max-width:45%;text-align:right}
 
-    #commandBar{display:flex;gap:10px;align-items:center;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
-    #cmdInput{flex:1;height:40px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);padding:.5rem .9rem;font-size:15px}
+#commandBar{display:flex;gap:10px;align-items:center;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
+#cmdInput{flex:1;height:40px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);padding:.5rem .9rem;font-size:15px}
+#cmdSuggestions{display:flex;gap:8px}
+#cmdSuggestions .chip{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:.3rem .7rem;cursor:pointer;font-weight:900;font-size:.9rem;white-space:nowrap}
+#cmdSuggestions .chip:hover{background:var(--hover)}
+@media (max-width:768px){#cmdSuggestions{display:none}}
 
-    aside#right{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column;min-height:0;position:sticky;top:70px;height:calc(100vh - 90px)}
-    .sidebar-nav{display:flex;gap:8px;border-bottom:1px solid var(--border);margin-bottom:10px}
-    .sidebar-nav .tab{padding:8px 14px;font-weight:900;cursor:pointer;border-bottom:3px solid transparent}
-    .sidebar-nav .tab:hover{background:var(--hover)}
-    .sidebar-nav .tab[data-active="1"]{color:var(--accent);border-bottom-color:var(--accent)}
-    .sidebar-content{flex:1;overflow:auto;display:none}.sidebar-content[data-active="1"]{display:block}
+#aiChip{position:absolute;display:none;gap:6px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:.28rem .55rem;box-shadow:0 8px 20px rgba(0,0,0,.15);z-index:80;font-weight:900}
+#aiChip small{opacity:.75}
 
-    #searchBox{display:flex;gap:6px;margin-bottom:8px}
-    #searchInput{flex:1;border:1px solid var(--border);border-radius:8px;background:var(--card);padding:.45rem .6rem}
+#suggPopup{position:absolute;display:none;z-index:80;background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 24px rgba(0,0,0,.18);min-width:300px;max-width:620px}
+#suggPopup header{padding:6px 10px;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+#suggPopup ul{list-style:none;margin:0;padding:6px;max-height:280px;overflow:auto}
+#suggPopup li{padding:8px 10px;border-radius:8px;display:grid;grid-template-columns:90px 1fr auto;gap:10px;cursor:pointer;align-items:center}
+#suggPopup li .kind{opacity:.75;font-size:.75rem}
+#suggPopup li .txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#suggPopup li .tag{border:1px solid var(--border);border-radius:6px;font-size:.72rem;padding:.05rem .35rem;opacity:.85}
+#suggPopup li[data-active="1"]{background:var(--hover);outline:1.5px solid #8ab4ff66}
 
-    #rightSearchResults .result{border:1px dashed var(--border);border-radius:10px;padding:8px;background:var(--card);margin:6px 0}
-    #rightFeed{display:flex;flex-direction:column;gap:12px}
-    .card{display:grid;grid-template-columns:120px 1fr;gap:10px;border:1px solid var(--border);border-radius:10px;background:var(--card);padding:8px;margin:8px 0;cursor:pointer}
-    .card:hover{background:var(--hover)} .card img{width:120px;height:80px;object-fit:cover;border-radius:8px}
-    .card .ttl{font-weight:900} .card .meta{font-size:.86rem;color:var(--muted);margin-top:2px}
+aside#right{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:none;flex-direction:column;min-height:0;position:sticky;top:70px;height:calc(100vh - 90px)}
+main[data-mode="research"] aside#right{display:flex}
+.sidebar-nav{display:flex;gap:0;background:var(--card);border-radius:8px;padding:4px;border:1px solid var(--border);margin-bottom:10px}
+.sidebar-nav .tab{flex:1;padding:8px 14px;font-weight:700;font-size:.9rem;cursor:pointer;border-radius:6px;text-align:center;color:var(--muted);transition:.2s}
+.sidebar-nav .tab:hover{background:var(--hover);color:var(--fg)}
+.sidebar-nav .tab[data-active="1"]{background:var(--panel);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.sidebar-nav .tab span{margin-left:4px}
+.sidebar-content{flex:1;overflow:auto;display:none}
+.sidebar-content[data-active="1"]{display:block}
 
-    /* Chat Dock */
-    #chatBtn{position:fixed;right:16px;bottom:18px;z-index:60}
-    #chatDock{position:fixed;right:16px;bottom:16px;width:min(95vw,1000px);height:85vh;display:none;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 36px rgba(0,0,0,.28);z-index:75}
-    #chatHead{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border);font-weight:900}
-    #chatWrap{flex:1;display:grid;grid-template-columns:220px 1fr;min-height:0}
-    #chatThreads{border-right:1px solid var(--border);padding:8px;overflow:auto}
-    .threadRow{display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;margin-bottom:8px;justify-content:space-between}
-    .threadRow:hover{background:var(--hover)} .threadRow[data-active="1"]{outline:2px solid #9bbcff}
-    #chatMain{display:flex;flex-direction:column;min-width:0}
-    #chatBody{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
-    .bubble{max-width:85%;padding:.7rem 1rem;border:1px solid var(--border);border-radius:14px;background:var(--card);white-space:pre-wrap;line-height:1.55}
-    .me{margin-left:auto;background:#143763;color:#fff;border-color:#143763}
-    .ai{margin-right:auto;border-color:#3b4b72;background:#15284f;color:#fff}
-    .sys{margin:0 auto;background:#eef2ff;border-style:dashed;color:#111}
-    #chatForm{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border)}
-    #chatInput{flex:1;border:1px solid var(--border);border-radius:10px;background:var(--card);color:#000;padding:.6rem .8rem;font-size:1.02rem}
+#rightSearchResults{display:flex;flex-direction:column;gap:12px}
+.search-summary{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;white-space:pre-wrap;font-size:.95rem;line-height:1.6}
+.search-sources h4{margin:12px 0 6px;font-size:.9rem;color:var(--muted)}
+.search-sources ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.search-sources li a{display:block;padding:8px;border-radius:8px;background:var(--card);border:1px solid var(--border);text-decoration:none;color:var(--fg);font-size:.85rem;transition:.2s}
+.search-sources li a:hover{background:var(--hover)}
+.search-sources li a strong{display:block;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-sources li a span{color:var(--muted);font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 
-    footer{padding:10px 12px;text-align:center;color:var(--muted)}
-  </style>
+#rightFeed{display:flex;flex-direction:column;gap:12px}
+.feed-item{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer}
+.feed-item:hover{background:var(--hover)}
+.feed-item img{width:100%;height:140px;object-fit:cover;display:block;background-color:var(--border)}
+.feed-item .feed-content{padding:10px}
+.feed-item .feed-source{font-size:.8rem;color:var(--muted);margin-bottom:4px}
+.feed-item .feed-title{font-weight:900}
+
+#chatBtn{position:fixed;right:16px;bottom:80px;z-index:60}
+#chatDock{position:fixed;right:16px;bottom:16px;width:min(95vw,1000px);height:88vh;display:none;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 36px rgba(0,0,0,.28);z-index:75}
+#chatHead{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border);font-weight:900}
+#chatHead .actions{position:relative;display:flex;align-items:center;gap:6px}
+#chatPlusMenu{position:absolute;display:none;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px;right:40px;top:40px;z-index:90;width:150px}
+#chatPlusMenu .item{padding:6px 8px;border-radius:6px;cursor:pointer;font-size:.9em}
+#chatPlusMenu .item:hover{background:var(--hover)}
+
+#chatWrap{flex:1;display:grid;grid-template-columns:220px 1fr;min-height:0}
+#chatThreads{border-right:1px solid var(--border);padding:8px;overflow:auto}
+.threadRow{display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;margin-bottom:8px;justify-content:space-between}
+.threadRow:hover{background:var(--hover)} .threadRow[data-active="1"]{outline:2px solid #9bbcff}
+#chatMain{display:flex;flex-direction:column;min-width:0}
+#chatBody{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
+.bubble{max-width:85%;padding:.8rem 1.2rem;border:1px solid var(--border);border-radius:14px;background:var(--card);word-break:break-word;font-size:1.05rem;line-height:1.6;white-space:pre-wrap}
+.bubble.ai{cursor:pointer}
+.me{margin-left:auto;background:#143763;color:#fff;border-color:#143763}
+.ai{margin-right:auto;border-color:#3b4b72;background:#15284f;color:#fff}
+[data-theme="dark"] .ai{background:#15203baa;border-color:#273453}
+.sys{margin:0 auto;background:#eef2ff;border-style:dashed;color:#111}
+#chatForm{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border)}
+#chatInput{flex:1;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);padding:.6rem .8rem;font-size:1.02rem;resize:vertical;min-height:80px}
+#quota{position:absolute;left:12px;bottom:12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.25rem .55rem;font-size:.85rem;color:#666}
+#filePick{display:none}
+
+footer{position:fixed;bottom:0;left:0;right:0;background:var(--panel);padding:8px 10px;border-top:1px solid var(--border);font-size:.92rem;text-align:center;user-select:none;pointer-events:none;z-index:10}
+footer a{pointer-events:auto}
+
+#gaze{position:fixed;pointer-events:none;width:14px;height:14px;border-radius:50%;background:rgba(37,99,235,.75);box-shadow:0 0 0 3px rgba(37,99,235,.2);mix-blend-mode:multiply;z-index:100;transform:translate(-50%,-50%);display:none}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:120;align-items:center;justify-content:center}
+.modal{background:#fff;color:#111;border-radius:12px;max-width:560px;width:92vw;padding:18px;border:1px solid var(--border);box-shadow:0 18px 36px rgba(0,0,0,.25)}
+[data-theme="dark"] .modal{background:#0f172a;color:#f1f5ff}
+.modal h3{margin:.2rem 0 .6rem}.modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.modal .btn-plain{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:.45rem .8rem;cursor:pointer}
+[data-theme="dark"] .modal .btn-plain{background:#1e293b;border-color:#334155;color:#f1f5ff}
+#subModal{display:none}
+#guideModal .content{max-height:60vh;overflow:auto;padding-right:10px}
+kbd{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:2px 5px;font-weight:900;font-family:monospace;display:inline-block}
+.spinner{border:4px solid rgba(0,0,0,.1);width:24px;height:24px;border-radius:50%;border-left-color:var(--accent);animation:spin 1s ease infinite;margin:20px auto}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+</style>
 </head>
 <body>
-  <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NXBQK43Z"
-  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-  <!-- End Google Tag Manager (noscript) -->
+  <div id="gaze"></div>
 
   <div class="topbar">
-    <button class="iconbtn" id="btnToggleLeft">☰</button>
-    <div class="brand"><div class="logo"></div><div>ThinkHelper</div></div>
+    <button class="iconbtn" id="btnToggleLeft" title="문서 패널 접기/펼치기">☰</button>
+    <div class="brand"><div class="logo"></div><div id="t_brand">ThinkHelper</div></div>
 
     <div class="menu" data-menu>
       <button class="btn">도구 ▾</button>
       <div class="dropdown">
-        <div class="item" id="iNew"><span>새 문서</span></div>
-        <div class="item" id="iSave"><span>문서 저장</span></div>
+        <div class="item" id="iNew"><span>새 문서</span><span>⌘/Ctrl+N</span></div>
+        <div class="item" id="iPrint"><span>🖨️ 프린터로 인쇄</span></div>
+        <div class="item" id="iImport"><span>📥 불러오기 (데모)</span></div>
+        <div class="item" id="iSavePDF"><span>💾 PDF로 저장</span></div>
+        <div class="item" id="iSaveWord"><span>💾 Word로 저장</span></div>
+        <div class="item" id="iSaveHWP"><span>💾 HWP로 저장 (데모)</span></div>
+        <div class="item" id="iTranslate"><span>🌐 번역하기 (데모)</span></div>
+        <div class="item" id="iCollab"><span>👥 협업 초대하기</span></div>
+        <div class="item" id="iMakePPT"><span>✨ PPT 슬라이드 생성</span></div>
+        <div class="item" id="iClipboard"><span>공유하기 (QR/링크)</span><span>↗</span></div>
       </div>
     </div>
 
     <div class="menu" data-menu>
       <button class="btn">설정 ▾</button>
-      <div class="dropdown">
+      <div class="dropdown" id="dropSettings">
+        <div class="item" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <label><input type="checkbox" id="optSugg"> 추천어 표시 (VSCode 스타일)</label>
+          <label><input type="checkbox" id="optPersonal"> ✨ 맞춤형 AI 제안 (데모)</label>
+          <label><input type="checkbox" id="optGaze"> 시선 커서</label>
+        </div>
+        <div class="item">
+          <span>모드</span>
+          <select id="modeSel" class="selectlike" style="width:180px">
+            <option value="normal" selected>Normal (일반)</option>
+            <option value="research">Research (리서치)</option>
+          </select>
+        </div>
+        <div class="item">
+          <span>언어</span>
+          <select id="langSel" class="selectlike" style="width:180px">
+            <option value="ko" selected>한국어</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+          </select>
+        </div>
         <div class="item" id="toggleTheme">🌓 <span>테마 전환</span></div>
       </div>
     </div>
@@ -117,67 +200,79 @@
     <div class="menu" data-menu>
       <button class="btn">도움말 ▾</button>
       <div class="dropdown">
-        <a class="item" href="mailto:ho8949607@gmail.com"><span>피드백 보내기</span><span>↗</span></a>
-        <a class="item" href="https://docs.google.com/document/d/1kmFzmp3ddJOKOp1TPsvsNzAuBKt6M0Vm0N_G5BIOZEE/edit?usp=sharing" target="_blank"><span>개인정보</span><span>↗</span></a>
-        <a class="item" href="https://docs.google.com/document/d/1TLZ2m52s1mAd8BPzXDBQuXF6QZ_hLDZOyX6Y8TKALnE/edit?usp=sharing" target="_blank"><span>서비스 약관</span><span>↗</span></a>
+        <div class="item" id="iGuide"><span>서비스 소개 및 가이드</span></div>
+        <div class="item" id="iShortcuts"><span>단축키 목록</span></div>
+        <a class="item" href="https://docs.google.com/document/d/1kmFzmp3ddJOKOp1TPsvsNzAuBKt6M0Vm0N_G5BIOZEE/edit?usp=sharing" target="_blank" rel="noopener noreferrer"><span>개인정보처리방침</span><span>↗</span></a>
+        <a class="item" href="https://docs.google.com/document/d/1TLZ2m52s1mAd8BPzXDBQuXF6QZ_hLDZOyX6Y8TKALnE/edit?usp=sharing" target="_blank" rel="noopener noreferrer"><span>서비스 이용약관</span><span>↗</span></a>
+        <a class="item" href="mailto:ho849607@gmail.com"><span>피드백 보내기</span><span>↗</span></a>
       </div>
     </div>
 
-    <button class="btn" id="chatBtn" style="margin-left:auto">💬</button>
+    <button class="btn" id="chatBtn" style="margin-left:auto" title="채팅 열기">💬</button>
   </div>
 
-  <main>
-    <aside id="left">
-      <div class="listHead"><b>문서</b><button class="btn" id="addDoc">＋</button></div>
+  <main id="mainLayout">
+    <aside id="left" aria-label="문서목록" data-collapsed="0">
+      <div class="listHead"><b>문서</b><button class="btn" id="addDoc" title="새 문서 추가">＋</button></div>
       <div id="docList"></div>
     </aside>
 
     <section id="center">
       <div id="editorWrap">
-        <div id="editor"></div>
-        <!-- 부드러운 회색 문장 추천(고스트) -->
+        <div id="editor" aria-label="에디터"></div>
         <div id="ghostSuggest" aria-hidden="true"></div>
+        <button id="aiChip">✨ AI <small>문맥 도움</small></button>
+        <div id="suggPopup" aria-live="polite">
+          <header><span>제안 (↑/↓, Enter 선택)</span><div><button class="min" id="suggClose">✖</button></div></header>
+          <ul id="suggList"></ul>
+        </div>
       </div>
-
       <div id="commandBar">
-        <input id="cmdInput" placeholder="AI에게 요청하거나 검색 (/search 또는 ? )"/>
+        <div id="cmdSuggestions">
+          <button class="chip" data-cmd="create_doc">✨ 문서 생성</button>
+          <button class="chip" data-cmd="edit_doc">✍️ 작성 도움 받기</button>
+        </div>
+        <input id="cmdInput" placeholder="AI에게 요청하거나 검색 ( /search 또는 ? )"/>
         <button class="btn" id="cmdSend">전송</button>
       </div>
     </section>
 
-    <aside id="right">
+    <aside id="right" aria-label="리서치 패널">
       <nav class="sidebar-nav">
-        <button class="tab" data-tab="search" data-active="1">검색</button>
-        <button class="tab" data-tab="feed" data-active="0">피드</button>
+        <button class="tab" data-tab="search" data-active="0">🔍<span>검색</span></button>
+        <button class="tab" data-tab="feed" data-active="1">📰<span>피드</span></button>
       </nav>
-
-      <div id="rightSearchResults" class="sidebar-content" data-active="1">
-        <div id="searchBox">
-          <input id="searchInput" placeholder="예) cnn.com / site:naver.com 인공지능 / 인공지능 최신 동향"/>
-          <button class="btn" id="searchBtn">검색</button>
-        </div>
-        <div class="result">검색어나 URL을 입력하세요.</div>
+      <div id="rightSearchResults" class="sidebar-content" data-active="0">
+        <div class="search-summary" style="color:var(--muted);font-style:italic;">하단 커맨드 바에서 '/search' 또는 '?'로 검색하세요.</div>
       </div>
-
-      <div id="rightFeed" class="sidebar-content" data-active="0">
-        <div class="result">피드를 불러오는 중…</div>
+      <div id="rightFeed" class="sidebar-content" data-active="1">
+        <div class="spinner"></div>
       </div>
     </aside>
   </main>
 
-  <footer>© ThinkHelper — 인공지능 결과는 검토가 필요합니다.</footer>
+  <footer>
+    <div>© ThinkHelper — ⚠️ 인공지능 결과는 검토가 필요합니다.</div>
+    <div id="loc">📍 위치 확인 중…</div>
+  </footer>
 
-  <!-- Chat Dock -->
-  <div id="chatDock" role="dialog" aria-hidden="true">
+  <div id="chatDock" role="dialog" aria-hidden="true" style="display:none;">
     <div id="chatHead">
-      <span>AI 채팅</span>
-      <div class="actions" style="display:flex;gap:6px;align-items:center">
-        <button class="iconbtn" id="btnNewThread">＋</button>
-        <button class="iconbtn" id="chatClose">✖</button>
+      <span>AI 채팅 <small id="chatModelIndicator">(헬퍼 1.0)</small></span>
+      <div class="actions">
+        <input type="file" id="filePick" accept=".pdf,.txt,image/*"/>
+        <button class="iconbtn" id="btnChatPlus" title="더보기">➕</button>
+        <div id="chatPlusMenu">
+          <div class="item" data-action="github">↗️ GitHub (데모)</div>
+          <div class="item" data-action="word">📄 Word (데모)</div>
+          <div class="item" data-action="email">✉️ 메일 (데모)</div>
+        </div>
+        <button class="iconbtn" id="btnAttach" title="파일 첨부 (이미지/텍스트)">📎</button>
+        <button class="iconbtn" id="chatClose" aria-label="닫기">✖</button>
       </div>
     </div>
     <div id="chatWrap">
-      <aside id="chatThreads"></aside>
+      <aside id="chatThreads" aria-label="채팅 스레드"></aside>
       <section id="chatMain">
         <div style="padding:6px 10px;border-bottom:1px dashed var(--border);display:flex;gap:8px;align-items:center">
           <input id="threadTitleInput" placeholder="스레드 제목" style="flex:1;border:1px solid var(--border);border-radius:8px;padding:.35rem .55rem;background:var(--card)"/>
@@ -186,84 +281,61 @@
         </div>
         <div id="chatBody"></div>
         <form id="chatForm">
-          <textarea id="chatInput" rows="2" placeholder="메시지 입력 (Enter=전송)"></textarea>
+          <textarea id="chatInput" rows="3" placeholder="메시지 입력 (Enter=전송, Shift+Enter=줄바꿈)"></textarea>
           <button class="btn" type="submit">전송</button>
         </form>
       </section>
     </div>
+    <div id="quota">헬퍼 1.0 사용 중 (서버 연동 시 AI 사용 가능)</div>
+  </div>
+
+  <div id="shareModal" class="modal-backdrop">
+    <div class="modal">
+      <h3>공유하기</h3>
+      <p>링크/텍스트가 클립보드에 복사되었습니다. QR로도 전송할 수 있어요.</p>
+      <div id="qr" style="margin:10px auto;width:200px;height:200px"></div>
+      <div class="actions"><button class="btn-plain" id="shareClose">닫기</button></div>
+    </div>
+  </div>
+
+  <div id="guideModal" class="modal-backdrop">
+    <div class="modal">
+      <h3>ThinkHelper 사용 가이드</h3>
+      <div class="content" style="line-height:1.6">
+        <p><b>ThinkHelper</b>는 문서 작성과 리서치를 한 화면에서 끝내는 AI 에디터입니다.</p>
+        <h4>핵심 기능</h4>
+        <ul>
+          <li><b>AI 엔진:</b> 기본 <b>헬퍼 모델(Helper 1.0)</b>이 오프라인 상태에서도 응답합니다.</li>
+          <li><b>검색:</b> 하단 바에 <kbd>/search 키워드</kbd>를 입력하세요. (데모)</li>
+          <li><b>AI 글쓰기/채팅:</b> 하단 바에 요청을 입력하거나 우측 하단 💬을 클릭하세요.</li>
+          <li><b>파일 저장:</b> PDF/Word 저장 지원.</li>
+          <li><b>PPT 생성:</b> Google Slides 새 탭 열기.</li>
+        </ul>
+      </div>
+      <div class="actions"><button class="btn-plain" id="guideClose">닫기</button></div>
+    </div>
   </div>
 
 <script>
-/* =================== 기본 유틸 =================== */
+/* ========= Helpers ========= */
 const $$ = (id)=>document.getElementById(id);
-const esc = (s)=> (s??"").toString().replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m]));
-const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
-
-/* =================== 메뉴 동작 =================== */
-(function(){
-  const menus=[...document.querySelectorAll('[data-menu]')];
-  const closeAll=()=>document.querySelectorAll('.dropdown').forEach(d=>d.style.display='none');
-  menus.forEach(m=>{
-    const btn=m.querySelector('.btn'); const drop=m.querySelector('.dropdown');
-    btn.addEventListener('click',(e)=>{e.stopPropagation();const open=drop.style.display==='block';closeAll();drop.style.display=open?'none':'block';});
-    drop.addEventListener('click',e=>e.stopPropagation());
-  });
-  document.addEventListener('click',closeAll);
-  $$("toggleTheme").onclick=()=>{const r=document.documentElement; r.dataset.theme=r.dataset.theme==="dark"?"light":"dark";};
-  $$("btnToggleLeft").onclick=()=>{ const left=$$("left"); left.style.display = (left.style.display==='none'?'flex':'none'); };
-})();
-</script>
-
-<!-- ===== Lambda Bridge (호환) ===== -->
-<script>
-window.lambdaBridge = window.lambdaBridge || {
-  endpoint: "/lambda",               // 필요 시 절대경로/도메인으로 교체
-  async call(action, payload) {
-    try {
-      const r = await fetch(this.endpoint, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ action, payload })
-      });
-      if (!r.ok) throw new Error(`lambda ${r.status}`);
-      return await r.json();         // { ok: true, data: ... } 형태 추천
-    } catch (e) {
-      return null;                   // 람다 미연동/오류 시 null -> 로컬 폴백
-    }
+document.getElementById("chatInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById("chatForm").requestSubmit();
   }
-};
-</script>
+});
+const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+const escapeHtml = (s)=> (s==null?"":String(s)).replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m]));
+const SKEY_SETTINGS = "th.settings";
 
-<!-- ===== Proxy fetch & HTML helpers ===== -->
-<script>
-const PROXY = (url)=>`https://r.jina.ai/http://${url.replace(/^https?:\/\//,'')}`;
-const fetchText = async (url)=> (await fetch(PROXY(url))).text();
+/* ========= Config (로컬 데모) ========= */
+const SERVER_API_ENDPOINT = null; // 실제 서버 붙일 땐 URL 입력
+const FEED_API_ENDPOINT = null;   // 실제 피드 서버 붙일 땐 URL 입력
 
-function stripTags(s){ return (s||"").replace(/<script[\s\S]*?<\/script>/gi,'')
-  .replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<!\[CDATA\[|\]\]>/g,'')
-  .replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); }
-
-function pickOG(html){
-  const get = (n)=> (html.match(new RegExp(`<meta[^>]+property=["']og:${n}["'][^>]*content=["']([^"']+)["'][^>]*>`,`i`))||
-                     html.match(new RegExp(`<meta[^>]+name=["']${n}["'][^>]*content=["']([^"']+)["'][^>]*>`,`i`)))?.[1]||"";
-  return {
-    title: get("title") || (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]||""),
-    desc:  get("description") || "",
-    image: get("image") || "",
-    site:  get("site_name") || ""
-  };
-}
-
-function firstParagraphs(html, n=3){
-  const ps=[...html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)].map(m=>stripTags(m[1])).filter(t=>t.length>30);
-  return ps.slice(0,n).join("\n");
-}
-</script>
-
-<script>
-/* =================== 에디터/저장 =================== */
-let editor;
-const store={listKey:"th.docs.list",docKey:id=>`th.doc.${id}`,curKey:"th.cur",
+/* ========= Store ========= */
+const store={
+  listKey:"th.docs.list",docKey:id=>`th.doc.${id}`,curKey:"th.cur",
   list(){try{return JSON.parse(localStorage.getItem(this.listKey)||"[]")}catch{return[]}},
   saveList(a){localStorage.setItem(this.listKey,JSON.stringify(a||[]))},
   get(id){try{return JSON.parse(localStorage.getItem(this.docKey(id))||"null")}catch{return null}},
@@ -273,325 +345,434 @@ const store={listKey:"th.docs.list",docKey:id=>`th.doc.${id}`,curKey:"th.cur",
   setCurrent(id){localStorage.setItem(this.curKey,id||"")}
 };
 let curId="";
+let settings={};
 
-async function initEditor(){
-  editor=await ClassicEditor.create($$("editor"),{placeholder:"여기서 작성하세요…"});
-  editor.model.document.on('change:data', ()=>{ saveDocDebounced(); renderGhost(); });
+/* ========= Settings ========= */
+function loadSettings(){
+  settings = JSON.parse(localStorage.getItem(SKEY_SETTINGS) || '{}');
+  settings.suggest ??= true;
+  settings.personal ??= false;
+  settings.gaze ??= false;
+  settings.lang ??= 'ko';
+  settings.mode ??= 'normal';
 }
-let saveTimer=null;
-function saveDocDebounced(){ clearTimeout(saveTimer); saveTimer=setTimeout(saveDoc,500); }
+const saveSettings=()=>localStorage.setItem(SKEY_SETTINGS, JSON.stringify(settings));
 
-function newDoc(){const id="d_"+Date.now(); curId=id; store.setCurrent(id);
-  const row={id,createdAt:Date.now(),updatedAt:Date.now(),title:"무제"}; store.saveList([row,...store.list().filter(x=>x.id!==id)]);
-  editor.setData(""); store.set(id,{...row,html:""}); renderList();}
+/* ========= Menus / Theme / Panels ========= */
+(function(){
+  loadSettings();
 
-function openDoc(id){const d=store.get(id); if(!d) return; curId=id; store.setCurrent(id); editor.setData(d.html||"");}
-function getPlain(){ return editor.getData().replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim(); }
+  // dropdowns
+  const menus=[...document.querySelectorAll('[data-menu]')];
+  const closeAll=()=>document.querySelectorAll('.dropdown').forEach(d=>d.style.display='none');
+  menus.forEach(m=>{
+    const btn=m.querySelector('.btn'); const drop=m.querySelector('.dropdown');
+    if(!btn||!drop) return;
+    btn.addEventListener('click',(e)=>{e.stopPropagation();const open=drop.style.display==='block';closeAll();drop.style.display=open?'none':'block';});
+    drop.addEventListener('click',e=>e.stopPropagation());
+  });
+  document.addEventListener('click',closeAll);
 
+  // Theme
+  $$("toggleTheme")?.addEventListener('click', ()=>{
+    const root=document.documentElement;
+    root.dataset.theme = root.dataset.theme==="dark"?"light":"dark";
+  });
+
+  // Left panel toggle
+  $$("btnToggleLeft")?.addEventListener('click', ()=>{
+    const left=$$("left");
+    if(!left) return;
+    left.style.display = (left.style.display==='none'?'flex':'none');
+  });
+
+  // Guide modal
+  $$("iGuide")?.addEventListener('click', ()=>($$("guideModal").style.display="flex"));
+  $$("guideClose")?.addEventListener('click', ()=>($$("guideModal").style.display="none"));
+
+  // Settings controls
+  $$("optSugg").checked = settings.suggest;
+  $$("optSugg").onchange = (e)=>{settings.suggest=e.target.checked; saveSettings(); updateGhostSuggest();};
+  $$("optPersonal").checked = settings.personal;
+  $$("optPersonal").onchange = (e)=>{settings.personal=e.target.checked; saveSettings();};
+  $$("optGaze").checked = settings.gaze;
+  $$("optGaze").onchange = (e)=>{settings.gaze=e.target.checked; saveSettings(); setupGazeCursor();};
+  $$("langSel").value = settings.lang;
+  $$("langSel").onchange = (e)=>{settings.lang=e.target.value; saveSettings(); updateGhostSuggest();};
+  $$("modeSel").value = settings.mode;
+  $$("modeSel").onchange = (e)=>{settings.mode=e.target.value; saveSettings(); $$('mainLayout').dataset.mode=settings.mode; if(settings.mode==='research'){switchSidebarTab('feed'); loadFeed();}};
+  $$('mainLayout').dataset.mode=settings.mode;
+})();
+
+/* ========= Editor ========= */
+let editor=null, autosaveTimer=null;
+async function initEditor(restore){
+  editor = await ClassicEditor.create($$("editor"), { placeholder:"여기서 작성하세요…" });
+  if(restore!=null) editor.setData(restore);
+  editor.model.document.on('change:data', ()=>{
+    clearTimeout(autosaveTimer);
+    autosaveTimer=setTimeout(saveDoc, 500);
+    triggerSuggest(); updateGhostSuggest();
+  });
+  editor.model.document.on('change:selection', updateGhostSuggest);
+}
+function newDoc(){
+  const id="d_"+Date.now(); curId=id; store.setCurrent(id);
+  const row={id,createdAt:Date.now(),updatedAt:Date.now(),title:"무제",html:""};
+  store.set(id,row); store.saveList([row,...store.list().filter(x=>x.id!==id)]);
+  editor?.setData(""); renderList(); updateGhostSuggest();
+}
+function openDoc(id){
+  const d=store.get(id); if(!d||!editor) return;
+  curId=id; store.setCurrent(id); editor.setData(d.html||""); renderList(); updateGhostSuggest();
+}
 async function saveDoc(){
-  if(!curId) newDoc();
-  const d=store.get(curId)||{id:curId};
+  if(!editor || !curId) return;
+  const d=store.get(curId); if(!d) return;
   d.html=editor.getData(); d.updatedAt=Date.now();
-  const plain=getPlain();
-  d.title=(d.title&&d.title!=="무제")? d.title : (plain.split(" ").slice(0,8).join(" ")||"무제");
+  const plain=d.html.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+  if(!d.title||d.title==="무제"){ d.title=(plain.split(" ").slice(0,8).join(" ")||"무제"); }
   store.set(curId,d);
-  const list=store.list().filter(x=>x.id!==curId);
-  list.unshift({id:curId,createdAt:d.createdAt||Date.now(),updatedAt:d.updatedAt,title:d.title}); store.saveList(list);
-  renderList();
+  const list=store.list().map(x => x.id===curId ? {id:curId,createdAt:d.createdAt||Date.now(),updatedAt:d.updatedAt,title:d.title} : x);
+  store.saveList(list); renderList();
 }
-
 function renderList(){
   const list=store.list().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
-  $$("docList").innerHTML=list.map(d=>{
-    const when=new Date(d.updatedAt||d.createdAt||Date.now()).toLocaleString();
-    const title=(store.get(d.id)?.title)||"무제";
-    return `<div class="doc" data-open="${d.id}">
-      <div class="title">${esc(title)}</div>
-      <div class="time">${esc(when)}</div>
-      <div class="act"><button class="iconbtn" data-rename="${d.id}">✏️</button><button class="iconbtn" data-del="${d.id}">🗑️</button></div>
+  const el=$$("docList");
+  el.innerHTML=list.map(it=>{
+    const d=store.get(it.id)||it;
+    const when=new Date(d.updatedAt||d.createdAt||Date.now()).toLocaleString('ko-KR',{dateStyle:'medium',timeStyle:'short'});
+    return `<div class="doc" data-id="${it.id}">
+      <div class="title" data-rename-id="${it.id}" title="제목 클릭하여 수정">${escapeHtml(d.title||"무제")}</div>
+      <div class="time">${escapeHtml(when)}</div>
+      <div class="act"><button class="iconbtn" data-del-id="${it.id}" title="삭제">🗑️</button></div>
     </div>`;
-  }).join("")||`<div class="doc"><div class="title">저장된 문서가 없습니다.</div></div>`;
-  $$("docList").onclick=(e)=>{
-    const r=e.target.closest("[data-rename]"), d=e.target.closest("[data-del]"), o=e.target.closest("[data-open]");
-    if(r){const id=r.dataset.rename; const doc=store.get(id)||{}; const t=prompt("제목",doc?.title||"무제")||"무제"; doc.title=t; doc.updatedAt=Date.now(); store.set(id,doc); renderList(); return;}
-    if(d){const id=d.dataset.del; if(confirm("삭제할까요?")){store.remove(id); store.saveList(store.list().filter(x=>x.id!==id)); if(curId===id){curId=""; editor.setData("");} renderList();} return;}
-    if(o){openDoc(o.dataset.open);}
+  }).join("") || `<div class="doc"><div class="title">저장된 문서가 없습니다.</div></div>`;
+
+  el.onclick=(e)=>{
+    const titleEl=e.target.closest('.title[data-rename-id]');
+    const delBtn=e.target.closest('button[data-del-id]');
+    const docRow=e.target.closest('.doc[data-id]');
+    if(delBtn){
+      const id=delBtn.dataset.delId;
+      const doc=store.get(id);
+      if(confirm(`'${doc?.title||'무제'}' 문서를 삭제할까요?`)){
+        store.remove(id);
+        store.saveList(store.list().filter(x=>x.id!==id));
+        if(curId===id){curId=""; editor?.setData("");}
+        renderList();
+      }
+    }else if(titleEl){
+      enableInlineRename(titleEl);
+    }else if(docRow){
+      openDoc(docRow.dataset.id);
+    }
   };
 }
-$$("addDoc").onclick=newDoc; $$("iNew").onclick=newDoc; $$("iSave").onclick=saveDoc;
+function enableInlineRename(el){
+  const id=el.dataset.renameId;
+  if(!id || el.contentEditable==="true") return;
+  const old=el.textContent;
+  el.contentEditable="true"; el.focus(); document.execCommand('selectAll', false, null);
 
-/* 문장 추천(고스트 텍스트) - 연한 회색 */
-function renderGhost(){
-  try{
-    const txt = getPlain();
-    if(!txt){ $$("ghostSuggest").textContent = "예: '오늘 회의 요약 5줄' 처럼 입력해 보세요."; return; }
-    const last = txt.slice(-160);
-    const suggestion = last.length>30 ? "→ 핵심만 5줄로 요약해 드릴까요?  /search 최신 자료" : "→ '/search 주제'로 바로 조사하기";
-    $$("ghostSuggest").textContent = suggestion;
-  }catch{ $$("ghostSuggest").textContent = ""; }
+  const finish=(save=true)=>{
+    el.contentEditable="false"; el.onblur=null; el.onkeydown=null;
+    const nv=el.textContent.trim();
+    if(save && nv!==old){
+      const d=store.get(id); if(d){ d.title=nv||"무제"; d.updatedAt=Date.now(); store.set(id,d); renderList(); }
+    }else if(!save){ el.textContent=old; }
+  };
+  el.onblur=()=>finish(true);
+  el.onkeydown=(e)=>{ if(e.key==="Enter"){e.preventDefault();finish(true)} else if(e.key==="Escape"){e.preventDefault();finish(false)} };
 }
+$$("addDoc").onclick=newDoc; $$("iNew").onclick=newDoc;
 
-function insertAtCursor(t){
-  editor.model.change(w=>{editor.model.insertContent(w.createText(t), editor.model.document.selection);});
-  saveDocDebounced();
+/* ========= Export & Share ========= */
+function exportPDF(){
+  if(!editor) return alert("에디터가 준비되지 않았습니다.");
+  const content=document.createElement('div');
+  content.innerHTML=editor.getData();
+  const opt={margin:10,filename:`ThinkHelper_${Date.now()}.pdf`,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+  html2pdf().from(content).set(opt).save();
 }
-</script>
-
-<!-- ===== 사이트 카드 UI ===== -->
-<script>
-function siteCardHTML({title,url,img,site,desc,preview}){
-  return `<div class="card" data-title="${esc(title)}" data-url="${esc(url)}" data-source="${esc(site||'사이트')}">
-    <img src="${esc(img||('https://picsum.photos/200/120?random='+Math.floor(Math.random()*1000)))}" alt=""/>
-    <div>
-      <div class="ttl">${esc(title||url)}</div>
-      <div class="meta">${esc(site||new URL(url).hostname)}</div>
-      <div class="meta">${esc(desc||'')}</div>
-      ${preview?`<div class="meta" style="margin-top:6px;white-space:pre-wrap">${esc(preview)}</div>`:""}
-    </div>
-  </div>`;
+function exportWord(){
+  if(!editor) return alert("에디터가 준비되지 않았습니다.");
+  const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
+    "xmlns:w='urn:schemas-microsoft-com:office:word' "+
+    "xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>ThinkHelper Export</title></head><body>";
+  const footer="</"+"body></html>";
+  const sourceHTML=header+editor.getData()+footer;
+  const source='data:application/vnd.ms-word;charset=utf-8,'+encodeURIComponent(sourceHTML);
+  const a=document.createElement('a');
+  document.body.appendChild(a);
+  a.href=source; a.download=`ThinkHelper_${Date.now()}.doc`; a.click();
+  document.body.removeChild(a);
 }
-</script>
-
-<!-- ===== 검색/미리보기 로직 ===== -->
-<script>
-function switchTab(tab){ document.querySelectorAll(".sidebar-nav .tab").forEach(t=>t.dataset.active=(t.dataset.tab===tab?"1":"0"));
-  document.querySelectorAll(".sidebar-content").forEach(c=>c.dataset.active=(c.id.includes(tab)?"1":"0")); }
-document.querySelectorAll(".sidebar-nav .tab").forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));
-
-function isURLlike(q){
-  try {
-    if (/^https?:\/\//i.test(q)) return true;
-    if (/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(q)) return true;         // domain.tld
-    const m=q.match(/site:([a-z0-9.-]+\.[a-z]{2,})\s*(.*)/i);     // site:도메인 키워드
-    if (m) return { domain:m[1], rest:(m[2]||'').trim() };
-    return false;
-  } catch { return false; }
+async function sharePad(){
+  let url=location.href;
+  try{ await navigator.clipboard.writeText(url); }catch{}
+  const wrap=$$("shareModal"); wrap.style.display="flex";
+  const q=$$("qr"); q.innerHTML=""; new QRCode(q,{text:url,width:200,height:200});
 }
-
-async function showSitePreview(url, q){
-  const box = $$("rightSearchResults");
-  box.innerHTML = `<div id="searchBox"><input id="searchInput" value="${esc(q)}"/><button class="btn" id="searchBtn">검색</button></div>
-                   <div class="result">사이트 불러오는 중…</div>`;
-  document.getElementById("searchBtn").onclick=()=>internalSearch(document.getElementById("searchInput").value.trim());
-
-  try{
-    const html = await fetchText(url);
-    const og = pickOG(html);
-    const preview = firstParagraphs(html, 3);
-    const card = siteCardHTML({title:og.title||url, url, img:og.image, site:og.site||new URL(url).hostname, desc:og.desc, preview});
-    box.innerHTML = box.innerHTML + card;
-
-    box.querySelector(".card:last-child").onclick = ()=> {
-      insertAtCursor(`> [${og.site||'사이트'}] ${og.title||url}\n${url}\n\n${preview}\n`);
-    };
-  }catch(e){
-    box.innerHTML += `<div class="result">가져오기 실패: ${esc(e.message)} — 새 탭으로 엽니다.</div>`;
-    window.open(url, "_blank");
-  }
-}
-
-async function internalSearch(q){
-  if(!q) return; switchTab('search');
-
-  // URL/도메인/ site: 감지
-  const shape = isURLlike(q);
-  if (shape === true) {
-    const url = /^https?:\/\//i.test(q)? q : ("https://" + q);
-    return showSitePreview(url, q);
-  } else if (shape && shape.domain) {
-    const domain = shape.domain, rest = shape.rest || "";
-    const duck = await (await fetch(`https://r.jina.ai/http://duckduckgo.com/html/?q=${encodeURIComponent(`site:${domain} ${rest}`)}`)).text();
-    const links = [...duck.matchAll(/<a[^>]*class="result__a"[^>]*>(.*?)<\/a>[\s\S]*?<a[^>]*href="(http[^"]+)"/g)]
-      .slice(0,8).map(m=>decodeURIComponent(m[2].replace(/&amp;/g,'&')));
-    if (!links.length) return showSitePreview("https://"+domain, q);
-
-    const box=$$("rightSearchResults");
-    box.innerHTML = `<div id="searchBox"><input id="searchInput" value="${esc(q)}"/><button class="btn" id="searchBtn">검색</button></div>`;
-    document.getElementById("searchBtn").onclick=()=>internalSearch(document.getElementById("searchInput").value.trim());
-
-    for (const url of links){
-      try{
-        const html = await fetchText(url);
-        const og = pickOG(html);
-        const preview = firstParagraphs(html, 2);
-        box.innerHTML += siteCardHTML({title:og.title||url, url, img:og.image, site:og.site||new URL(url).hostname, desc:og.desc, preview});
-      }catch(_){}
-    }
-    box.querySelectorAll(".card").forEach(el=>{
-      el.onclick=()=> insertAtCursor(`> [${el.dataset.source}] ${el.dataset.title}\n${el.dataset.url}\n`);
-    });
-    return;
-  }
-
-  // 일반 검색
-  const list = $$("rightSearchResults");
-  list.innerHTML = `<div id="searchBox"><input id="searchInput" value="${esc(q)}"/><button class="btn" id="searchBtn">검색</button></div>
-                    <div class="result">검색 중…</div>`;
-  document.getElementById("searchBtn").onclick=()=>internalSearch(document.getElementById("searchInput").value.trim());
-
-  try{
-    const html = await (await fetch(`https://r.jina.ai/http://duckduckgo.com/html/?q=${encodeURIComponent(q)}`)).text();
-    const items = [...html.matchAll(/<a[^>]*class="result__a"[^>]*>(.*?)<\/a>[\s\S]*?<a[^>]*href="(http[^"]+)"[\s\S]*?class="result__snippet">(.*?)<\/a>/g)]
-      .slice(0,10).map(m=>({ title: stripTags(m[1]), url: decodeURIComponent(m[2].replace(/&amp;/g,'&')), desc: stripTags(m[3])}));
-
-    list.innerHTML = `<div id="searchBox"><input id="searchInput" value="${esc(q)}"/><button class="btn" id="searchBtn">검색</button></div>`;
-    document.getElementById("searchBtn").onclick=()=>internalSearch(document.getElementById("searchInput").value.trim());
-
-    for (const r of items){
-      try{
-        const page = await fetchText(r.url);
-        const og=pickOG(page); const pv=firstParagraphs(page,2);
-        list.innerHTML += siteCardHTML({title:r.title||og.title||r.url, url:r.url, img:og.image, site:og.site||new URL(r.url).hostname, desc:r.desc||og.desc, preview:pv});
-      }catch(e){
-        list.innerHTML += siteCardHTML({title:r.title, url:r.url, site:new URL(r.url).hostname, desc:r.desc});
-      }
-    }
-    list.querySelectorAll(".card").forEach(el=>{
-      el.onclick=()=> insertAtCursor(`> [${el.dataset.source}] ${el.dataset.title}\n${el.dataset.url}\n`);
-    });
-  }catch(e){
-    window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`,'_blank');
-    window.open(`https://search.naver.com/search.naver?query=${encodeURIComponent(q)}`,'_blank');
-    list.innerHTML += `<div class="result">브라우저 탭으로 열었습니다.</div>`;
-  }
-}
-
-$$("searchBtn").onclick=()=>internalSearch($$("searchInput").value.trim());
-$$("searchInput").addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); $$("searchBtn").click(); }});
-</script>
-
-<!-- ===== 커맨드바(검색/질문) ===== -->
-<script>
-async function askOnline(prompt){
-  // 필요 시 여기에 Gemini 등 연결 (키가 없으면 null 반환)
-  return null;
-}
-
-const HelperModel = {
-  // 간단한 오프라인 규칙 기반 헬퍼모델 (로컬 폴백)
-  async generate(prompt, ctx){
-    const plain = ctx?.doc || "";
-    const bullets=(txt)=> txt.split(/[.!?]\s+/).slice(0,6).map(s=>"• "+s.replace(/^[\-•\s]+/,"")).join("\n");
-    if(/요약|summary|정리/.test(prompt)) return `요약:\n${bullets(plain.slice(-1200)||prompt)}`;
-    if(/목차|outline|슬라이드|프레젠테이션/.test(prompt)) return `# ${prompt}\n\n## 배경\n## 문제정의\n## 동향\n## 해결전략\n## 사례\n## 결론`;
-    if(/키워드|keywords?/.test(prompt)) {
-      const arr=(plain.toLowerCase().match(/[a-zA-Z가-힣]{2,}/g)||[]);
-      const uniq=[...new Set(arr)].slice(0,12).join(", ");
-      return `핵심 키워드: ${uniq}`;
-    }
-    // 일반 답변
-    return `답변:\n${bullets(prompt)}\n\n다음 단계\n- 목표 확정\n- 자료 수집\n- 실험/프로토타입\n- 피드백 반영\n- 공유`;
-  }
+$$("iSavePDF").onclick=exportPDF;
+$$("iSaveWord").onclick=exportWord;
+$$("iClipboard").onclick=sharePad;
+$$("shareClose").onclick=()=>($$("shareModal").style.display="none");
+$$("iPrint").onclick=()=>window.print();
+$$("iImport").onclick=()=>alert("PDF/Word/HWP 불러오기 (데모)");
+$$("iSaveHWP").onclick=()=>alert("HWP로 저장은 서버의 상용 변환기가 필요합니다.");
+$$("iTranslate").onclick=()=>alert("번역(데모): 서버 연동 시 실제 번역 가능합니다.");
+$$("iMakePPT").onclick=()=>window.open('https://slides.google.com/create','_blank');
+$$("iCollab").onclick=()=>{
+  const id=curId||"";
+  const link=`${location.origin}${location.pathname}${id?`?doc=${encodeURIComponent(id)}`:""}`;
+  const subject=encodeURIComponent("[ThinkHelper] 문서 협업 초대");
+  const body=encodeURIComponent(`아래 링크로 접속하면 문서를 함께 편집할 수 있어요(데모).\n\n${link}\n\n— ThinkHelper`);
+  location.href=`mailto:?subject=${subject}&body=${body}`;
 };
 
-async function ask(prompt){
-  // 1) 람다 먼저 (있으면)
-  const lambda = await window.lambdaBridge.call("chat", { prompt, context: { doc:getPlain(), history:chatHistory.slice(-10) }});
-  if (lambda && lambda.ok && lambda.data) return String(lambda.data).trim();
+/* ========= Suggestions / AI Chip ========= */
+const aiChip=$$("aiChip"), suggPopup=$$("suggPopup"), suggList=$$("suggList");
+let suggActive=-1, suggItems=[], suggDebounce=null;
+function getPrefix(){
+  const text=editor.getData().replace(/<[^>]+>/g," ");
+  const parts=text.split(/\s+/); return parts[parts.length-1]||"";
+}
+const FILTER_OUT=new Set(["요약","요약하기","질문","정리"]);
+const KO_DICT=["개발","검색","계획","분석","최적화","테스트","프로젝트","템플릿","프레젠테이션","요약","이미지","코드","번역","데이터"];
+const EN_DICT=["develop","search","plan","analyze","optimize","test","project","template","summary","image","code","translate","data"];
+const JA_DICT=["開発","検索","計画","分析","最適化","テスト","プロジェクト","テンプレート","要約","画像","コード","翻訳","データ"];
+async function buildCandidates(prefix){
+  const p=(prefix||"").toLowerCase();
+  if(!prefix || prefix==="/") return [];
+  const words=(editor.getData().replace(/<[^>]+>/g," ").toLowerCase().match(/[a-zA-Z가-힣]+/g)||[]);
+  const freq={}; words.forEach(w=>{ if(w.length>2 && w.startsWith(p)) freq[w]=(freq[w]||0)+1; });
+  const freqWords=Object.keys(freq).sort((a,b)=>freq[b]-freq[a]);
+  const lang=settings.lang; const dict=lang==='en'?EN_DICT:lang==='ja'?JA_DICT:KO_DICT;
+  const items=[
+    ...freqWords.slice(0,5).map(w=>({kind:"DOC",text:w,tag:"문서"})),
+    ...dict.filter(w=> (lang==='ko'?w.startsWith(prefix):w.toLowerCase().startsWith(p))).slice(0,7).map(w=>({kind:"REC",text:w,tag:"추천"}))
+  ];
+  return Array.from(new Map(items.map(i=>[i.text,i])).values());
+}
+function renderSugg(items){
+  if(!items.length){suggPopup.style.display="none";return;}
+  suggList.innerHTML=items.map((it,i)=>`<li data-idx="${i}"><div class="kind">${it.kind}</div><div class="txt">${escapeHtml(it.text)}</div><div class="tag">${it.tag||""}</div></li>`).join("");
+  suggPopup.style.display="block"; suggActive=0; setActive(0);
+}
+function setActive(i){
+  const lis=[...suggList.querySelectorAll("li")]; lis.forEach(li=>li.dataset.active="0");
+  if(lis[i]) lis[i].dataset.active="1";
+}
+function applySuggestion(i){
+  const it=suggItems[i]; if(!it) return;
+  const prefix=getPrefix();
+  const insert=it.text.slice(prefix.length);
+  editor.model.change(w=>{editor.model.insertContent(w.createText(insert), editor.model.document.selection);});
+  saveDoc(); closeSuggest();
+}
+function closeSuggest(){suggPopup.style.display="none"; suggActive=-1; suggItems=[];}
+async function openSuggest(){
+  const px=getPrefix(); if(!px) return closeSuggest();
+  suggItems=await buildCandidates(px); renderSugg(suggItems);
+}
+function triggerSuggest(){
+  if(!settings.suggest) return;
+  clearTimeout(suggDebounce); suggDebounce=setTimeout(openSuggest, 220);
+}
+$$("suggClose").onclick=closeSuggest;
+document.addEventListener("keydown",(e)=>{
+  if(suggPopup.style.display!=="block") return;
+  if(e.key==="ArrowDown"){e.preventDefault();suggActive=Math.min(suggActive+1, suggItems.length-1); setActive(suggActive);}
+  else if(e.key==="ArrowUp"){e.preventDefault();suggActive=Math.max(suggActive-1,0); setActive(suggActive);}
+  else if(e.key==="Enter"){e.preventDefault();applySuggestion(suggActive);}
+});
 
-  // 2) 온라인(Gemini 등) – 선택
-  const online = await askOnline(prompt);
-  if (online) return online;
-
-  // 3) 로컬 헬퍼모델
-  const newsCards=[...document.querySelectorAll("#rightSearchResults .card")].slice(0,6).map(el=>({
-    title:el.dataset.title,url:el.dataset.url,desc:(el.querySelector(".meta:last-child")?.textContent||"")
-  }));
-  return await HelperModel.generate(prompt,{doc:getPlain(),chat:chatHistory,news:newsCards});
+/* Ghost Suggest */
+function updateGhostSuggest(){
+  const el=$$("ghostSuggest"); if(!el) return;
+  if(!settings.suggest){ el.textContent=""; return; }
+  const txt=editor?.getData().replace(/<[^>]+>/g," ").trim()||"";
+  if(!txt){
+    el.textContent= settings.lang==='en' ? "e.g., 'Summarize today's meeting in 5 bullets'" :
+                    settings.lang==='ja' ? "例: 「今日の会議を5行で要約」" :
+                    "예: '오늘 회의 요약 5줄'";
+  }else{
+    el.textContent="→ 핵심만 5줄로 요약할까요?  /search 최신 자료";
+  }
 }
 
+/* ========= Right Sidebar ========= */
+function switchSidebarTab(tab){
+  document.querySelectorAll(".sidebar-nav .tab").forEach(t=>t.dataset.active=(t.dataset.tab===tab?"1":"0"));
+  document.querySelectorAll(".sidebar-content").forEach(c=>c.dataset.active=(c.id.toLowerCase().includes(tab)?"1":"0"));
+}
+document.querySelectorAll(".sidebar-nav .tab").forEach(t=>t.onclick=()=>switchSidebarTab(t.dataset.tab));
+function renderSearch(summary, sources){
+  const c=$$("rightSearchResults");
+  c.innerHTML=`<div class="search-summary">${escapeHtml(summary)}</div>
+  <div class="search-sources"><h4>출처(데모)</h4><ul>${
+    sources.map(s=>`<li><a href="${escapeHtml(s.url)}" target="_blank"><strong>${escapeHtml(s.title)}</strong><span>${escapeHtml(s.url)}</span></a></li>`).join("")
+  }</ul></div>`;
+  switchSidebarTab('search');
+}
+async function internalSearch(q){
+  const s = q.replace(/^(\?|\/search)\s*/,'').trim();
+  if(!s) return renderSearch("검색어를 입력해 주세요.",[]);
+  renderSearch(`'${s}'에 대한 요약(데모):\n- 관련 소식과 최신 글을 정리합니다.\n- 신뢰할 수 있는 출처를 함께 제공합니다.`,[
+    {title:`${s} - 위키`,url:`https://ko.wikipedia.org/wiki/${encodeURIComponent(s)}`},
+    {title:`${s} 최신 뉴스`,url:`https://news.google.com/search?q=${encodeURIComponent(s)}`},
+    {title:`${s} GitHub`,url:`https://github.com/search?q=${encodeURIComponent(s)}`}
+  ]);
+}
+const SAMPLE_FEED_ITEMS=[
+  { title:"AI가 작성한 코드, 신뢰할 수 있나?", link:"#", source:"TechNews (샘플)" },
+  { title:"분기별 경제 전망: 인플레이션과 금리", link:"#", source:"EcoTimes (샘플)" },
+  { title:"로컬 AI 모델(LLaMA 3) 실행 가이드", link:"#", source:"DevBlog (샘플)" }
+];
+async function loadFeed(topic="IT"){
+  const c=$$("rightFeed");
+  c.innerHTML = SAMPLE_FEED_ITEMS.map(it=>`
+    <div class="feed-item" onclick="window.open('${escapeHtml(it.link)}','_blank')">
+      <img src="https://placehold.co/340x140/cccccc/333333?text=${encodeURIComponent(it.source)}" alt="">
+      <div class="feed-content"><div class="feed-source">${escapeHtml(it.source)}</div><div class="feed-title">${escapeHtml(it.title)}</div></div>
+    </div>`).join("");
+}
+
+/* ========= Command Bar ========= */
 function setupCommandBar(){
-  const cmd=$$("cmdInput"), btn=$$("cmdSend");
-  const run=async ()=>{
-    const q=cmd.value.trim(); if(!q) return; cmd.value="";
-    if(q.startsWith('/search ')||q.startsWith('? ')){ internalSearch(q.replace(/^\/?search\s+|\?\s+/,'').trim()); return; }
-    const out=await ask(q); insertAtCursor(out+"\n");
-  };
-  btn.onclick=run;
-  cmd.addEventListener("keydown",(e)=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); run(); }});
+  const cmdInput=$$("cmdInput"), cmdSend=$$("cmdSend");
+  async function handle(){
+    const v=(cmdInput.value||"").trim();
+    if(!v) return;
+    if(v.startsWith("/search") || v.startsWith("?")) { await internalSearch(v); }
+    else { openChat(); await sendChat(v); }
+    cmdInput.value="";
+  }
+  cmdSend.onclick=handle;
+  cmdInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); handle(); }});
+  $$("cmdSuggestions").addEventListener('click',(e)=>{
+    const b=e.target.closest(".chip"); if(!b) return;
+    if(b.dataset.cmd==="create_doc"){ editor.setData("<h1>새 문서 템플릿</h1><p>여기에 내용을 입력하세요.</p>"); saveDoc(); }
+    if(b.dataset.cmd==="edit_doc"){ openChat(); sendChat("이 문서 문장 다듬어줘"); }
+  });
 }
-</script>
 
-<!-- ===== 채팅 ===== -->
-<script>
+/* ========= Helper Model (오프라인) ========= */
+const helperResponses={
+  greeting:["안녕하세요! 무엇을 도와드릴까요? (헬퍼 1.0)","반갑습니다! (헬퍼 1.0)"],
+  thanks:["천만에요! (헬퍼 1.0)","언제든지요! (헬퍼 1.0)"],
+  default:["조금 더 구체적으로 알려주실래요? (헬퍼 1.0)","음… 그건 어려워요. 다른 방식으로 물어볼까요? (헬퍼 1.0)"]
+};
+function callHelperModel(prompt){
+  const p=prompt.toLowerCase();
+  if(/(hi|hello|안녕)/.test(p)) return helperResponses.greeting[Math.floor(Math.random()*helperResponses.greeting.length)];
+  if(/(고마워|감사)/.test(p)) return helperResponses.thanks[Math.floor(Math.random()*helperResponses.thanks.length)];
+  if(/요약/.test(p)){ // 간단 요약 데모
+    const text=editor.getData().replace(/<[^>]+>/g," ").trim().slice(0,600);
+    if(!text) return "요약할 내용이 없어요. (헬퍼 1.0)";
+    const bullets=text.split(/[.?!]\s+/).slice(0,5).map(s=>"- "+s.trim()).join("\n");
+    return "요약(데모):\n"+bullets+"\n(헬퍼 1.0)";
+  }
+  return helperResponses.default[Math.floor(Math.random()*helperResponses.default.length)];
+}
+
+/* ========= Chat ========= */
 const THREADS_KEY="th.threads";
 function threads(){try{return JSON.parse(localStorage.getItem(THREADS_KEY)||"[]")}catch{return[]}}
 function saveThreads(a){localStorage.setItem(THREADS_KEY,JSON.stringify(a||[]))}
 let chatHistory=[], threadId=null;
-
 function renderThreads(){
-  const arr=threads();
-  $$("chatThreads").innerHTML=arr.map(t=>`
-    <div class="threadRow" data-tid="${t.id}" ${t.id===threadId?'data-active="1"':''}>
-      <div class="threadTitle"><b>${esc(t.title||"스레드")}</b></div>
-      <div style="display:flex;gap:6px">
-        <button class="iconbtn" data-rename="${t.id}">✏️</button>
-        <button class="iconbtn" data-del="${t.id}">🗑️</button>
-      </div>
-    </div>`).join("");
-
-  $$("chatThreads").onclick=(e)=>{
-    const r=e.target.closest("[data-rename]"), d=e.target.closest("[data-del]"), o=e.target.closest("[data-tid]");
-    if(r){ const id=r.dataset.rename; const arr=threads(); const t=arr.find(x=>x.id===id); if(!t) return; const nt=prompt("새 제목",t.title||"스레드"); if(nt!=null){ t.title=nt.trim()||"스레드"; saveThreads(arr); if(threadId===id) $$("threadTitleInput").value=t.title; renderThreads(); } return; }
-    if(d){ const id=d.dataset.del; if(confirm("삭제할까요?")){ const arr=threads().filter(x=>x.id!==id); saveThreads(arr); if(threadId===id){ threadId=null; $$("chatBody").innerHTML=""; } renderThreads(); } return; }
-    if(o && !r && !d){ openThread(o.dataset.tid); $$("threadTitleInput").value=(threads().find(x=>x.id===o.dataset.tid)?.title)||""; }
+  const list=threads();
+  const el=$$("chatThreads");
+  el.innerHTML=list.map(t=>`<div class="threadRow" data-id="${t.id}" data-active="${t.id===threadId?1:0}">
+     <div style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(t.title||"새 스레드")}</div>
+     <div class="threadActions"><button class="iconbtn" data-del="${t.id}">🗑️</button></div>
+  </div>`).join("") || `<div class="threadRow">스레드가 없습니다.</div>`;
+  el.onclick=(e)=>{
+    const d=e.target.closest("[data-del]");
+    const r=e.target.closest(".threadRow[data-id]");
+    if(d){ const id=d.dataset.del; const ls=threads().filter(x=>x.id!==id); saveThreads(ls); if(threadId===id){threadId=null; chatHistory=[]; $$("chatBody").innerHTML="";} renderThreads(); return; }
+    if(r){ openThread(r.dataset.id); }
   };
 }
-
-function openThread(id){
-  const arr=threads(); const t=arr.find(x=>x.id===id); if(!t) return;
-  threadId=id; chatHistory=t.history||[]; $$("chatBody").innerHTML="";
-  chatHistory.forEach(m=>addBubble(m.content, m.role==="user", false));
-  $$("threadTitleInput").value=t.title||"";
-  renderThreads();
-}
-
 function newThread(){
-  const id="t_"+Date.now(); threadId=id;
-  const arr=[{id, title:"새 채팅", history:[]}, ...threads()]; saveThreads(arr); renderThreads();
-  $$("chatBody").innerHTML=""; chatHistory=[]; $$("threadTitleInput").value="새 채팅";
+  const id="t_"+Date.now(); threadId=id; chatHistory=[];
+  const list=[{id, title:"새 스레드", history:[]} , ...threads()];
+  saveThreads(list); renderThreads(); $$("threadTitleInput").value="새 스레드"; $$("chatBody").innerHTML="";
+}
+function openThread(id){
+  const t=threads().find(x=>x.id===id); if(!t) return;
+  threadId=id; chatHistory=t.history||[];
+  $$("threadTitleInput").value=t.title||"";
+  $$("chatBody").innerHTML="";
+  chatHistory.forEach(m=>addBubble(m.content, m.role==='user', false));
+  renderThreads();
 }
 function persistThread(){
   if(!threadId) newThread();
-  const arr=threads(); const idx=arr.findIndex(x=>x.id===threadId);
-  const title=$$("threadTitleInput").value.trim() || chatHistory.find(m=>m.role==="user")?.content?.slice(0,20) || "채팅";
-  const t={id:threadId, title, history:chatHistory.slice(-50)};
-  if(idx>=0) arr[idx]=t; else arr.unshift(t);
-  saveThreads(arr); renderThreads();
+  const title=$$("threadTitleInput").value.trim()||"새 스레드";
+  const list=threads();
+  const i=list.findIndex(x=>x.id===threadId);
+  const obj={ id:threadId, title, history:chatHistory.slice(-50) };
+  if(i>=0) list[i]=obj; else list.unshift(obj);
+  saveThreads(list); renderThreads();
 }
-$$("renameThread").onclick=()=>persistThread();
-$$("deleteThread").onclick=()=>{ if(!threadId) return; if(confirm("현재 스레드를 삭제할까요?")){ const arr=threads().filter(x=>x.id!==threadId); saveThreads(arr); threadId=null; $$("chatBody").innerHTML=""; renderThreads(); } };
+$$("renameThread").onclick=persistThread;
+$$("deleteThread").onclick=()=>{ if(threadId){ const list=threads().filter(x=>x.id!==threadId); saveThreads(list); threadId=null; chatHistory=[]; $$("chatBody").innerHTML=""; renderThreads(); }};
 
 const chatDock=$$("chatDock"), chatInput=$$("chatInput");
-function openChat(){ chatDock.style.display="flex"; chatDock.setAttribute("aria-hidden","false"); renderThreads(); if(!threadId){newThread();} setTimeout(()=>chatInput?.focus(),0); }
+function openChat(){ chatDock.style.display="flex"; chatDock.setAttribute("aria-hidden","false"); if(!threadId) newThread(); }
 function closeChat(){ chatDock.style.display="none"; chatDock.setAttribute("aria-hidden","true"); }
-$$("chatBtn").onclick=openChat; $$("btnNewThread").onclick=newThread; $$("chatClose").onclick=closeChat;
+$$("chatBtn").onclick=openChat; $$("chatClose").onclick=closeChat;
+$$("btnChatPlus").onclick=(e)=>{e.stopPropagation(); const m=$$("chatPlusMenu"); m.style.display=m.style.display==="block"?"none":"block";};
+document.addEventListener("click",()=>{const m=$$("chatPlusMenu"); if(m) m.style.display="none";});
 
 function addBubble(text,me=false,isErr=false){
   const b=document.createElement("div"); b.className="bubble "+(me?"me":"ai")+(isErr?" sys":""); b.textContent=text;
   $$("chatBody").appendChild(b); b.scrollIntoView({behavior:"smooth",block:"end"}); return b;
 }
-async function typeOut(b,text,delay=6){ b.textContent=""; for(let i=1;i<=text.length;i++){ b.textContent=text.slice(0,i); if(i%3===0) await sleep(delay);} }
+async function typeOut(b,text,delay=4){ b.textContent=""; for(let i=1;i<=text.length;i++){ b.textContent=text.slice(0,i); if(i%3===0) await sleep(delay);} }
+$$("chatBody").addEventListener('click', (e)=>{ const bub=e.target.closest(".bubble.ai"); if(!bub) return; chatInput.value=bub.textContent; chatInput.focus(); });
 
-$$("chatForm").addEventListener("submit",async (e)=>{
-  e.preventDefault();
-  const msg=chatInput.value.trim(); if(!msg) return; chatInput.value="";
+async function sendChat(msg){
   addBubble(msg,true); chatHistory.push({role:"user",content:msg});
-  const holder=addBubble("…");
-  const ans=await ask(msg);
-  await typeOut(holder,ans||"(빈 응답)");
+  persistThread();
+  const holder=addBubble("…",false);
+  const reply = callHelperModel(msg, chatHistory);
+  await typeOut(holder, reply);
   chatHistory.push({role:"assistant",content:holder.textContent});
   persistThread();
+}
+$$("chatForm").addEventListener("submit",async (e)=>{
+  e.preventDefault(); const t=chatInput.value.trim(); if(!t) return; chatInput.value=""; sendChat(t);
 });
-</script>
+$$("btnAttach").onclick=()=>$$("filePick").click();
+$$("filePick").addEventListener("change",(e)=>{ const f=e.target.files?.[0]; if(!f) return; addBubble(`파일을 받았어요: ${f.name} (${Math.round(f.size/1024)}KB)`, false); });
 
-<!-- ===== 초기화 ===== -->
-<script>
+/* ========= Footer Location ========= */
 (async function(){
-  await initEditor();
-  const last=store.current(); if(last) openDoc(last); else newDoc(); renderList();
-  setupCommandBar();
-  switchTab('search'); // 기본 검색 탭
+  try{
+    const r=await fetch("https://ipapi.co/json");
+    const a=await r.json();
+    if(a?.city) $$("loc").textContent=`📍 ${a.city}, ${a.country_name}`;
+    else throw new Error();
+  }catch{ $$("loc").textContent="📍 위치 확인 불가"; }
+})();
+
+/* ========= Gaze Cursor ========= */
+function setupGazeCursor(){ $$("gaze").style.display = settings.gaze ? "block" : "none"; }
+document.addEventListener("mousemove",(e)=>{ if($$("gaze").style.display==="block"){ const g=$$("gaze"); g.style.left=e.clientX+"px"; g.style.top=e.clientY+"px"; }});
+
+/* ========= Keyboard Shortcuts ========= */
+document.addEventListener("keydown",(e)=>{ if((e.ctrlKey||e.metaKey)&&(e.key||"").toLowerCase()==="k"){e.preventDefault(); $$("cmdInput").focus(); $$("cmdInput").select();}});
+$$("suggList").addEventListener("click",(e)=>{const li=e.target.closest("li[data-idx]"); if(li) applySuggestion(Number(li.dataset.idx));});
+
+/* ========= Init ========= */
+(async function(){
+  try{ await initEditor(""); }catch(e){ alert("에디터 로딩 실패: "+e.message); return; }
+  const last=store.current(); if(last && store.get(last)) openDoc(last); else newDoc(); renderList();
+  setupCommandBar(); setupGazeCursor(); updateGhostSuggest(); renderThreads(); loadFeed();
 })();
 </script>
 </body>
