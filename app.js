@@ -29,7 +29,8 @@
   const isDevHost = () => DEV_HOST.test(location.hostname);
 
   // API BASE: 같은 오리진 기본. 필요시 index.html에서 window.TH_API_BASE로 주입
-  const API_BASE = window.TH_API_BASE ?? "";
+  // const API_BASE = window.TH_API_BASE ?? ""; // <-- 기존 코드 주석 처리
+  const API_BASE = "http://54.250.162.208:8000"; // ★★★★★ 네 EC2 서버 주소로 수정 ★★★★★
 
   // ===== fetch wrappers =====
   async function apiGet(path){
@@ -266,12 +267,16 @@
     const ta=$("#chatInput"); const text=(ta?.value||"").trim(); if(!text) return;
     appendMsg("user", text); ta.value="";
     try{
+      // ★★★★★ 여기가 API_BASE를 사용해 EC2 서버와 통신하는 부분 ★★★★★
       const res = await apiPost("/ask", { question:text, id: state.currentChatId || "" });
       const data = await res.json();
       const reply = data?.answer || "(no response)";
       appendMsg("assistant", reply);
       updatePlanBadge(data?.plan || state.plan);
-    }catch{ appendMsg("assistant","오프라인 폴백: 더 구체적으로 물어보세요."); }
+    }catch(e){ // e -> CORS 에러가 여기서 잡힐 확률이 높음
+      console.error("Chat API failed:", e); // 에러 로그 추가
+      appendMsg("assistant","서버 연결에 실패했습니다. (CORS 오류?)"); 
+    }
   }
   function appendMsg(role, text){
     const log=$("#chatLog");
