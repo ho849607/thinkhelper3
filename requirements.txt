@@ -1,3 +1,7 @@
-Flask==3.0.3
-flask-cors==4.0.0
-gunicorn==21.2.0
+fastapi
+uvicorn[standard]
+transformers>=4.43.0
+auto-gptq>=0.7.1
+accelerate
+einops
+optimum
