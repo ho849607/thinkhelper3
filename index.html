@@ -6,18 +6,17 @@
 <title>ThinkHelper — Editor</title>
 <link rel="icon" href="data:,"/>
 
-<!-- CDN: CKEditor / html2pdf / QRCode -->
 <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 
 <style>
+/* (스타일 코드는 이전과 동일... 생략) */
 :root{--bg:#f6f8fb;--fg:#0b1020;--muted:#6a7691;--panel:#fff;--card:#f2f5ff;--border:#d6deee;--hover:#e9effe;--accent:#2563eb}
 :root[data-theme="dark"]{--bg:#0b1020;--fg:#f1f5ff;--muted:#a8b4cf;--panel:#0f172a;--card:#101a30;--border:#273453;--hover:#16213b;--accent:#60a5fa}
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;display:flex;flex-direction:column;padding-bottom:70px}
-
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;display:flex;flex-direction:column;padding-bottom:90px}
 .topbar{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1000}
 .brand{display:flex;align-items:center;gap:8px;font-weight:900}
 .logo{width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,#60a5fa,#34d399)}
@@ -35,12 +34,10 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Seg
 .dropdown a.item{text-decoration:none;color:inherit}
 .dropdown .item label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.9em}
 .dropdown .item input[type="checkbox"]{margin:0;transform:scale(.9)}
-
 main{flex:1;min-height:0;display:grid;grid-template-columns:260px 1fr;gap:10px;padding:10px;position:relative;z-index:2}
 main[data-mode="research"]{grid-template-columns:260px 1fr 340px}
 @media (max-width:1200px){main{grid-template-columns:0 1fr;padding:6px} main[data-mode="research"]{grid-template-columns:0 1fr 340px} #left{display:none}}
 @media (max-width:900px){main{grid-template-columns:0 1fr} main[data-mode="research"]{grid-template-columns:0 1fr} #left{display:none} aside#right{display:none!important}}
-
 aside#left{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column;min-height:0;position:sticky;top:70px;height:calc(100vh - 90px)}
 .listHead{display:flex;align-items:center;gap:8px}
 #docList{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-top:10px}
@@ -50,25 +47,21 @@ aside#left{background:var(--panel);border:1px solid var(--border);border-radius:
 .doc .title[contenteditable="true"]{outline:1.5px solid var(--accent);background:#fff;border-radius:4px;padding:2px 4px}
 .doc .time{font-size:.78rem;color:var(--muted)}
 .doc .act{display:none}.doc:hover .act{display:inline-flex}
-
-section#center{display:flex;flex-direction:column;gap:10px;min-width:0}
+section#center{display:flex;flex-direction:column;gap:10px;min-width:0;padding-bottom: 50px;}
 #editorWrap{flex:1;border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:8px;position:relative}
 #editor{min-height:62vh}
 .ck-balloon-panel,.ck-powered-by-balloon{display:none!important}
 .ck-editor__editable_inline{min-height:58vh!important;color:#222;background:#fff;padding:12px 12px 140px;border-radius:8px;position:relative;z-index:1}
 [data-theme="dark"] .ck-editor__editable_inline{color:#ffe7b3;background:#0b1327}
 #ghostSuggest{position:absolute;right:14px;top:10px;font-size:.9rem;color:#9aa3b2;opacity:.7;pointer-events:none;max-width:45%;text-align:right}
-
 #commandBar{display:flex;gap:10px;align-items:center;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
 #cmdInput{flex:1;height:40px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);padding:.5rem .9rem;font-size:15px}
 #cmdSuggestions{display:flex;gap:8px}
 #cmdSuggestions .chip{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:.3rem .7rem;cursor:pointer;font-weight:900;font-size:.9rem;white-space:nowrap}
 #cmdSuggestions .chip:hover{background:var(--hover)}
 @media (max-width:768px){#cmdSuggestions{display:none}}
-
 #aiChip{position:absolute;display:none;gap:6px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:.28rem .55rem;box-shadow:0 8px 20px rgba(0,0,0,.15);z-index:80;font-weight:900}
 #aiChip small{opacity:.75}
-
 #suggPopup{position:absolute;display:none;z-index:80;background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 24px rgba(0,0,0,.18);min-width:300px;max-width:620px}
 #suggPopup header{padding:6px 10px;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
 #suggPopup ul{list-style:none;margin:0;padding:6px;max-height:280px;overflow:auto}
@@ -77,7 +70,6 @@ section#center{display:flex;flex-direction:column;gap:10px;min-width:0}
 #suggPopup li .txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #suggPopup li .tag{border:1px solid var(--border);border-radius:6px;font-size:.72rem;padding:.05rem .35rem;opacity:.85}
 #suggPopup li[data-active="1"]{background:var(--hover);outline:1.5px solid #8ab4ff66}
-
 aside#right{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:none;flex-direction:column;min-height:0;position:sticky;top:70px;height:calc(100vh - 90px)}
 main[data-mode="research"] aside#right{display:flex}
 .sidebar-nav{display:flex;gap:0;background:var(--card);border-radius:8px;padding:4px;border:1px solid var(--border);margin-bottom:10px}
@@ -87,7 +79,6 @@ main[data-mode="research"] aside#right{display:flex}
 .sidebar-nav .tab span{margin-left:4px}
 .sidebar-content{flex:1;overflow:auto;display:none}
 .sidebar-content[data-active="1"]{display:block}
-
 #rightSearchResults{display:flex;flex-direction:column;gap:12px}
 .search-summary{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;white-space:pre-wrap;font-size:.95rem;line-height:1.6}
 .search-sources h4{margin:12px 0 6px;font-size:.9rem;color:var(--muted)}
@@ -96,7 +87,6 @@ main[data-mode="research"] aside#right{display:flex}
 .search-sources li a:hover{background:var(--hover)}
 .search-sources li a strong{display:block;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .search-sources li a span{color:var(--muted);font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-
 #rightFeed{display:flex;flex-direction:column;gap:12px}
 .feed-item{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer}
 .feed-item:hover{background:var(--hover)}
@@ -104,7 +94,6 @@ main[data-mode="research"] aside#right{display:flex}
 .feed-item .feed-content{padding:10px}
 .feed-item .feed-source{font-size:.8rem;color:var(--muted);margin-bottom:4px}
 .feed-item .feed-title{font-weight:900}
-
 #chatBtn{position:fixed;right:16px;bottom:80px;z-index:60}
 #chatDock{position:fixed;right:16px;bottom:16px;width:min(95vw,1000px);height:88vh;display:none;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 36px rgba(0,0,0,.28);z-index:75}
 #chatHead{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border);font-weight:900}
@@ -112,7 +101,6 @@ main[data-mode="research"] aside#right{display:flex}
 #chatPlusMenu{position:absolute;display:none;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px;right:40px;top:40px;z-index:90;width:150px}
 #chatPlusMenu .item{padding:6px 8px;border-radius:6px;cursor:pointer;font-size:.9em}
 #chatPlusMenu .item:hover{background:var(--hover)}
-
 #chatWrap{flex:1;display:grid;grid-template-columns:220px 1fr;min-height:0}
 #chatThreads{border-right:1px solid var(--border);padding:8px;overflow:auto}
 .threadRow{display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;margin-bottom:8px;justify-content:space-between}
@@ -129,10 +117,8 @@ main[data-mode="research"] aside#right{display:flex}
 #chatInput{flex:1;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);padding:.6rem .8rem;font-size:1.02rem;resize:vertical;min-height:80px}
 #quota{position:absolute;left:12px;bottom:12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.25rem .55rem;font-size:.85rem;color:#666}
 #filePick{display:none}
-
 footer{position:fixed;bottom:0;left:0;right:0;background:var(--panel);padding:8px 10px;border-top:1px solid var(--border);font-size:.92rem;text-align:center;user-select:none;pointer-events:none;z-index:10}
 footer a{pointer-events:auto}
-
 #gaze{position:fixed;pointer-events:none;width:14px;height:14px;border-radius:50%;background:rgba(37,99,235,.75);box-shadow:0 0 0 3px rgba(37,99,235,.2);mix-blend-mode:multiply;z-index:100;transform:translate(-50%,-50%);display:none}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:120;align-items:center;justify-content:center}
 .modal{background:#fff;color:#111;border-radius:12px;max-width:560px;width:92vw;padding:18px;border:1px solid var(--border);box-shadow:0 18px 36px rgba(0,0,0,.25)}
@@ -149,11 +135,9 @@ kbd{background:var(--card);border:1px solid var(--border);border-radius:4px;padd
 </head>
 <body>
   <div id="gaze"></div>
-
   <div class="topbar">
     <button class="iconbtn" id="btnToggleLeft" title="문서 패널 접기/펼치기">☰</button>
     <div class="brand"><div class="logo"></div><div id="t_brand">ThinkHelper</div></div>
-
     <div class="menu" data-menu>
       <button class="btn">도구 ▾</button>
       <div class="dropdown">
@@ -169,7 +153,6 @@ kbd{background:var(--card);border:1px solid var(--border);border-radius:4px;padd
         <div class="item" id="iClipboard"><span>공유하기 (QR/링크)</span><span>↗</span></div>
       </div>
     </div>
-
     <div class="menu" data-menu>
       <button class="btn">설정 ▾</button>
       <div class="dropdown" id="dropSettings">
@@ -196,7 +179,6 @@ kbd{background:var(--card);border:1px solid var(--border);border-radius:4px;padd
         <div class="item" id="toggleTheme">🌓 <span>테마 전환</span></div>
       </div>
     </div>
-
     <div class="menu" data-menu>
       <button class="btn">도움말 ▾</button>
       <div class="dropdown">
@@ -207,16 +189,13 @@ kbd{background:var(--card);border:1px solid var(--border);border-radius:4px;padd
         <a class="item" href="mailto:ho849607@gmail.com"><span>피드백 보내기</span><span>↗</span></a>
       </div>
     </div>
-
     <button class="btn" id="chatBtn" style="margin-left:auto" title="채팅 열기">💬</button>
   </div>
-
   <main id="mainLayout">
     <aside id="left" aria-label="문서목록" data-collapsed="0">
       <div class="listHead"><b>문서</b><button class="btn" id="addDoc" title="새 문서 추가">＋</button></div>
       <div id="docList"></div>
     </aside>
-
     <section id="center">
       <div id="editorWrap">
         <div id="editor" aria-label="에디터"></div>
@@ -236,7 +215,6 @@ kbd{background:var(--card);border:1px solid var(--border);border-radius:4px;padd
         <button class="btn" id="cmdSend">전송</button>
       </div>
     </section>
-
     <aside id="right" aria-label="리서치 패널">
       <nav class="sidebar-nav">
         <button class="tab" data-tab="search" data-active="0">🔍<span>검색</span></button>
@@ -250,12 +228,10 @@ kbd{background:var(--card);border:1px solid var(--border);border-radius:4px;padd
       </div>
     </aside>
   </main>
-
   <footer>
     <div>© ThinkHelper — ⚠️ 인공지능 결과는 검토가 필요합니다.</div>
     <div id="loc">📍 위치 확인 중…</div>
   </footer>
-
   <div id="chatDock" role="dialog" aria-hidden="true" style="display:none;">
     <div id="chatHead">
       <span>AI 채팅 <small id="chatModelIndicator">(헬퍼 1.0)</small></span>
@@ -288,7 +264,6 @@ kbd{background:var(--card);border:1px solid var(--border);border-radius:4px;padd
     </div>
     <div id="quota">헬퍼 1.0 사용 중 (서버 연동 시 AI 사용 가능)</div>
   </div>
-
   <div id="shareModal" class="modal-backdrop">
     <div class="modal">
       <h3>공유하기</h3>
@@ -297,7 +272,6 @@ kbd{background:var(--card);border:1px solid var(--border);border-radius:4px;padd
       <div class="actions"><button class="btn-plain" id="shareClose">닫기</button></div>
     </div>
   </div>
-
   <div id="guideModal" class="modal-backdrop">
     <div class="modal">
       <h3>ThinkHelper 사용 가이드</h3>
@@ -330,8 +304,10 @@ const escapeHtml = (s)=> (s==null?"":String(s)).replace(/[&<>"']/g, m=>({ "&":"&
 const SKEY_SETTINGS = "th.settings";
 
 /* ========= Config (로컬 데모) ========= */
-const SERVER_API_ENDPOINT = null; // 실제 서버 붙일 땐 URL 입력
-const FEED_API_ENDPOINT = null;   // 실제 피드 서버 붙일 땐 URL 입력
+// ★★★ (수정 1/4) API 주소 설정
+const SERVER_API_ENDPOINT = "http://54.250.162.208:8000"; // ★★★ 네 EC2 서버 (제미나이 뇌)
+const FEED_API_ENDPOINT = "https://api-v2.deepsearch.com"; // ★★★ 딥서치 (리서치 뇌)
+const DEEPSEARCH_API_KEY = "YOUR_DEEPSEARCH_API_KEY_HERE"; // 👈 (필수!) 여기에 네 딥서치 API 키를 넣어!
 
 /* ========= Store ========= */
 const store={
@@ -357,12 +333,25 @@ function loadSettings(){
   settings.mode ??= 'normal';
 }
 const saveSettings=()=>localStorage.setItem(SKEY_SETTINGS, JSON.stringify(settings));
+function updateChatUI(plan) {
+    const indicator = $$("chatModelIndicator");
+    const quota = $$("quota");
+    if (!indicator || !quota) return;
+    if (plan && plan.includes("Gemini")) {
+        indicator.textContent = `(${plan})`;
+        quota.textContent = "Gemini AI 사용 중";
+    } else if (plan && plan.includes("no_key")) {
+        indicator.textContent = "(헬퍼 1.0 - 키 없음)";
+        quota.textContent = "서버 API 키 없음 (헬퍼 1.0)";
+    } else {
+        indicator.textContent = "(헬퍼 1.0)";
+        quota.textContent = "헬퍼 1.0 사용 중 (오프라인)";
+    }
+}
 
 /* ========= Menus / Theme / Panels ========= */
 (function(){
   loadSettings();
-
-  // dropdowns
   const menus=[...document.querySelectorAll('[data-menu]')];
   const closeAll=()=>document.querySelectorAll('.dropdown').forEach(d=>d.style.display='none');
   menus.forEach(m=>{
@@ -372,25 +361,17 @@ const saveSettings=()=>localStorage.setItem(SKEY_SETTINGS, JSON.stringify(settin
     drop.addEventListener('click',e=>e.stopPropagation());
   });
   document.addEventListener('click',closeAll);
-
-  // Theme
   $$("toggleTheme")?.addEventListener('click', ()=>{
     const root=document.documentElement;
     root.dataset.theme = root.dataset.theme==="dark"?"light":"dark";
   });
-
-  // Left panel toggle
   $$("btnToggleLeft")?.addEventListener('click', ()=>{
     const left=$$("left");
     if(!left) return;
     left.style.display = (left.style.display==='none'?'flex':'none');
   });
-
-  // Guide modal
   $$("iGuide")?.addEventListener('click', ()=>($$("guideModal").style.display="flex"));
   $$("guideClose")?.addEventListener('click', ()=>($$("guideModal").style.display="none"));
-
-  // Settings controls
   $$("optSugg").checked = settings.suggest;
   $$("optSugg").onchange = (e)=>{settings.suggest=e.target.checked; saveSettings(); updateGhostSuggest();};
   $$("optPersonal").checked = settings.personal;
@@ -405,6 +386,7 @@ const saveSettings=()=>localStorage.setItem(SKEY_SETTINGS, JSON.stringify(settin
 })();
 
 /* ========= Editor ========= */
+// (Editor, Doc, List, Export, Share 관련 함수는 이전과 동일... 생략)
 let editor=null, autosaveTimer=null;
 async function initEditor(restore){
   editor = await ClassicEditor.create($$("editor"), { placeholder:"여기서 작성하세요…" });
@@ -448,7 +430,6 @@ function renderList(){
       <div class="act"><button class="iconbtn" data-del-id="${it.id}" title="삭제">🗑️</button></div>
     </div>`;
   }).join("") || `<div class="doc"><div class="title">저장된 문서가 없습니다.</div></div>`;
-
   el.onclick=(e)=>{
     const titleEl=e.target.closest('.title[data-rename-id]');
     const delBtn=e.target.closest('button[data-del-id]');
@@ -474,7 +455,6 @@ function enableInlineRename(el){
   if(!id || el.contentEditable==="true") return;
   const old=el.textContent;
   el.contentEditable="true"; el.focus(); document.execCommand('selectAll', false, null);
-
   const finish=(save=true)=>{
     el.contentEditable="false"; el.onblur=null; el.onkeydown=null;
     const nv=el.textContent.trim();
@@ -486,8 +466,6 @@ function enableInlineRename(el){
   el.onkeydown=(e)=>{ if(e.key==="Enter"){e.preventDefault();finish(true)} else if(e.key==="Escape"){e.preventDefault();finish(false)} };
 }
 $$("addDoc").onclick=newDoc; $$("iNew").onclick=newDoc;
-
-/* ========= Export & Share ========= */
 function exportPDF(){
   if(!editor) return alert("에디터가 준비되지 않았습니다.");
   const content=document.createElement('div');
@@ -532,6 +510,7 @@ $$("iCollab").onclick=()=>{
 };
 
 /* ========= Suggestions / AI Chip ========= */
+// (Suggestions 관련 함수는 이전과 동일... 생략)
 const aiChip=$$("aiChip"), suggPopup=$$("suggPopup"), suggList=$$("suggList");
 let suggActive=-1, suggItems=[], suggDebounce=null;
 function getPrefix(){
@@ -587,18 +566,16 @@ document.addEventListener("keydown",(e)=>{
   else if(e.key==="ArrowUp"){e.preventDefault();suggActive=Math.max(suggActive-1,0); setActive(suggActive);}
   else if(e.key==="Enter"){e.preventDefault();applySuggestion(suggActive);}
 });
-
-/* Ghost Suggest */
 function updateGhostSuggest(){
   const el=$$("ghostSuggest"); if(!el) return;
   if(!settings.suggest){ el.textContent=""; return; }
   const txt=editor?.getData().replace(/<[^>]+>/g," ").trim()||"";
   if(!txt){
     el.textContent= settings.lang==='en' ? "e.g., 'Summarize today's meeting in 5 bullets'" :
-                    settings.lang==='ja' ? "例: 「今日の会議を5行で要約」" :
-                    "예: '오늘 회의 요약 5줄'";
+                     settings.lang==='ja' ? "例: 「今日の会議を5行で要約」" :
+                     "예: '오늘 회의 요약 5줄'";
   }else{
-    el.textContent="→ 핵심만 5줄로 요약할까요?  /search 최신 자료";
+    el.textContent="→ 핵심만 5줄로 요약할까요?  /search 최신 자료";
   }
 }
 
@@ -608,35 +585,105 @@ function switchSidebarTab(tab){
   document.querySelectorAll(".sidebar-content").forEach(c=>c.dataset.active=(c.id.toLowerCase().includes(tab)?"1":"0"));
 }
 document.querySelectorAll(".sidebar-nav .tab").forEach(t=>t.onclick=()=>switchSidebarTab(t.dataset.tab));
+
+// ★★★ (수정 2/4) renderSearch 함수는 '데모' 글자만 삭제
 function renderSearch(summary, sources){
   const c=$$("rightSearchResults");
   c.innerHTML=`<div class="search-summary">${escapeHtml(summary)}</div>
-  <div class="search-sources"><h4>출처(데모)</h4><ul>${
-    sources.map(s=>`<li><a href="${escapeHtml(s.url)}" target="_blank"><strong>${escapeHtml(s.title)}</strong><span>${escapeHtml(s.url)}</span></a></li>`).join("")
+  <div class="search-sources"><h4>출처</h4><ul>${ // '출처(데모)'에서 '(데모)' 텍스트 삭제
+    (sources || []).map(s=>`<li><a href="${escapeHtml(s.url || '#')}" target="_blank"><strong>${escapeHtml(s.title || '제목 없음')}</strong><span>${escapeHtml(s.url || 'URL 없음')}</span></a></li>`).join("")
   }</ul></div>`;
   switchSidebarTab('search');
 }
+
+// ★★★ (수정 3/4) internalSearch 함수를 DeepSearch API 호출하도록 수정 (설계도 반영)
 async function internalSearch(q){
   const s = q.replace(/^(\?|\/search)\s*/,'').trim();
   if(!s) return renderSearch("검색어를 입력해 주세요.",[]);
-  renderSearch(`'${s}'에 대한 요약(데모):\n- 관련 소식과 최신 글을 정리합니다.\n- 신뢰할 수 있는 출처를 함께 제공합니다.`,[
-    {title:`${s} - 위키`,url:`https://ko.wikipedia.org/wiki/${encodeURIComponent(s)}`},
-    {title:`${s} 최신 뉴스`,url:`https://news.google.com/search?q=${encodeURIComponent(s)}`},
-    {title:`${s} GitHub`,url:`https://github.com/search?q=${encodeURIComponent(s)}`}
-  ]);
+
+  renderSearch(`'${s}'에 대한 DeepSearch AI 요약 검색 중...`,[]);
+  
+  if (!FEED_API_ENDPOINT || !DEEPSEARCH_API_KEY.startsWith("5e")) {
+    renderSearch("DEEPSEARCH_API_KEY가 설정되지 않았습니다. (index.html 403번째 줄)",[]);
+    return;
+  }
+
+  try {
+    // 👈 '설계도' 반영: GET, /v1/global-articles, 쿼리 파라미터로 q
+    const res = await fetch(`${FEED_API_ENDPOINT}/v1/global-articles?q=${encodeURIComponent(s)}&limit=5&return_fields=title,url,summary_ko`, { // 👈 (추측) summary_ko 반환 요청
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${DEEPSEARCH_API_KEY}` // 👈 '설계도' 반영: 헤더 인증
+        }
+    });
+    
+    if (!res.ok) throw new Error(`DeepSearch 검색 API 에러: ${res.status}`);
+    
+    const data = await res.json();
+
+    // 🔴 (경고!) 이 부분은 내가 100% 추측한 거야! API 문서의 '응답 예시'를 봐야 해.
+    const summary = data?.summary || "AI 요약이 없습니다. (API 응답 구조 확인 필요)";
+    const sources = (data?.documents || data?.articles || data?.items || []).map(doc => ({
+        title: doc.title,
+        url: doc.url,
+        summary: doc.summary_ko // (추측)
+    })); 
+    
+    // (추측) 요약이 따로 안 오면 첫 번째 문서 요약을 씀
+    const finalSummary = summary === "AI 요약이 없습니다. (API 응답 구조 확인 필요)" 
+                         ? (sources[0]?.summary || summary) 
+                         : summary;
+
+    renderSearch(finalSummary, sources);
+
+  } catch (e) {
+    console.error("internalSearch failed:", e);
+    renderSearch(`'${s}' 검색 실패: ${e.message} (API 키/응답 구조 확인)`, []);
+  }
 }
-const SAMPLE_FEED_ITEMS=[
-  { title:"AI가 작성한 코드, 신뢰할 수 있나?", link:"#", source:"TechNews (샘플)" },
-  { title:"분기별 경제 전망: 인플레이션과 금리", link:"#", source:"EcoTimes (샘플)" },
-  { title:"로컬 AI 모델(LLaMA 3) 실행 가이드", link:"#", source:"DevBlog (샘플)" }
-];
+
+// ★★★ (수정 4/4) loadFeed 함수를 DeepSearch API 호출하도록 수정 (설계도 반영)
 async function loadFeed(topic="IT"){
   const c=$$("rightFeed");
-  c.innerHTML = SAMPLE_FEED_ITEMS.map(it=>`
-    <div class="feed-item" onclick="window.open('${escapeHtml(it.link)}','_blank')">
-      <img src="https://placehold.co/340x140/cccccc/333333?text=${encodeURIComponent(it.source)}" alt="">
-      <div class="feed-content"><div class="feed-source">${escapeHtml(it.source)}</div><div class="feed-title">${escapeHtml(it.title)}</div></div>
-    </div>`).join("");
+  if (!FEED_API_ENDPOINT || !DEEPSEARCH_API_KEY.startsWith("5e")) {
+    c.innerHTML = `<div class="feed-item"><div class="feed-content">DEEPSEARCH_API_KEY가 설정되지 않았습니다.</div></div>`;
+    return;
+  }
+  c.innerHTML = `<div class="spinner"></div>`; 
+  
+  try {
+    // 👈 '설계도' 반영: GET, /v1/global-articles, 쿼리로 topic
+    const res = await fetch(`${FEED_API_ENDPOINT}/v1/global-articles?q=${encodeURIComponent(topic)}&limit=10&return_fields=title,url,provider_name,image_url`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${DEEPSEARCH_API_KEY}` // 👈 '설계도' 반영: 헤더 인증
+        }
+    });
+    if (!res.ok) throw new Error(`DeepSearch 피드 API 에러: ${res.status}`);
+    
+    const data = await res.json();
+    
+    // 🔴 (경고!) 이 부분도 내가 100% 추측한 거야! API 문서의 '응답 예시'를 봐야 해.
+    const items = data?.documents || data?.articles || data?.items || [];
+    
+    if (!items.length) {
+        c.innerHTML = `<div class="feed-item"><div class="feed-content">실시간 피드가 없습니다. (API 응답 구조 확인 필요)</div></div>`;
+        return;
+    }
+    
+    c.innerHTML = items.map(it=>`
+      <div class="feed-item" onclick="window.open('${escapeHtml(it.url || '#')}','_blank')">
+        <img src="${escapeHtml(it.image_url || 'https://placehold.co/340x140/cccccc/333333?text=No+Image')}" alt="뉴스 썸네일">
+        <div class="feed-content">
+          <div class="feed-source">${escapeHtml(it.provider_name || "출처 불명")}</div>
+          <div class="feed-title">${escapeHtml(it.title)}</div>
+        </div>
+      </div>`).join("");
+      
+  } catch (e) {
+    console.error("loadFeed failed:", e);
+    c.innerHTML = `<div class="feed-item"><div class="feed-content">피드 로드 실패: ${e.message} (API 키/응답 구조 확인)</div></div>`;
+  }
 }
 
 /* ========= Command Bar ========= */
@@ -659,6 +706,7 @@ function setupCommandBar(){
 }
 
 /* ========= Helper Model (오프라인) ========= */
+// (callHelperModel 함수는 이전과 동일... 생략)
 const helperResponses={
   greeting:["안녕하세요! 무엇을 도와드릴까요? (헬퍼 1.0)","반갑습니다! (헬퍼 1.0)"],
   thanks:["천만에요! (헬퍼 1.0)","언제든지요! (헬퍼 1.0)"],
@@ -668,7 +716,7 @@ function callHelperModel(prompt){
   const p=prompt.toLowerCase();
   if(/(hi|hello|안녕)/.test(p)) return helperResponses.greeting[Math.floor(Math.random()*helperResponses.greeting.length)];
   if(/(고마워|감사)/.test(p)) return helperResponses.thanks[Math.floor(Math.random()*helperResponses.thanks.length)];
-  if(/요약/.test(p)){ // 간단 요약 데모
+  if(/요약/.test(p)){
     const text=editor.getData().replace(/<[^>]+>/g," ").trim().slice(0,600);
     if(!text) return "요약할 내용이 없어요. (헬퍼 1.0)";
     const bullets=text.split(/[.?!]\s+/).slice(0,5).map(s=>"- "+s.trim()).join("\n");
@@ -678,6 +726,7 @@ function callHelperModel(prompt){
 }
 
 /* ========= Chat ========= */
+// (Chat 관련 함수는 이전과 동일... EC2 서버 /ask 호출)
 const THREADS_KEY="th.threads";
 function threads(){try{return JSON.parse(localStorage.getItem(THREADS_KEY)||"[]")}catch{return[]}}
 function saveThreads(a){localStorage.setItem(THREADS_KEY,JSON.stringify(a||[]))}
@@ -720,30 +769,58 @@ function persistThread(){
 }
 $$("renameThread").onclick=persistThread;
 $$("deleteThread").onclick=()=>{ if(threadId){ const list=threads().filter(x=>x.id!==threadId); saveThreads(list); threadId=null; chatHistory=[]; $$("chatBody").innerHTML=""; renderThreads(); }};
-
 const chatDock=$$("chatDock"), chatInput=$$("chatInput");
 function openChat(){ chatDock.style.display="flex"; chatDock.setAttribute("aria-hidden","false"); if(!threadId) newThread(); }
 function closeChat(){ chatDock.style.display="none"; chatDock.setAttribute("aria-hidden","true"); }
 $$("chatBtn").onclick=openChat; $$("chatClose").onclick=closeChat;
 $$("btnChatPlus").onclick=(e)=>{e.stopPropagation(); const m=$$("chatPlusMenu"); m.style.display=m.style.display==="block"?"none":"block";};
 document.addEventListener("click",()=>{const m=$$("chatPlusMenu"); if(m) m.style.display="none";});
-
 function addBubble(text,me=false,isErr=false){
   const b=document.createElement("div"); b.className="bubble "+(me?"me":"ai")+(isErr?" sys":""); b.textContent=text;
   $$("chatBody").appendChild(b); b.scrollIntoView({behavior:"smooth",block:"end"}); return b;
 }
-async function typeOut(b,text,delay=4){ b.textContent=""; for(let i=1;i<=text.length;i++){ b.textContent=text.slice(0,i); if(i%3===0) await sleep(delay);} }
+async function typeOut(b,text,delay=4){ b.textContent=""; for(let i=1;i<=text.length;i++){ b.textContent=text.slice(0,i); if(i%3===0 && delay>0) await sleep(delay);} }
 $$("chatBody").addEventListener('click', (e)=>{ const bub=e.target.closest(".bubble.ai"); if(!bub) return; chatInput.value=bub.textContent; chatInput.focus(); });
 
 async function sendChat(msg){
-  addBubble(msg,true); chatHistory.push({role:"user",content:msg});
+  addBubble(msg, true);
+  chatHistory.push({role: "user", content: msg});
   persistThread();
-  const holder=addBubble("…",false);
-  const reply = callHelperModel(msg, chatHistory);
-  await typeOut(holder, reply);
-  chatHistory.push({role:"assistant",content:holder.textContent});
-  persistThread();
+  const holder = addBubble("…", false);
+  
+  if (SERVER_API_ENDPOINT) {
+      try {
+          const res = await fetch(SERVER_API_ENDPOINT + "/ask", { 
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                  question: msg, 
+                  id: threadId || ""
+              })
+          });
+          if (!res.ok) throw new Error(`서버 에러: ${res.status}`);
+          const data = await res.json();
+          const reply = data?.answer || "(AI 응답이 없습니다)"; 
+          await typeOut(holder, reply);
+          updateChatUI(data?.plan); 
+          chatHistory.push({role: "assistant", content: holder.textContent});
+          persistThread();
+      } catch (e) {
+          console.error("Chat API failed:", e);
+          const errMsg = "서버 연결에 실패했습니다. (CORS 또는 네트워크 오류일 수 있습니다)";
+          await typeOut(holder, errMsg, 0); 
+          holder.classList.add("sys");
+          updateChatUI("offline");
+      }
+  } else {
+      const reply = callHelperModel(msg, chatHistory);
+      await typeOut(holder, reply);
+      updateChatUI("helper_1.0_offline");
+      chatHistory.push({role: "assistant", content: holder.textContent});
+      persistThread();
+  }
 }
+
 $$("chatForm").addEventListener("submit",async (e)=>{
   e.preventDefault(); const t=chatInput.value.trim(); if(!t) return; chatInput.value=""; sendChat(t);
 });
