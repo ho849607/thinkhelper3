@@ -3,51 +3,76 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>ThinkHelper — Editor</title>
+<title data-i18n="page.title">ThinkHelper — Editor</title>
 <link rel="icon" href="data:,"/>
 
+<!-- Google Tag Manager (optional) -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-NXBQK43Z');</script>
+
+<!-- libs -->
 <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 
 <style>
-/* (스타일 코드는 이전과 동일... 생략) */
 :root{--bg:#f6f8fb;--fg:#0b1020;--muted:#6a7691;--panel:#fff;--card:#f2f5ff;--border:#d6deee;--hover:#e9effe;--accent:#2563eb}
 :root[data-theme="dark"]{--bg:#0b1020;--fg:#f1f5ff;--muted:#a8b4cf;--panel:#0f172a;--card:#101a30;--border:#273453;--hover:#16213b;--accent:#60a5fa}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;display:flex;flex-direction:column;padding-bottom:90px}
+
+/* topbar */
 .topbar{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1000}
 .brand{display:flex;align-items:center;gap:8px;font-weight:900}
 .logo{width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,#60a5fa,#34d399)}
-.btn{border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:8px;padding:.45rem .7rem;font-weight:900;cursor:pointer}
+.btn{border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:8px;padding:.45rem .7rem;font-weight:900;cursor:pointer;transition:.2s}
 .btn:hover{background:var(--hover)} .btn[disabled]{opacity:.6;cursor:not-allowed}
-.iconbtn{border:1px solid var(--border);background:transparent;color:var(--fg);border-radius:6px;padding:.25rem .45rem;cursor:pointer}
+.iconbtn{border:1px solid var(--border);background:transparent;color:var(--fg);border-radius:6px;padding:.25rem .45rem;cursor:pointer;transition:.2s}
 .iconbtn:hover{background:var(--hover)}
 .selectlike{height:34px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--fg);padding:.25rem .5rem}
 .menu{position:relative;z-index:1001}
 .menu>.btn{font-weight:900}
-.dropdown{display:none;position:absolute;top:42px;left:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:320px;box-shadow:0 12px 24px rgba(0,0,0,.12)}
+.dropdown{display:none;position:absolute;top:42px;left:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:320px;box-shadow:0 12px 24px rgba(0,0,0,.12);z-index:1002}
 .dropdown .item{padding:.55rem .7rem;border-bottom:1px dashed var(--border);cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}
 .dropdown .item:last-child{border-bottom:none}
 .dropdown .item:hover{background:var(--hover)}
 .dropdown a.item{text-decoration:none;color:inherit}
 .dropdown .item label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.9em}
 .dropdown .item input[type="checkbox"]{margin:0;transform:scale(.9)}
+
+/* layout */
 main{flex:1;min-height:0;display:grid;grid-template-columns:260px 1fr;gap:10px;padding:10px;position:relative;z-index:2}
 main[data-mode="research"]{grid-template-columns:260px 1fr 340px}
-@media (max-width:1200px){main{grid-template-columns:0 1fr;padding:6px} main[data-mode="research"]{grid-template-columns:0 1fr 340px} #left{display:none}}
-@media (max-width:900px){main{grid-template-columns:0 1fr} main[data-mode="research"]{grid-template-columns:0 1fr} #left{display:none} aside#right{display:none!important}}
+@media (max-width:1200px){
+  main{grid-template-columns:0 1fr;padding:6px}
+  main[data-mode="research"]{grid-template-columns:0 1fr 340px}
+  #left{display:none!important}
+}
+@media (max-width:900px){
+  main{grid-template-columns:0 1fr}
+  main[data-mode="research"]{grid-template-columns:0 1fr}
+  #left{display:none!important}
+  aside#right{display:none!important}
+}
+
+/* left */
 aside#left{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column;min-height:0;position:sticky;top:70px;height:calc(100vh - 90px)}
-.listHead{display:flex;align-items:center;gap:8px}
-#docList{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-top:10px}
-.doc{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card)}
+.listHead{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+#docList{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.doc{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);transition:.2s}
+.doc.active{background:var(--hover);border-color:var(--accent)}
 .doc:hover{background:var(--hover)}
-.doc .title{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;padding:2px 4px}
-.doc .title[contenteditable="true"]{outline:1.5px solid var(--accent);background:#fff;border-radius:4px;padding:2px 4px}
+.doc .title{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;padding:2px 4px}
+.doc .title[contenteditable="true"]{outline:1.5px solid var(--accent);background:#fff;border-radius:4px;padding:2px 4px;cursor:text}
 .doc .time{font-size:.78rem;color:var(--muted)}
 .doc .act{display:none}.doc:hover .act{display:inline-flex}
-section#center{display:flex;flex-direction:column;gap:10px;min-width:0;padding-bottom: 50px;}
+
+/* center */
+section#center{display:flex;flex-direction:column;gap:10px;min-width:0;padding-bottom:50px}
 #editorWrap{flex:1;border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:8px;position:relative}
 #editor{min-height:62vh}
 .ck-balloon-panel,.ck-powered-by-balloon{display:none!important}
@@ -57,9 +82,11 @@ section#center{display:flex;flex-direction:column;gap:10px;min-width:0;padding-b
 #commandBar{display:flex;gap:10px;align-items:center;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
 #cmdInput{flex:1;height:40px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);padding:.5rem .9rem;font-size:15px}
 #cmdSuggestions{display:flex;gap:8px}
-#cmdSuggestions .chip{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:.3rem .7rem;cursor:pointer;font-weight:900;font-size:.9rem;white-space:nowrap}
+#cmdSuggestions .chip{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:.3rem .7rem;cursor:pointer;font-weight:900;font-size:.9rem;white-space:nowrap;transition:.2s}
 #cmdSuggestions .chip:hover{background:var(--hover)}
 @media (max-width:768px){#cmdSuggestions{display:none}}
+
+/* suggest popup */
 #aiChip{position:absolute;display:none;gap:6px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:.28rem .55rem;box-shadow:0 8px 20px rgba(0,0,0,.15);z-index:80;font-weight:900}
 #aiChip small{opacity:.75}
 #suggPopup{position:absolute;display:none;z-index:80;background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 24px rgba(0,0,0,.18);min-width:300px;max-width:620px}
@@ -70,13 +97,14 @@ section#center{display:flex;flex-direction:column;gap:10px;min-width:0;padding-b
 #suggPopup li .txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #suggPopup li .tag{border:1px solid var(--border);border-radius:6px;font-size:.72rem;padding:.05rem .35rem;opacity:.85}
 #suggPopup li[data-active="1"]{background:var(--hover);outline:1.5px solid #8ab4ff66}
+
+/* right */
 aside#right{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:none;flex-direction:column;min-height:0;position:sticky;top:70px;height:calc(100vh - 90px)}
 main[data-mode="research"] aside#right{display:flex}
 .sidebar-nav{display:flex;gap:0;background:var(--card);border-radius:8px;padding:4px;border:1px solid var(--border);margin-bottom:10px}
 .sidebar-nav .tab{flex:1;padding:8px 14px;font-weight:700;font-size:.9rem;cursor:pointer;border-radius:6px;text-align:center;color:var(--muted);transition:.2s}
 .sidebar-nav .tab:hover{background:var(--hover);color:var(--fg)}
 .sidebar-nav .tab[data-active="1"]{background:var(--panel);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.sidebar-nav .tab span{margin-left:4px}
 .sidebar-content{flex:1;overflow:auto;display:none}
 .sidebar-content[data-active="1"]{display:block}
 #rightSearchResults{display:flex;flex-direction:column;gap:12px}
@@ -88,12 +116,14 @@ main[data-mode="research"] aside#right{display:flex}
 .search-sources li a strong{display:block;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .search-sources li a span{color:var(--muted);font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 #rightFeed{display:flex;flex-direction:column;gap:12px}
-.feed-item{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer}
-.feed-item:hover{background:var(--hover)}
-.feed-item img{width:100%;height:140px;object-fit:cover;display:block;background-color:var(--border)}
-.feed-item .feed-content{padding:10px}
-.feed-item .feed-source{font-size:.8rem;color:var(--muted);margin-bottom:4px}
-.feed-item .feed-title{font-weight:900}
+a.feed-item{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:.2s}
+a.feed-item:hover{background:var(--hover)}
+a.feed-item img{width:100%;height:140px;object-fit:cover;display:block;background-color:var(--border)}
+a.feed-item .feed-content{padding:10px}
+a.feed-item .feed-source{font-size:.8rem;color:var(--muted);margin-bottom:4px}
+a.feed-item .feed-title{font-weight:900;color:var(--fg)}
+
+/* chat dock */
 #chatBtn{position:fixed;right:16px;bottom:80px;z-index:60}
 #chatDock{position:fixed;right:16px;bottom:16px;width:min(95vw,1000px);height:88vh;display:none;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 36px rgba(0,0,0,.28);z-index:75}
 #chatHead{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border);font-weight:900}
@@ -103,8 +133,8 @@ main[data-mode="research"] aside#right{display:flex}
 #chatPlusMenu .item:hover{background:var(--hover)}
 #chatWrap{flex:1;display:grid;grid-template-columns:220px 1fr;min-height:0}
 #chatThreads{border-right:1px solid var(--border);padding:8px;overflow:auto}
-.threadRow{display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;margin-bottom:8px;justify-content:space-between}
-.threadRow:hover{background:var(--hover)} .threadRow[data-active="1"]{outline:2px solid #9bbcff}
+.threadRow{display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;margin-bottom:8px;justify-content:space-between;transition:.2s}
+.threadRow:hover{background:var(--hover)} .threadRow[data-active="1"]{outline:2px solid #9bbcff;background:var(--hover)}
 #chatMain{display:flex;flex-direction:column;min-width:0}
 #chatBody{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
 .bubble{max-width:85%;padding:.8rem 1.2rem;border:1px solid var(--border);border-radius:14px;background:var(--card);word-break:break-word;font-size:1.05rem;line-height:1.6;white-space:pre-wrap}
@@ -112,744 +142,863 @@ main[data-mode="research"] aside#right{display:flex}
 .me{margin-left:auto;background:#143763;color:#fff;border-color:#143763}
 .ai{margin-right:auto;border-color:#3b4b72;background:#15284f;color:#fff}
 [data-theme="dark"] .ai{background:#15203baa;border-color:#273453}
-.sys{margin:0 auto;background:#eef2ff;border-style:dashed;color:#111}
+.sys{margin:0 auto;background:#eef2ff;border-style:dashed;color:#111;font-size:.9em;text-align:center}
 #chatForm{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border)}
 #chatInput{flex:1;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);padding:.6rem .8rem;font-size:1.02rem;resize:vertical;min-height:80px}
 #quota{position:absolute;left:12px;bottom:12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.25rem .55rem;font-size:.85rem;color:#666}
 #filePick{display:none}
-footer{position:fixed;bottom:0;left:0;right:0;background:var(--panel);padding:8px 10px;border-top:1px solid var(--border);font-size:.92rem;text-align:center;user-select:none;pointer-events:none;z-index:10}
+
+/* footer */
+footer{position:fixed;bottom:0;left:0;right:0;background:var(--panel);padding:8px 10px;border-top:1px solid var(--border);font-size:.92rem;text-align:center;user-select:none;z-index:10}
 footer a{pointer-events:auto}
+
+/* misc and modals */
 #gaze{position:fixed;pointer-events:none;width:14px;height:14px;border-radius:50%;background:rgba(37,99,235,.75);box-shadow:0 0 0 3px rgba(37,99,235,.2);mix-blend-mode:multiply;z-index:100;transform:translate(-50%,-50%);display:none}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:120;align-items:center;justify-content:center}
-.modal{background:#fff;color:#111;border-radius:12px;max-width:560px;width:92vw;padding:18px;border:1px solid var(--border);box-shadow:0 18px 36px rgba(0,0,0,.25)}
+.modal{background:#fff;color:#111;border-radius:12px;max-width:760px;width:92vw;max-height:86vh;overflow:auto;padding:18px;border:1px solid var(--border);box-shadow:0 18px 36px rgba(0,0,0,.25)}
 [data-theme="dark"] .modal{background:#0f172a;color:#f1f5ff}
-.modal h3{margin:.2rem 0 .6rem}.modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.modal h3{margin:.2rem 0 .6rem}
+.modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
 .modal .btn-plain{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:.45rem .8rem;cursor:pointer}
 [data-theme="dark"] .modal .btn-plain{background:#1e293b;border-color:#334155;color:#f1f5ff}
-#subModal{display:none}
-#guideModal .content{max-height:60vh;overflow:auto;padding-right:10px}
-kbd{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:2px 5px;font-weight:900;font-family:monospace;display:inline-block}
 .spinner{border:4px solid rgba(0,0,0,.1);width:24px;height:24px;border-radius:50%;border-left-color:var(--accent);animation:spin 1s ease infinite;margin:20px auto}
 @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+#rightSearchResults ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+#rightSearchResults li{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;font-weight:500;transition:.2s}
+#rightSearchResults li:hover{background:var(--hover)}
+.modal article h4{margin:12px 0 6px}
+.modal article p{line-height:1.6;margin:8px 0}
 </style>
 </head>
-<body>
-  <div id="gaze"></div>
-  <div class="topbar">
-    <button class="iconbtn" id="btnToggleLeft" title="문서 패널 접기/펼치기">☰</button>
-    <div class="brand"><div class="logo"></div><div id="t_brand">ThinkHelper</div></div>
-    <div class="menu" data-menu>
-      <button class="btn">도구 ▾</button>
-      <div class="dropdown">
-        <div class="item" id="iNew"><span>새 문서</span><span>⌘/Ctrl+N</span></div>
-        <div class="item" id="iPrint"><span>🖨️ 프린터로 인쇄</span></div>
-        <div class="item" id="iImport"><span>📥 불러오기 (데모)</span></div>
-        <div class="item" id="iSavePDF"><span>💾 PDF로 저장</span></div>
-        <div class="item" id="iSaveWord"><span>💾 Word로 저장</span></div>
-        <div class="item" id="iSaveHWP"><span>💾 HWP로 저장 (데모)</span></div>
-        <div class="item" id="iTranslate"><span>🌐 번역하기 (데모)</span></div>
-        <div class="item" id="iCollab"><span>👥 협업 초대하기</span></div>
-        <div class="item" id="iMakePPT"><span>✨ PPT 슬라이드 생성</span></div>
-        <div class="item" id="iClipboard"><span>공유하기 (QR/링크)</span><span>↗</span></div>
-      </div>
+<body data-lang="ko">
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NXBQK43Z" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<div id="gaze"></div>
+
+<div class="topbar">
+  <button class="iconbtn" id="btnToggleLeft" title="문서 패널 접기/펼치기">☰</button>
+  <div class="brand"><div class="logo"></div><div id="t_brand" data-i18n="brand.name">ThinkHelper</div></div>
+
+  <div class="menu" data-menu>
+    <button class="btn" data-i18n="menu.tools">도구 ▾</button>
+    <div class="dropdown">
+      <div class="item" id="iNew"><span data-i18n="tools.newDoc">새 문서</span><span>⌘/Ctrl+N</span></div>
+      <div class="item" id="iPrint"><span data-i18n="tools.print">🖨️ 프린터로 인쇄</span></div>
+      <div class="item" id="iImport"><span data-i18n="tools.import">📥 불러오기 (데모)</span></div>
+      <div class="item" id="iSavePDF"><span data-i18n="tools.savePdf">💾 PDF로 저장</span></div>
+      <div class="item" id="iSaveWord"><span data-i18n="tools.saveWord">💾 Word로 저장</span></div>
+      <div class="item" id="iSaveHWP"><span data-i18n="tools.saveHwp">💾 HWP로 저장 (데모)</span></div>
+      <div class="item" id="iTranslate"><span data-i18n="tools.translate">🌐 번역하기 (데모)</span></div>
+      <div class="item" id="iCollab"><span data-i18n="tools.collab">👥 협업 초대하기</span></div>
+      <div class="item" id="iMakePPT"><span data-i18n="tools.makePpt">✨ PPT 슬라이드 생성</span></div>
+      <div class="item" id="iClipboard"><span data-i18n="tools.share">공유하기 (QR/링크)</span><span>↗</span></div>
     </div>
-    <div class="menu" data-menu>
-      <button class="btn">설정 ▾</button>
-      <div class="dropdown" id="dropSettings">
-        <div class="item" style="flex-direction:column;align-items:flex-start;gap:8px">
-          <label><input type="checkbox" id="optSugg"> 추천어 표시 (VSCode 스타일)</label>
-          <label><input type="checkbox" id="optPersonal"> ✨ 맞춤형 AI 제안 (데모)</label>
-          <label><input type="checkbox" id="optGaze"> 시선 커서</label>
-        </div>
-        <div class="item">
-          <span>모드</span>
-          <select id="modeSel" class="selectlike" style="width:180px">
-            <option value="normal" selected>Normal (일반)</option>
-            <option value="research">Research (리서치)</option>
-          </select>
-        </div>
-        <div class="item">
-          <span>언어</span>
-          <select id="langSel" class="selectlike" style="width:180px">
-            <option value="ko" selected>한국어</option>
-            <option value="en">English</option>
-            <option value="ja">日本語</option>
-          </select>
-        </div>
-        <div class="item" id="toggleTheme">🌓 <span>테마 전환</span></div>
-      </div>
-    </div>
-    <div class="menu" data-menu>
-      <button class="btn">도움말 ▾</button>
-      <div class="dropdown">
-        <div class="item" id="iGuide"><span>서비스 소개 및 가이드</span></div>
-        <div class="item" id="iShortcuts"><span>단축키 목록</span></div>
-        <a class="item" href="https://docs.google.com/document/d/1kmFzmp3ddJOKOp1TPsvsNzAuBKt6M0Vm0N_G5BIOZEE/edit?usp=sharing" target="_blank" rel="noopener noreferrer"><span>개인정보처리방침</span><span>↗</span></a>
-        <a class="item" href="https://docs.google.com/document/d/1TLZ2m52s1mAd8BPzXDBQuXF6QZ_hLDZOyX6Y8TKALnE/edit?usp=sharing" target="_blank" rel="noopener noreferrer"><span>서비스 이용약관</span><span>↗</span></a>
-        <a class="item" href="mailto:ho849607@gmail.com"><span>피드백 보내기</span><span>↗</span></a>
-      </div>
-    </div>
-    <button class="btn" id="chatBtn" style="margin-left:auto" title="채팅 열기">💬</button>
   </div>
-  <main id="mainLayout">
-    <aside id="left" aria-label="문서목록" data-collapsed="0">
-      <div class="listHead"><b>문서</b><button class="btn" id="addDoc" title="새 문서 추가">＋</button></div>
-      <div id="docList"></div>
-    </aside>
-    <section id="center">
-      <div id="editorWrap">
-        <div id="editor" aria-label="에디터"></div>
-        <div id="ghostSuggest" aria-hidden="true"></div>
-        <button id="aiChip">✨ AI <small>문맥 도움</small></button>
-        <div id="suggPopup" aria-live="polite">
-          <header><span>제안 (↑/↓, Enter 선택)</span><div><button class="min" id="suggClose">✖</button></div></header>
-          <ul id="suggList"></ul>
-        </div>
+
+  <div class="menu" data-menu>
+    <button class="btn" data-i18n="menu.settings">설정 ▾</button>
+    <div class="dropdown" id="dropSettings">
+      <div class="item" style="flex-direction:column;align-items:flex-start;gap:8px">
+        <label><input type="checkbox" id="optSugg"> <span data-i18n="settings.showSuggest">추천어 표시 (VSCode 스타일)</span></label>
+        <label><input type="checkbox" id="optPersonal"> <span data-i18n="settings.aiSuggest">맞춤형 AI 제안 (데모)</span></label>
+        <label><input type="checkbox" id="optGaze"> <span data-i18n="settings.gazeCursor">시선 커서</span></label>
       </div>
-      <div id="commandBar">
-        <div id="cmdSuggestions">
-          <button class="chip" data-cmd="create_doc">✨ 문서 생성</button>
-          <button class="chip" data-cmd="edit_doc">✍️ 작성 도움 받기</button>
-        </div>
-        <input id="cmdInput" placeholder="AI에게 요청하거나 검색 ( /search 또는 ? )"/>
-        <button class="btn" id="cmdSend">전송</button>
+      <div class="item">
+        <span data-i18n="settings.mode">모드</span>
+        <select id="modeSel" class="selectlike" style="width:180px">
+          <option value="normal" selected data-i18n="settings.mode.normal">Normal (일반)</option>
+          <option value="research" data-i18n="settings.mode.research">Research (리서치)</option>
+        </select>
       </div>
+      <div class="item">
+        <span data-i18n="settings.language">언어</span>
+        <select id="langSel" class="selectlike" style="width:180px">
+          <option value="ko" selected>한국어</option>
+          <option value="en">English</option>
+          <option value="ja">日本語</option>
+        </select>
+      </div>
+      <div class="item" id="toggleTheme">🌓 <span data-i18n="settings.toggleTheme">테마 전환</span></div>
+    </div>
+  </div>
+
+  <div class="menu" data-menu>
+    <button class="btn" data-i18n="menu.help">도움말 ▾</button>
+    <div class="dropdown">
+      <div class="item" id="iGuide"><span data-i18n="help.guide">서비스 소개 및 가이드</span></div>
+      <div class="item" id="iShortcuts"><span data-i18n="help.shortcuts">단축키 목록</span></div>
+      <div class="item" id="openPrivacy"><span data-i18n="help.privacy">개인정보처리방침</span><span>↗</span></div>
+      <div class="item" id="openTerms"><span data-i18n="help.terms">서비스 이용약관</span><span>↗</span></div>
+      <a class="item" href="mailto:ho849607@gmail.com"><span data-i18n="help.feedback">피드백 보내기</span><span>↗</span></a>
+    </div>
+  </div>
+
+  <button class="btn" id="chatBtn" style="margin-left:auto" title="채팅 열기" data-i18n-title="tooltip.openChat">💬</button>
+</div>
+
+<main id="mainLayout" data-mode="normal">
+  <aside id="left" aria-label="문서목록" data-collapsed="0">
+    <div class="listHead"><b data-i18n="doclist.title">문서</b><button class="btn" id="addDoc" title="새 문서 추가" data-i18n-title="tooltip.addDoc">＋</button></div>
+    <div id="docList"></div>
+  </aside>
+
+  <section id="center">
+    <div id="editorWrap">
+      <div id="editor" aria-label="에디터"></div>
+      <div id="ghostSuggest" aria-hidden="true"></div>
+      <button id="aiChip">✨ AI <small data-i18n="aiChip.contextHelp">문맥 도움</small></button>
+      <div id="suggPopup" aria-live="polite">
+        <header><span data-i18n="suggest.header">제안 (↑/↓, Enter 선택)</span><div><button class="min" id="suggClose">✖</button></div></header>
+        <ul id="suggList"></ul>
+      </div>
+    </div>
+    <div id="commandBar">
+      <div id="cmdSuggestions">
+        <button class="chip" data-cmd="create_doc" data-i18n="cmd.createDoc">✨ 문서 생성</button>
+        <button class="chip" data-cmd="edit_doc" data-i18n="cmd.editDoc">✍️ 작성 도움 받기</button>
+      </div>
+      <input id="cmdInput" placeholder="AI에게 요청하기" data-i18n-ph="cmd.inputPhAiOnly"/>
+      <button class="btn" id="cmdSend" data-i18n="cmd.send">전송</button>
+    </div>
+  </section>
+
+  <aside id="right" aria-label="리서치 패널">
+    <nav class="sidebar-nav">
+      <button class="tab" data-tab="topics" data-active="0">🔍<span data-i18n="sidebar.tab.topics">탐색</span></button>
+      <button class="tab" data-tab="feed" data-active="1">📰<span data-i18n="sidebar.tab.feed">피드</span></button>
+    </nav>
+    <div id="rightSearchResults" class="sidebar-content" data-active="0">
+      <div class="search-summary" style="color:var(--muted);font-style:italic;" data-i18n="topics.placeholder">채팅 내용 기반 추천 토픽 (서버 구현 필요)</div>
+    </div>
+    <div id="rightFeed" class="sidebar-content" data-active="1">
+      <div class="spinner"></div>
+    </div>
+  </aside>
+</main>
+
+<footer>
+  <div>© ThinkHelper — <span data-i18n="footer.warning">⚠️ 인공지능 결과는 검토가 필요합니다.</span></div>
+  <div id="loc">📍 <span data-i18n="footer.locationLoading">위치 확인 중…</span></div>
+</footer>
+
+<!-- Chat Dock -->
+<div id="chatDock" role="dialog" aria-hidden="true" style="display:none;">
+  <div id="chatHead">
+    <span><span data-i18n="chat.title">AI 채팅</span> <small id="chatModelIndicator">(with Gemini)</small></span>
+    <div class="actions">
+      <input type="file" id="filePick" accept=".pdf,.txt,image/*"/>
+      <button class="iconbtn" id="btnChatPlus" title="더보기" data-i18n-title="tooltip.chatMore">➕</button>
+      <div id="chatPlusMenu">
+        <div class="item" data-action="github">↗️ GitHub (데모)</div>
+        <div class="item" data-action="word">📄 Word (데모)</div>
+        <div class="item" data-action="email">✉️ 메일 (데모)</div>
+      </div>
+      <button class="iconbtn" id="btnAttach" title="파일 첨부 (이미지/텍스트)" data-i18n-title="tooltip.attachFile">📎</button>
+      <button class="iconbtn" id="chatClose" aria-label="닫기" data-i18n-aria="aria.close">✖</button>
+    </div>
+  </div>
+  <div id="chatWrap">
+    <aside id="chatThreads" aria-label="채팅 스레드"></aside>
+    <section id="chatMain">
+      <div style="padding:6px 10px;border-bottom:1px dashed var(--border);display:flex;gap:8px;align-items:center">
+        <input id="threadTitleInput" placeholder="스레드 제목" data-i18n-ph="chat.threadTitlePh" style="flex:1;border:1px solid var(--border);border-radius:8px;padding:.35rem .55rem;background:var(--card)"/>
+        <button class="btn" id="renameThread" data-i18n="chat.saveTitle">제목 저장</button>
+        <button class="btn" id="deleteThread" data-i18n="chat.deleteThread">삭제</button>
+      </div>
+      <div id="chatBody"></div>
+      <form id="chatForm">
+        <textarea id="chatInput" rows="3" placeholder="메시지 입력 (Enter=전송, Shift+Enter=줄바꿈)" data-i18n-ph="chat.inputPh"></textarea>
+        <button class="btn" type="submit" data-i18n="chat.send">전송</button>
+      </form>
     </section>
-    <aside id="right" aria-label="리서치 패널">
-      <nav class="sidebar-nav">
-        <button class="tab" data-tab="search" data-active="0">🔍<span>검색</span></button>
-        <button class="tab" data-tab="feed" data-active="1">📰<span>피드</span></button>
-      </nav>
-      <div id="rightSearchResults" class="sidebar-content" data-active="0">
-        <div class="search-summary" style="color:var(--muted);font-style:italic;">하단 커맨드 바에서 '/search' 또는 '?'로 검색하세요.</div>
-      </div>
-      <div id="rightFeed" class="sidebar-content" data-active="1">
-        <div class="spinner"></div>
-      </div>
-    </aside>
-  </main>
-  <footer>
-    <div>© ThinkHelper — ⚠️ 인공지능 결과는 검토가 필요합니다.</div>
-    <div id="loc">📍 위치 확인 중…</div>
-  </footer>
-  <div id="chatDock" role="dialog" aria-hidden="true" style="display:none;">
-    <div id="chatHead">
-      <span>AI 채팅 <small id="chatModelIndicator">(헬퍼 1.0)</small></span>
-      <div class="actions">
-        <input type="file" id="filePick" accept=".pdf,.txt,image/*"/>
-        <button class="iconbtn" id="btnChatPlus" title="더보기">➕</button>
-        <div id="chatPlusMenu">
-          <div class="item" data-action="github">↗️ GitHub (데모)</div>
-          <div class="item" data-action="word">📄 Word (데모)</div>
-          <div class="item" data-action="email">✉️ 메일 (데모)</div>
-        </div>
-        <button class="iconbtn" id="btnAttach" title="파일 첨부 (이미지/텍스트)">📎</button>
-        <button class="iconbtn" id="chatClose" aria-label="닫기">✖</button>
-      </div>
-    </div>
-    <div id="chatWrap">
-      <aside id="chatThreads" aria-label="채팅 스레드"></aside>
-      <section id="chatMain">
-        <div style="padding:6px 10px;border-bottom:1px dashed var(--border);display:flex;gap:8px;align-items:center">
-          <input id="threadTitleInput" placeholder="스레드 제목" style="flex:1;border:1px solid var(--border);border-radius:8px;padding:.35rem .55rem;background:var(--card)"/>
-          <button class="btn" id="renameThread">제목 저장</button>
-          <button class="btn" id="deleteThread">삭제</button>
-        </div>
-        <div id="chatBody"></div>
-        <form id="chatForm">
-          <textarea id="chatInput" rows="3" placeholder="메시지 입력 (Enter=전송, Shift+Enter=줄바꿈)"></textarea>
-          <button class="btn" type="submit">전송</button>
-        </form>
-      </section>
-    </div>
-    <div id="quota">헬퍼 1.0 사용 중 (서버 연동 시 AI 사용 가능)</div>
   </div>
-  <div id="shareModal" class="modal-backdrop">
-    <div class="modal">
-      <h3>공유하기</h3>
-      <p>링크/텍스트가 클립보드에 복사되었습니다. QR로도 전송할 수 있어요.</p>
-      <div id="qr" style="margin:10px auto;width:200px;height:200px"></div>
-      <div class="actions"><button class="btn-plain" id="shareClose">닫기</button></div>
-    </div>
+  <div id="quota" data-i18n="chat.quotaGemini">Gemini AI 연동</div>
+</div>
+
+<!-- Share Modal -->
+<div id="shareModal" class="modal-backdrop">
+  <div class="modal">
+    <h3 data-i18n="share.title">공유하기</h3>
+    <p data-i18n="share.desc">링크/텍스트가 클립보드에 복사되었습니다. QR로도 전송할 수 있어요.</p>
+    <div id="qr" style="margin:10px auto;width:200px;height:200px"></div>
+    <div class="actions"><button class="btn-plain" id="shareClose" data-i18n="modal.close">닫기</button></div>
   </div>
-  <div id="guideModal" class="modal-backdrop">
-    <div class="modal">
-      <h3>ThinkHelper 사용 가이드</h3>
-      <div class="content" style="line-height:1.6">
-        <p><b>ThinkHelper</b>는 문서 작성과 리서치를 한 화면에서 끝내는 AI 에디터입니다.</p>
-        <h4>핵심 기능</h4>
-        <ul>
-          <li><b>AI 엔진:</b> 기본 <b>헬퍼 모델(Helper 1.0)</b>이 오프라인 상태에서도 응답합니다.</li>
-          <li><b>검색:</b> 하단 바에 <kbd>/search 키워드</kbd>를 입력하세요. (데모)</li>
-          <li><b>AI 글쓰기/채팅:</b> 하단 바에 요청을 입력하거나 우측 하단 💬을 클릭하세요.</li>
-          <li><b>파일 저장:</b> PDF/Word 저장 지원.</li>
-          <li><b>PPT 생성:</b> Google Slides 새 탭 열기.</li>
-        </ul>
-      </div>
-      <div class="actions"><button class="btn-plain" id="guideClose">닫기</button></div>
+</div>
+
+<!-- Guide Modal -->
+<div id="guideModal" class="modal-backdrop">
+  <div class="modal">
+    <h3 data-i18n="guide.title">ThinkHelper 사용 가이드</h3>
+    <div class="content" style="line-height:1.6">
+      <p><b data-i18n="brand.name">ThinkHelper</b><span data-i18n="guide.intro">는 문서 작성과 리서치를 한 화면에서 끝내는 AI 에디터입니다.</span></p>
+      <h4 data-i18n="guide.featuresTitle">핵심 기능</h4>
+      <ul>
+        <li data-i18n="guide.feature1.gemini"><b>AI 엔진:</b> Google Gemini 모델 기반 응답.</li>
+        <li data-i18n="guide.feature2"><b>탐색/피드:</b> Research 모드에서 최신 정보 확인.</li>
+        <li data-i18n="guide.feature3"><b>AI 글쓰기/채팅:</b> 하단 바 요청 또는 우측 하단 채팅.</li>
+        <li data-i18n="guide.feature4"><b>파일 저장:</b> PDF/Word 저장.</li>
+        <li data-i18n="guide.feature5"><b>PPT 생성:</b> Google Slides 새 탭.</li>
+      </ul>
     </div>
+    <div class="actions"><button class="btn-plain" id="guideClose" data-i18n="modal.close">닫기</button></div>
   </div>
+</div>
+
+<!-- Privacy Policy Modal -->
+<div id="privacyModal" class="modal-backdrop">
+  <div class="modal">
+    <h3>개인정보처리방침</h3>
+    <article>
+      <p>본 서비스는 사용자 개인정보를 중요하게 생각합니다. 본 방침은 수집하는 정보, 이용 목적, 보관 기간, 제3자 제공, 사용자 권리 및 문의처를 설명합니다.</p>
+      <h4>1. 수집 항목</h4>
+      <p>필수: 이메일, 서비스 이용 로그, 쿠키. 선택: 프로필 정보.</p>
+      <h4>2. 이용 목적</h4>
+      <p>계정 관리, 고객 지원, 서비스 품질 향상, 보안 모니터링.</p>
+      <h4>3. 보관 및 파기</h4>
+      <p>관련 법령 또는 서비스 이용 목적 달성 시까지 보관하며, 목적 달성 시 안전하게 파기합니다.</p>
+      <h4>4. 제3자 제공</h4>
+      <p>법령에 의한 경우를 제외하고 동의 없이 제공하지 않습니다.</p>
+      <h4>5. 이용자 권리</h4>
+      <p>열람, 정정, 삭제, 처리정지 요구가 가능하며, 문의처로 연락하면 지체 없이 조치합니다.</p>
+      <h4>6. 문의처</h4>
+      <p>이메일: support@example.com</p>
+    </article>
+    <div class="actions"><button class="btn-plain" id="privacyClose">닫기</button></div>
+  </div>
+</div>
+
+<!-- Terms of Service Modal -->
+<div id="termsModal" class="modal-backdrop">
+  <div class="modal">
+    <h3>서비스 이용약관</h3>
+    <article>
+      <h4>1. 목적</h4>
+      <p>이 약관은 본 서비스의 이용과 관련하여 회사와 사용자 간 권리, 의무 및 책임 사항을 규정합니다.</p>
+      <h4>2. 계정</h4>
+      <p>사용자는 정확한 정보를 제공해야 하며 계정 보안을 유지할 책임이 있습니다.</p>
+      <h4>3. 사용 조건</h4>
+      <p>불법, 침해, 스팸 활동 금지. 서비스 정책을 준수해야 합니다.</p>
+      <h4>4. 지적재산권</h4>
+      <p>서비스 및 콘텐츠의 저작권은 회사 또는 해당 권리자에게 있으며, 사용자는 허용된 범위 내에서만 이용할 수 있습니다.</p>
+      <h4>5. 책임 제한</h4>
+      <p>불가항력, 제3자 사유, 사용자의 귀책으로 발생한 손해에 대해서는 책임을 지지 않습니다.</p>
+      <h4>6. 변경</h4>
+      <p>약관이 변경되는 경우 서비스 내 공지 또는 이메일로 통지합니다.</p>
+      <h4>7. 문의</h4>
+      <p>이메일: support@example.com</p>
+    </article>
+    <div class="actions"><button class="btn-plain" id="termsClose">닫기</button></div>
+  </div>
+</div>
 
 <script>
-/* ========= Helpers ========= */
-const $$ = (id)=>document.getElementById(id);
-document.getElementById("chatInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    document.getElementById("chatForm").requestSubmit();
-  }
-});
-const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
-const escapeHtml = (s)=> (s==null?"":String(s)).replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m]));
-const SKEY_SETTINGS = "th.settings";
+function $$(id){return document.getElementById(id);}
+if($$("chatInput")){$$("chatInput").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault(); if($$("chatForm")){$$("chatForm").requestSubmit();}}});}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+function escapeHtml(s){return (s==null?"":String(s)).replace(/[&<>\"']/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m];});}
+var SKEY_SETTINGS="th.settings";
 
-/* ========= Config (로컬 데모) ========= */
-// ★★★ (수정 1/4) API 주소 설정
-const SERVER_API_ENDPOINT = "http://54.250.162.208:8000"; // ★★★ 네 EC2 서버 (제미나이 뇌)
-const FEED_API_ENDPOINT = "https://api-v2.deepsearch.com"; // ★★★ 딥서치 (리서치 뇌)
-const DEEPSEARCH_API_KEY = "YOUR_DEEPSEARCH_API_KEY_HERE"; // 👈 (필수!) 여기에 네 딥서치 API 키를 넣어!
+var SERVER_API_ENDPOINT="http://54.250.162.208:8000";
+var FEED_API_ENDPOINT="https://api-v2.deepsearch.com";
+var DEEPSEARCH_API_KEY="YOUR_DEEPSEARCH_API_KEY_HERE";
+var TOTAL_FREE_TOKEN_LIMIT=15000, NUM_USERS=10;
+var USER_SHARE_LIMIT=TOTAL_FREE_TOKEN_LIMIT/NUM_USERS;
+var TOKEN_WARN_THRESHOLD=USER_SHARE_LIMIT*0.8;
+var TOKEN_COUNT_KEY="th.token.state";
+var APPROX_CHARS_PER_TOKEN=2;
 
-/* ========= Store ========= */
-const store={
-  listKey:"th.docs.list",docKey:id=>`th.doc.${id}`,curKey:"th.cur",
-  list(){try{return JSON.parse(localStorage.getItem(this.listKey)||"[]")}catch{return[]}},
-  saveList(a){localStorage.setItem(this.listKey,JSON.stringify(a||[]))},
-  get(id){try{return JSON.parse(localStorage.getItem(this.docKey(id))||"null")}catch{return null}},
-  set(id,o){localStorage.setItem(this.docKey(id),JSON.stringify(o))},
-  remove(id){localStorage.removeItem(this.docKey(id))},
-  current(){return localStorage.getItem(this.curKey)||""},
-  setCurrent(id){localStorage.setItem(this.curKey,id||"")}
+var I18N={ko:{limit:{near:function(dt){return "무료 토큰 한도가 거의 다 사용되었어요.\n"+dt+" 이후 초기화됩니다.";},hit:function(dt){return "무료 토큰 한도를 모두 사용했어요.\n"+dt+" 이후 초기화됩니다.";}} ,suggest:{ai:"AI 추천",local:"로컬 추천",error:"오류"},error:{serverConnect:"서버 연결 실패. (CORS/네트워크 오류?)"}},
+en:{limit:{near:function(dt){return "You are nearing the free token limit.\nResets around "+dt+".";},hit:function(dt){return "Free token limit reached.\nResets around "+dt+".";}} ,suggest:{ai:"AI Suggestion",local:"Local Suggestion",error:"Error"},error:{serverConnect:"Server connection failed. (CORS/Network error?)"}},
+ja:{limit:{near:function(dt){return "無料トークンの制限に近づいています。\n"+dt+"頃にリセットされます。";},hit:function(dt){return "無料トークンをすべて使用しました。\n"+dt+"頃にリセットされます。";}} ,suggest:{ai:"AI提案",local:"ローカル提案",error:"エラー"},error:{serverConnect:"サーバー接続失敗。(CORS/ネットワークエラー？)"}}};
+var I18N_TEXT={ko:{"page.title":"ThinkHelper — 에디터","brand.name":"ThinkHelper","menu.tools":"도구","menu.settings":"설정","menu.help":"도움말","tools.newDoc":"새 문서","tools.print":"프린터로 인쇄","tools.import":"불러오기","tools.savePdf":"PDF로 저장","tools.saveWord":"Word로 저장","tools.saveHwp":"HWP로 저장","tools.translate":"번역하기","tools.collab":"협업 초대","tools.makePpt":"PPT 생성","tools.share":"공유하기","settings.showSuggest":"추천어 표시","settings.aiSuggest":"맞춤형 AI 제안","settings.gazeCursor":"시선 커서","settings.language":"언어","settings.toggleTheme":"테마 전환","settings.mode":"모드","settings.mode.normal":"Normal (일반)","settings.mode.research":"Research (리서치)","help.guide":"서비스 소개 및 가이드","help.shortcuts":"단축키 목록","help.privacy":"개인정보처리방침","help.terms":"서비스 이용약관","help.feedback":"피드백 보내기","tooltip.openChat":"채팅 열기","doclist.title":"문서","tooltip.addDoc":"새 문서","aiChip.contextHelp":"문맥 도움","suggest.header":"제안 (↑/↓, Enter)","cmd.createDoc":"문서 생성","cmd.editDoc":"작성 도움","cmd.inputPhAiOnly":"AI에게 요청하기","cmd.send":"전송","sidebar.tab.topics":"탐색","sidebar.tab.feed":"피드","topics.placeholder":"채팅 내용 기반 추천 토픽 (서버 구현 필요)","footer.warning":"AI 결과는 검토 필요","footer.locationLoading":"위치 확인 중...","chat.title":"AI 채팅","tooltip.chatMore":"더보기","tooltip.attachFile":"파일 첨부","aria.close":"닫기","chat.threadTitlePh":"스레드 제목","chat.saveTitle":"제목 저장","chat.deleteThread":"삭제","chat.inputPh":"메시지 입력 (Enter=전송)","chat.send":"전송","chat.quotaGemini":"Gemini AI 연동","share.title":"공유하기","share.desc":"링크/텍스트 복사됨. QR 전송 가능.","modal.close":"닫기","guide.title":"ThinkHelper 가이드","guide.intro":"는 문서 작성과 리서치를 한 화면에서 끝내는 AI 에디터입니다.","guide.featuresTitle":"핵심 기능","guide.feature1.gemini":"AI 엔진: Google Gemini 모델 기반 응답.","guide.feature2":"탐색/피드: Research 모드에서 정보 확인","guide.feature3":"AI 글쓰기/채팅: 하단 바 또는 채팅","guide.feature4":"파일 저장: PDF/Word 지원.","guide.feature5":"PPT 생성: Google Slides 열기."}};
+
+var store={listKey:"th.docs.list",docKey:function(id){return "th.doc."+id;},curKey:"th.cur",
+  list:function(){try{return JSON.parse(localStorage.getItem(this.listKey)||"[]");}catch(e){return[];}},
+  saveList:function(a){localStorage.setItem(this.listKey,JSON.stringify(a||[]));},
+  get:function(id){try{return JSON.parse(localStorage.getItem(this.docKey(id))||"null");}catch(e){return null;}},
+  set:function(id,o){localStorage.setItem(this.docKey(id),JSON.stringify(o));},
+  remove:function(id){localStorage.removeItem(this.docKey(id));},
+  current:function(){return localStorage.getItem(this.curKey)||"";},
+  setCurrent:function(id){localStorage.setItem(this.curKey,id||"");}
 };
-let curId="";
-let settings={};
+var curId=""; var settings={};
 
-/* ========= Settings ========= */
-function loadSettings(){
-  settings = JSON.parse(localStorage.getItem(SKEY_SETTINGS) || '{}');
-  settings.suggest ??= true;
-  settings.personal ??= false;
-  settings.gaze ??= false;
-  settings.lang ??= 'ko';
-  settings.mode ??= 'normal';
+function loadSettings(){try{settings=JSON.parse(localStorage.getItem(SKEY_SETTINGS)||"{}");}catch(e){settings={};}
+settings.suggest = (settings.suggest!==false);
+settings.personal = !!settings.personal;
+settings.gaze = !!settings.gaze;
+settings.lang = (settings.lang || (navigator.language||"ko").slice(0,2));
+settings.mode = settings.mode || "normal";
 }
-const saveSettings=()=>localStorage.setItem(SKEY_SETTINGS, JSON.stringify(settings));
-function updateChatUI(plan) {
-    const indicator = $$("chatModelIndicator");
-    const quota = $$("quota");
-    if (!indicator || !quota) return;
-    if (plan && plan.includes("Gemini")) {
-        indicator.textContent = `(${plan})`;
-        quota.textContent = "Gemini AI 사용 중";
-    } else if (plan && plan.includes("no_key")) {
-        indicator.textContent = "(헬퍼 1.0 - 키 없음)";
-        quota.textContent = "서버 API 키 없음 (헬퍼 1.0)";
-    } else {
-        indicator.textContent = "(헬퍼 1.0)";
-        quota.textContent = "헬퍼 1.0 사용 중 (오프라인)";
-    }
+function saveSettings(){localStorage.setItem(SKEY_SETTINGS,JSON.stringify(settings));}
+function applyI18n(){
+  var lang=(settings.lang||"ko").slice(0,2); var dict=I18N_TEXT[lang]||I18N_TEXT.ko;
+  document.body.dataset.lang=lang;
+  var n=document.querySelectorAll("[data-i18n]");
+  for(var i=0;i<n.length;i++){var el=n[i]; var k=el.getAttribute("data-i18n"); if(dict[k]) el.textContent=dict[k];}
+  n=document.querySelectorAll("[data-i18n-ph]");
+  for(i=0;i<n.length;i++){el=n[i]; k=el.getAttribute("data-i18n-ph"); if(dict[k]) el.setAttribute("placeholder",dict[k]);}
+  n=document.querySelectorAll("[data-i18n-title]");
+  for(i=0;i<n.length;i++){el=n[i]; k=el.getAttribute("data-i18n-title"); if(dict[k]) el.setAttribute("title",dict[k]);}
+  n=document.querySelectorAll("[data-i18n-aria]");
+  for(i=0;i<n.length;i++){el=n[i]; k=el.getAttribute("data-i18n-aria"); if(dict[k]) el.setAttribute("aria-label",dict[k]);}
+  updateGhostSuggest();
 }
 
-/* ========= Menus / Theme / Panels ========= */
+function getTokenState(){try{var s=JSON.parse(localStorage.getItem(TOKEN_COUNT_KEY)||"{}"); var today=new Date().toLocaleDateString("ko-KR"); if(s.date!==today) return {used:0,date:today}; return {used:s.used||0,date:today};}catch(e){return {used:0,date:new Date().toLocaleDateString("ko-KR")};}}
+function addUsedTokens(n){if(n<=0) return; var s=getTokenState(); s.used=(s.used||0)+n; try{localStorage.setItem(TOKEN_COUNT_KEY,JSON.stringify(s));}catch(e){}}
+function checkTokenLimitOrWarn(need){var s=getTokenState(); var cur=s.used||0; var langDict=(I18N[settings.lang]||I18N.ko).limit; var reset=settings.lang==="ko"?"자정":"midnight"; var use=Math.max(0,need||0); if(cur+use>=USER_SHARE_LIMIT){alert(langDict.hit(reset)); return false;} else if(cur+use>=TOKEN_WARN_THRESHOLD && cur<TOKEN_WARN_THRESHOLD){alert(langDict.near(reset));} return true;}
+
 (function(){
   loadSettings();
-  const menus=[...document.querySelectorAll('[data-menu]')];
-  const closeAll=()=>document.querySelectorAll('.dropdown').forEach(d=>d.style.display='none');
-  menus.forEach(m=>{
-    const btn=m.querySelector('.btn'); const drop=m.querySelector('.dropdown');
-    if(!btn||!drop) return;
-    btn.addEventListener('click',(e)=>{e.stopPropagation();const open=drop.style.display==='block';closeAll();drop.style.display=open?'none':'block';});
-    drop.addEventListener('click',e=>e.stopPropagation());
-  });
-  document.addEventListener('click',closeAll);
-  $$("toggleTheme")?.addEventListener('click', ()=>{
-    const root=document.documentElement;
-    root.dataset.theme = root.dataset.theme==="dark"?"light":"dark";
-  });
-  $$("btnToggleLeft")?.addEventListener('click', ()=>{
-    const left=$$("left");
-    if(!left) return;
-    left.style.display = (left.style.display==='none'?'flex':'none');
-  });
-  $$("iGuide")?.addEventListener('click', ()=>($$("guideModal").style.display="flex"));
-  $$("guideClose")?.addEventListener('click', ()=>($$("guideModal").style.display="none"));
-  $$("optSugg").checked = settings.suggest;
-  $$("optSugg").onchange = (e)=>{settings.suggest=e.target.checked; saveSettings(); updateGhostSuggest();};
-  $$("optPersonal").checked = settings.personal;
-  $$("optPersonal").onchange = (e)=>{settings.personal=e.target.checked; saveSettings();};
-  $$("optGaze").checked = settings.gaze;
-  $$("optGaze").onchange = (e)=>{settings.gaze=e.target.checked; saveSettings(); setupGazeCursor();};
-  $$("langSel").value = settings.lang;
-  $$("langSel").onchange = (e)=>{settings.lang=e.target.value; saveSettings(); updateGhostSuggest();};
-  $$("modeSel").value = settings.mode;
-  $$("modeSel").onchange = (e)=>{settings.mode=e.target.value; saveSettings(); $$('mainLayout').dataset.mode=settings.mode; if(settings.mode==='research'){switchSidebarTab('feed'); loadFeed();}};
-  $$('mainLayout').dataset.mode=settings.mode;
+  var menus=[].slice.call(document.querySelectorAll("[data-menu]"));
+  function closeAll(){var d=document.querySelectorAll(".dropdown"); for(var i=0;i<d.length;i++){d[i].style.display="none";}}
+  for(var mi=0; mi<menus.length; mi++){
+    var m=menus[mi]; var btn=m.querySelector(".btn"); var drop=m.querySelector(".dropdown"); if(!btn||!drop) continue;
+    btn.addEventListener("click",function(e){e.stopPropagation(); var d=this.nextElementSibling; var open=d.style.display==="block"; closeAll(); d.style.display=open?"none":"block";});
+    drop.addEventListener("click",function(e){e.stopPropagation();});
+  }
+  document.addEventListener("click",closeAll);
+  if($$("toggleTheme")){$$("toggleTheme").addEventListener("click",function(){var root=document.documentElement; root.dataset.theme=root.dataset.theme==="dark"?"light":"dark";});}
+  if($$("btnToggleLeft")){$$("btnToggleLeft").addEventListener("click",function(){var left=$$("left"); if(!left) return; var hidden=left.style.display==="none"; left.style.display=hidden?"flex":"none"; var main=$$("mainLayout"); if(!main) return; var rightCol=settings.mode==="research"?"340px":""; if(window.innerWidth<=900){main.style.gridTemplateColumns="0 1fr"; left.style.display="none";} else if(window.innerWidth<=1200){main.style.gridTemplateColumns=("0 1fr "+(rightCol?rightCol:"")).trim(); left.style.display="none";} else {main.style.gridTemplateColumns=((hidden?"260px":"0")+" 1fr "+(rightCol?rightCol:"")).replace(/\s+/g," ").trim();}});}
+  if($$("iGuide")){$$("iGuide").addEventListener("click",function(){$$("guideModal").style.display="flex";});}
+  if($$("guideClose")){$$("guideClose").addEventListener("click",function(){$$("guideModal").style.display="none";});}
+  if($$("openPrivacy")){$$("openPrivacy").addEventListener("click",function(){$$("privacyModal").style.display="flex";});}
+  if($$("privacyClose")){$$("privacyClose").addEventListener("click",function(){$$("privacyModal").style.display="none";});}
+  if($$("openTerms")){$$("openTerms").addEventListener("click",function(){$$("termsModal").style.display="flex";});}
+  if($$("termsClose")){$$("termsClose").addEventListener("click",function(){$$("termsModal").style.display="none";});}
+
+  var optSugg=$$("optSugg"); if(optSugg) optSugg.checked=!!settings.suggest;
+  var optPersonal=$$("optPersonal"); if(optPersonal) optPersonal.checked=!!settings.personal;
+  var optGaze=$$("optGaze"); if(optGaze) optGaze.checked=!!settings.gaze;
+  var langSel=$$("langSel"); if(langSel) langSel.value=settings.lang;
+  var modeSel=$$("modeSel"); if(modeSel) modeSel.value=settings.mode;
+
+  if(optSugg){optSugg.addEventListener("change",function(e){settings.suggest=e.target.checked; saveSettings(); updateGhostSuggest();});}
+  if(optPersonal){optPersonal.addEventListener("change",function(e){settings.personal=e.target.checked; saveSettings();});}
+  if(optGaze){optGaze.addEventListener("change",function(e){settings.gaze=e.target.checked; saveSettings(); setupGazeCursor();});}
+  if(langSel){langSel.addEventListener("change",function(e){settings.lang=e.target.value; saveSettings(); applyI18n();});}
+  if(modeSel){modeSel.addEventListener("change",function(e){
+    settings.mode=e.target.value; saveSettings();
+    var main=$$("mainLayout"); if(main) main.dataset.mode=settings.mode;
+    var left=$$("left"); var isLeftHidden=left?left.style.display==="none":true;
+    var leftCol=isLeftHidden?"0":"260px"; var rightCol=settings.mode==="research"?"340px":"";
+    if(window.innerWidth<=900) main.style.gridTemplateColumns="0 1fr";
+    else if(window.innerWidth<=1200) main.style.gridTemplateColumns=("0 1fr "+(rightCol?rightCol:"")).trim();
+    else main.style.gridTemplateColumns=(leftCol+" 1fr "+(rightCol?rightCol:"")).replace(/\s+/g," ").trim();
+    if(settings.mode==="research"){
+      var at=document.querySelector(".sidebar-nav .tab[data-active='1']");
+      var activeTab=at?at.getAttribute("data-tab"):null;
+      if(activeTab==="feed") loadFeed();
+      else if(activeTab==="topics") loadTopics();
+      else switchSidebarTab("feed");
+    }
+  });}
+
+  var main=$$("mainLayout"); if(main) main.dataset.mode=settings.mode;
+  applyI18n();
 })();
 
-/* ========= Editor ========= */
-// (Editor, Doc, List, Export, Share 관련 함수는 이전과 동일... 생략)
-let editor=null, autosaveTimer=null;
+/* CKEditor */
+var editor=null, autosaveTimer=null;
 async function initEditor(restore){
-  editor = await ClassicEditor.create($$("editor"), { placeholder:"여기서 작성하세요…" });
-  if(restore!=null) editor.setData(restore);
-  editor.model.document.on('change:data', ()=>{
-    clearTimeout(autosaveTimer);
-    autosaveTimer=setTimeout(saveDoc, 500);
-    triggerSuggest(); updateGhostSuggest();
-  });
-  editor.model.document.on('change:selection', updateGhostSuggest);
+  try{
+    editor=await ClassicEditor.create($$("editor"),{placeholder:settings.lang==="ja"?"ここで書いてください...":settings.lang==="en"?"Start writing here...":"여기서 작성하세요..."});
+    if(restore!=null) editor.setData(restore);
+    editor.model.document.on("change:data",function(){clearTimeout(autosaveTimer); autosaveTimer=setTimeout(saveDoc,700); triggerSuggest(); updateGhostSuggest();});
+    editor.editing.view.document.on("selectionChange",function(){updateGhostSuggest();});
+  }catch(e){console.error("CKEditor init failed",e); alert(settings.lang==="ja"?"エディタの読み込みに失敗しました。再読み込みしてください。":settings.lang==="en"?"Editor failed to load. Please refresh.":"에디터 로딩 실패. 새로고침 해주세요.");}
 }
 function newDoc(){
-  const id="d_"+Date.now(); curId=id; store.setCurrent(id);
-  const row={id,createdAt:Date.now(),updatedAt:Date.now(),title:"무제",html:""};
-  store.set(id,row); store.saveList([row,...store.list().filter(x=>x.id!==id)]);
-  editor?.setData(""); renderList(); updateGhostSuggest();
+  var id="d_"+Date.now(); curId=id; store.setCurrent(id);
+  var title=settings.lang==="ja"?"無題":settings.lang==="en"?"Untitled":"무제";
+  var row={id:id,createdAt:Date.now(),updatedAt:Date.now(),title:title,html:""};
+  store.set(id,row);
+  var list=store.list().filter(function(x){return x.id!==id;});
+  list=[row].concat(list);
+  store.saveList(list);
+  if(editor) editor.setData("");
+  renderList(); updateGhostSuggest();
 }
 function openDoc(id){
-  const d=store.get(id); if(!d||!editor) return;
+  var d=store.get(id); if(!d||!editor) return;
   curId=id; store.setCurrent(id); editor.setData(d.html||""); renderList(); updateGhostSuggest();
+  if(window.innerWidth<=1200){var left=$$("left"); if(left && left.style.display!=="none"){ if($$("btnToggleLeft")) $$("btnToggleLeft").click(); }}
 }
 async function saveDoc(){
-  if(!editor || !curId) return;
-  const d=store.get(curId); if(!d) return;
-  d.html=editor.getData(); d.updatedAt=Date.now();
-  const plain=d.html.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
-  if(!d.title||d.title==="무제"){ d.title=(plain.split(" ").slice(0,8).join(" ")||"무제"); }
+  if(!editor||!curId) return;
+  var d=store.get(curId); if(!d) return;
+  var html=editor.getData();
+  var t=d.title||(settings.lang==="ja"?"無題":settings.lang==="en"?"Untitled":"무제");
+  if(d.html===html && d.title===t) return;
+  d.html=html; d.updatedAt=Date.now();
+  var plain=d.html.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+  if(!d.title||d.title==="무제"||d.title==="Untitled"||d.title==="無題"){
+    d.title=(plain.split(" ").slice(0,8).join(" ")||(settings.lang==="ja"?"無題":settings.lang==="en"?"Untitled":"무제"));
+  }
   store.set(curId,d);
-  const list=store.list().map(x => x.id===curId ? {id:curId,createdAt:d.createdAt||Date.now(),updatedAt:d.updatedAt,title:d.title} : x);
+  var list=store.list().map(function(x){return x.id===curId?{id:curId,createdAt:d.createdAt||Date.now(),updatedAt:d.updatedAt,title:d.title}:x;});
   store.saveList(list); renderList();
 }
 function renderList(){
-  const list=store.list().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
-  const el=$$("docList");
-  el.innerHTML=list.map(it=>{
-    const d=store.get(it.id)||it;
-    const when=new Date(d.updatedAt||d.createdAt||Date.now()).toLocaleString('ko-KR',{dateStyle:'medium',timeStyle:'short'});
-    return `<div class="doc" data-id="${it.id}">
-      <div class="title" data-rename-id="${it.id}" title="제목 클릭하여 수정">${escapeHtml(d.title||"무제")}</div>
-      <div class="time">${escapeHtml(when)}</div>
-      <div class="act"><button class="iconbtn" data-del-id="${it.id}" title="삭제">🗑️</button></div>
-    </div>`;
-  }).join("") || `<div class="doc"><div class="title">저장된 문서가 없습니다.</div></div>`;
-  el.onclick=(e)=>{
-    const titleEl=e.target.closest('.title[data-rename-id]');
-    const delBtn=e.target.closest('button[data-del-id]');
-    const docRow=e.target.closest('.doc[data-id]');
+  var list=store.list().sort(function(a,b){return (b.updatedAt||0)-(a.updatedAt||0);});
+  var el=$$("docList"); if(!el) return;
+  var titleTip=(settings.lang==='ko'?'제목 클릭하여 수정':'Click title to rename');
+  var delTip=(settings.lang==='ko'?'삭제':'Delete');
+  el.innerHTML = (list.map(function(it){
+    var title=it.title||(settings.lang==="ja"?"無題":settings.lang==="en"?"Untitled":"무제");
+    var when=new Date(it.updatedAt||it.createdAt||Date.now()).toLocaleString(
+      settings.lang==="ja"?"ja-JP":settings.lang==="en"?"en-US":"ko-KR",{dateStyle:"short",timeStyle:"short"});
+    return '<div class="doc '+(it.id===curId?'active':'')+'" data-id="'+it.id+'">'+
+      '<div class="title" data-rename-id="'+it.id+'" title="'+titleTip+'">'+escapeHtml(title)+'</div>'+
+      '<div class="time">'+escapeHtml(when)+'</div>'+
+      '<div class="act"><button class="iconbtn" data-del-id="'+it.id+'" title="'+delTip+'">🗑️</button></div>'+
+    '</div>';
+  }).join("")) || '<div class="doc"><div class="title" data-i18n="doclist.empty">저장된 문서가 없습니다.</div></div>';
+  if(!list.length) applyI18n();
+  el.onclick=function(e){
+    var titleEl=e.target.closest?e.target.closest(".title[data-rename-id]"):null;
+    var delBtn=e.target.closest?e.target.closest("button[data-del-id]"):null;
+    var docRow=e.target.closest?e.target.closest(".doc[data-id]:not(.active)"):null;
     if(delBtn){
-      const id=delBtn.dataset.delId;
-      const doc=store.get(id);
-      if(confirm(`'${doc?.title||'무제'}' 문서를 삭제할까요?`)){
+      var id=delBtn.getAttribute("data-del-id");
+      var docTitle=(store.get(id)||{}).title||(settings.lang==="ja"?"無題":settings.lang==="en"?"Untitled":"무제");
+      var msg=settings.lang==="ko"?"'"+docTitle+"' 문서를 삭제할까요?":settings.lang==="ja"?"'"+docTitle+"' 文書を削除しますか?":"Delete document '"+docTitle+"'?";
+      if(confirm(msg)){
         store.remove(id);
-        store.saveList(store.list().filter(x=>x.id!==id));
-        if(curId===id){curId=""; editor?.setData("");}
-        renderList();
+        store.saveList(store.list().filter(function(x){return x.id!==id;}));
+        if(curId===id){
+          var next=store.list()[0];
+          if(next) openDoc(next.id);
+          else newDoc();
+        }else{
+          renderList();
+        }
       }
-    }else if(titleEl){
+    } else if(titleEl){
       enableInlineRename(titleEl);
-    }else if(docRow){
-      openDoc(docRow.dataset.id);
+    } else if(docRow){
+      openDoc(docRow.getAttribute("data-id"));
     }
   };
 }
 function enableInlineRename(el){
-  const id=el.dataset.renameId;
-  if(!id || el.contentEditable==="true") return;
-  const old=el.textContent;
-  el.contentEditable="true"; el.focus(); document.execCommand('selectAll', false, null);
-  const finish=(save=true)=>{
-    el.contentEditable="false"; el.onblur=null; el.onkeydown=null;
-    const nv=el.textContent.trim();
-    if(save && nv!==old){
-      const d=store.get(id); if(d){ d.title=nv||"무제"; d.updatedAt=Date.now(); store.set(id,d); renderList(); }
-    }else if(!save){ el.textContent=old; }
-  };
-  el.onblur=()=>finish(true);
-  el.onkeydown=(e)=>{ if(e.key==="Enter"){e.preventDefault();finish(true)} else if(e.key==="Escape"){e.preventDefault();finish(false)} };
+  var id=el.getAttribute("data-rename-id"); if(!id||el.contentEditable==="true") return;
+  var old=el.textContent; el.contentEditable="true"; el.focus(); document.execCommand("selectAll",false,null);
+  function finish(save){
+    if(save===void 0) save=true;
+    el.contentEditable="false"; el.removeEventListener("blur",onBlur); el.removeEventListener("keydown",onKey);
+    var nv=el.textContent.trim();
+    if(save && nv && nv!==old){ var d=store.get(id); if(d){ d.title=nv; d.updatedAt=Date.now(); store.set(id,d); renderList(); } }
+    else { el.textContent=old; }
+  }
+  function onBlur(){finish(true);}
+  function onKey(e){ if(e.key==="Enter"){e.preventDefault(); finish(true);} else if(e.key==="Escape"){e.preventDefault(); finish(false);} }
+  el.addEventListener("blur",onBlur); el.addEventListener("keydown",onKey);
 }
-$$("addDoc").onclick=newDoc; $$("iNew").onclick=newDoc;
+if($$("addDoc")){$$("addDoc").onclick=newDoc;}
+if($$("iNew")){$$("iNew").onclick=newDoc;}
+
+/* Export & Share */
 function exportPDF(){
-  if(!editor) return alert("에디터가 준비되지 않았습니다.");
-  const content=document.createElement('div');
+  if(!editor) return alert("Editor not ready.");
+  var content=document.createElement("div");
   content.innerHTML=editor.getData();
-  const opt={margin:10,filename:`ThinkHelper_${Date.now()}.pdf`,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+  content.style.fontFamily=getComputedStyle(document.body).fontFamily;
+  content.style.fontSize="11pt";
+  content.style.lineHeight="1.5";
+  content.style.padding="20mm";
+  var opt={margin:[20,20,20,20],filename:"ThinkHelper_"+Date.now()+".pdf",image:{type:"jpeg",quality:0.95},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}};
   html2pdf().from(content).set(opt).save();
 }
 function exportWord(){
-  if(!editor) return alert("에디터가 준비되지 않았습니다.");
-  const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
-    "xmlns:w='urn:schemas-microsoft-com:office:word' "+
-    "xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>ThinkHelper Export</title></head><body>";
-  const footer="</"+"body></html>";
-  const sourceHTML=header+editor.getData()+footer;
-  const source='data:application/vnd.ms-word;charset=utf-8,'+encodeURIComponent(sourceHTML);
-  const a=document.createElement('a');
+  if(!editor) return alert("Editor not ready.");
+  var header="<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>ThinkHelper Export</title><style> body { font-family: '"+getComputedStyle(document.body).fontFamily+"'; font-size: 11pt; } </style></head><body>";
+  var src=header+editor.getData()+footer;
+  var href='data:application/vnd.ms-word;charset=utf-8,'+encodeURIComponent(src);
+  var a=document.createElement("a");
   document.body.appendChild(a);
-  a.href=source; a.download=`ThinkHelper_${Date.now()}.doc`; a.click();
+  a.href=href; a.download="ThinkHelper_"+Date.now()+".doc"; a.click();
   document.body.removeChild(a);
 }
 async function sharePad(){
-  let url=location.href;
-  try{ await navigator.clipboard.writeText(url); }catch{}
-  const wrap=$$("shareModal"); wrap.style.display="flex";
-  const q=$$("qr"); q.innerHTML=""; new QRCode(q,{text:url,width:200,height:200});
+  var url=location.origin+location.pathname+(curId?("?doc="+encodeURIComponent(curId)):"");
+  try{await navigator.clipboard.writeText(url);}catch(e){}
+  var wrap=$$("shareModal"); wrap.style.display="flex";
+  var q=$$("qr"); q.innerHTML="";
+  new QRCode(q,{text:url,width:200,height:200,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});
 }
-$$("iSavePDF").onclick=exportPDF;
-$$("iSaveWord").onclick=exportWord;
-$$("iClipboard").onclick=sharePad;
-$$("shareClose").onclick=()=>($$("shareModal").style.display="none");
-$$("iPrint").onclick=()=>window.print();
-$$("iImport").onclick=()=>alert("PDF/Word/HWP 불러오기 (데모)");
-$$("iSaveHWP").onclick=()=>alert("HWP로 저장은 서버의 상용 변환기가 필요합니다.");
-$$("iTranslate").onclick=()=>alert("번역(데모): 서버 연동 시 실제 번역 가능합니다.");
-$$("iMakePPT").onclick=()=>window.open('https://slides.google.com/create','_blank');
-$$("iCollab").onclick=()=>{
-  const id=curId||"";
-  const link=`${location.origin}${location.pathname}${id?`?doc=${encodeURIComponent(id)}`:""}`;
-  const subject=encodeURIComponent("[ThinkHelper] 문서 협업 초대");
-  const body=encodeURIComponent(`아래 링크로 접속하면 문서를 함께 편집할 수 있어요(데모).\n\n${link}\n\n— ThinkHelper`);
-  location.href=`mailto:?subject=${subject}&body=${body}`;
-};
+if($$("iSavePDF")){$$("iSavePDF").onclick=exportPDF;}
+if($$("iSaveWord")){$$("iSaveWord").onclick=exportWord;}
+if($$("iClipboard")){$$("iClipboard").onclick=sharePad;}
+if($$("shareClose")){$$("shareClose").onclick=function(){$$("shareModal").style.display="none";};}
+if($$("iPrint")){$$("iPrint").onclick=function(){window.print();};}
+if($$("iImport")){$$("iImport").onclick=function(){alert("PDF/Word/HWP 불러오기 (데모)");};}
+if($$("iSaveHWP")){$$("iSaveHWP").onclick=function(){alert("HWP로 저장은 서버 변환기가 필요합니다.");};}
+if($$("iTranslate")){$$("iTranslate").onclick=function(){alert("번역 데모: 서버 연동 필요");};}
+if($$("iMakePPT")){$$("iMakePPT").onclick=function(){window.open("https://slides.google.com/create","_blank");};}
+if($$("iCollab")){$$("iCollab").onclick=function(){var id=curId||""; var link=location.origin+location.pathname+(id?("?doc="+encodeURIComponent(id)):""); var subject=encodeURIComponent("[ThinkHelper] 문서 협업 초대"); var body=encodeURIComponent("아래 링크로 접속하면 문서를 함께 편집할 수 있어요(데모).\n\n"+link+"\n\n- ThinkHelper"); location.href="mailto:?subject="+subject+"&body="+body;};}
 
-/* ========= Suggestions / AI Chip ========= */
-// (Suggestions 관련 함수는 이전과 동일... 생략)
-const aiChip=$$("aiChip"), suggPopup=$$("suggPopup"), suggList=$$("suggList");
-let suggActive=-1, suggItems=[], suggDebounce=null;
+/* Suggestions */
+var aiChip=$$("aiChip"), suggPopup=$$("suggPopup"), suggList=$$("suggList");
+var suggActive=-1, suggItems=[], suggDebounce=null;
+var KO_DICT=["감사합니다","안녕하세요","프로젝트","데이터","분석","결과","요청","확인","부탁드립니다","일정","회의","자료"];
+var EN_DICT=["Thank you","Hello","project","data","analysis","result","request","confirm","please","schedule","meeting","document"];
+var JA_DICT=["ありがとうございます","こんにちは","プロジェクト","データ","分析","結果","要請","確認","お願いします","日程","会議","資料"];
 function getPrefix(){
-  const text=editor.getData().replace(/<[^>]+>/g," ");
-  const parts=text.split(/\s+/); return parts[parts.length-1]||"";
+  if(!editor) return "";
+  try{
+    var model=editor.model; var sel=model.document.selection; var pos=sel.getFirstPosition(); if(!pos) return "";
+    var range=model.createRange(model.createPositionAt(pos.parent,0),pos); var text="";
+    var it=range.getItems(); var item;
+    for(item of it){ if(item.is && (item.is("$text")||item.is("$textProxy"))) text+=item.data; }
+    var m=text.match(/[A-Za-z0-9_-]+$/);
+    return m?m[0]:"";
+  }catch(e){
+    var t=editor.getData().replace(/<[^>]+>/g," ");
+    var parts=t.split(/\s+/); return parts[parts.length-1]||"";
+  }
 }
-const FILTER_OUT=new Set(["요약","요약하기","질문","정리"]);
-const KO_DICT=["개발","검색","계획","분석","최적화","테스트","프로젝트","템플릿","프레젠테이션","요약","이미지","코드","번역","데이터"];
-const EN_DICT=["develop","search","plan","analyze","optimize","test","project","template","summary","image","code","translate","data"];
-const JA_DICT=["開発","検索","計画","分析","最適化","テスト","プロジェクト","テンプレート","要約","画像","コード","翻訳","データ"];
-async function buildCandidates(prefix){
-  const p=(prefix||"").toLowerCase();
-  if(!prefix || prefix==="/") return [];
-  const words=(editor.getData().replace(/<[^>]+>/g," ").toLowerCase().match(/[a-zA-Z가-힣]+/g)||[]);
-  const freq={}; words.forEach(w=>{ if(w.length>2 && w.startsWith(p)) freq[w]=(freq[w]||0)+1; });
-  const freqWords=Object.keys(freq).sort((a,b)=>freq[b]-freq[a]);
-  const lang=settings.lang; const dict=lang==='en'?EN_DICT:lang==='ja'?JA_DICT:KO_DICT;
-  const items=[
-    ...freqWords.slice(0,5).map(w=>({kind:"DOC",text:w,tag:"문서"})),
-    ...dict.filter(w=> (lang==='ko'?w.startsWith(prefix):w.toLowerCase().startsWith(p))).slice(0,7).map(w=>({kind:"REC",text:w,tag:"추천"}))
-  ];
-  return Array.from(new Map(items.map(i=>[i.text,i])).values());
-}
-function renderSugg(items){
-  if(!items.length){suggPopup.style.display="none";return;}
-  suggList.innerHTML=items.map((it,i)=>`<li data-idx="${i}"><div class="kind">${it.kind}</div><div class="txt">${escapeHtml(it.text)}</div><div class="tag">${it.tag||""}</div></li>`).join("");
-  suggPopup.style.display="block"; suggActive=0; setActive(0);
-}
-function setActive(i){
-  const lis=[...suggList.querySelectorAll("li")]; lis.forEach(li=>li.dataset.active="0");
-  if(lis[i]) lis[i].dataset.active="1";
+function getLocalSuggestions(prefix){
+  var lang=settings.lang||"ko"; var dict=lang==="en"?EN_DICT:lang==="ja"?JA_DICT:KO_DICT;
+  var p=(prefix||"").toLowerCase(); var tag=(I18N[lang]||I18N.ko).suggest.local;
+  return dict.filter(function(w){return (lang==="ko"?w.indexOf(prefix)===0:w.toLowerCase().indexOf(p)===0);})
+             .slice(0,5).map(function(w){return {kind:"LOCAL",text:w,tag:tag};});
 }
 function applySuggestion(i){
-  const it=suggItems[i]; if(!it) return;
-  const prefix=getPrefix();
-  const insert=it.text.slice(prefix.length);
-  editor.model.change(w=>{editor.model.insertContent(w.createText(insert), editor.model.document.selection);});
+  var it=suggItems[i]; if(!it) return;
+  var prefix=getPrefix();
+  var ins=it.text.indexOf(prefix)===0?it.text.slice(prefix.length):it.text;
+  editor.model.change(function(w){
+    var sel=editor.model.document.selection;
+    if(sel.isCollapsed && prefix.length>0){
+      var pos=sel.getFirstPosition();
+      var start=pos.getShiftedBy(-prefix.length);
+      if(start){
+        var r=editor.model.createRange(start,pos); var s="";
+        var iter=r.getItems(); var itm;
+        for(itm of iter){ if(itm.is && (itm.is("$text")||itm.is("$textProxy"))) s+=itm.data; }
+        if(s===prefix){w.remove(r);}
+      }
+    }
+    editor.model.insertContent(w.createText(ins),sel);
+  });
   saveDoc(); closeSuggest();
 }
-function closeSuggest(){suggPopup.style.display="none"; suggActive=-1; suggItems=[];}
-async function openSuggest(){
-  const px=getPrefix(); if(!px) return closeSuggest();
-  suggItems=await buildCandidates(px); renderSugg(suggItems);
-}
-function triggerSuggest(){
-  if(!settings.suggest) return;
-  clearTimeout(suggDebounce); suggDebounce=setTimeout(openSuggest, 220);
-}
-$$("suggClose").onclick=closeSuggest;
-document.addEventListener("keydown",(e)=>{
-  if(suggPopup.style.display!=="block") return;
-  if(e.key==="ArrowDown"){e.preventDefault();suggActive=Math.min(suggActive+1, suggItems.length-1); setActive(suggActive);}
-  else if(e.key==="ArrowUp"){e.preventDefault();suggActive=Math.max(suggActive-1,0); setActive(suggActive);}
-  else if(e.key==="Enter"){e.preventDefault();applySuggestion(suggActive);}
-});
-function updateGhostSuggest(){
-  const el=$$("ghostSuggest"); if(!el) return;
-  if(!settings.suggest){ el.textContent=""; return; }
-  const txt=editor?.getData().replace(/<[^>]+>/g," ").trim()||"";
-  if(!txt){
-    el.textContent= settings.lang==='en' ? "e.g., 'Summarize today's meeting in 5 bullets'" :
-                     settings.lang==='ja' ? "例: 「今日の会議を5行で要約」" :
-                     "예: '오늘 회의 요약 5줄'";
-  }else{
-    el.textContent="→ 핵심만 5줄로 요약할까요?  /search 최신 자료";
-  }
-}
-
-/* ========= Right Sidebar ========= */
-function switchSidebarTab(tab){
-  document.querySelectorAll(".sidebar-nav .tab").forEach(t=>t.dataset.active=(t.dataset.tab===tab?"1":"0"));
-  document.querySelectorAll(".sidebar-content").forEach(c=>c.dataset.active=(c.id.toLowerCase().includes(tab)?"1":"0"));
-}
-document.querySelectorAll(".sidebar-nav .tab").forEach(t=>t.onclick=()=>switchSidebarTab(t.dataset.tab));
-
-// ★★★ (수정 2/4) renderSearch 함수는 '데모' 글자만 삭제
-function renderSearch(summary, sources){
-  const c=$$("rightSearchResults");
-  c.innerHTML=`<div class="search-summary">${escapeHtml(summary)}</div>
-  <div class="search-sources"><h4>출처</h4><ul>${ // '출처(데모)'에서 '(데모)' 텍스트 삭제
-    (sources || []).map(s=>`<li><a href="${escapeHtml(s.url || '#')}" target="_blank"><strong>${escapeHtml(s.title || '제목 없음')}</strong><span>${escapeHtml(s.url || 'URL 없음')}</span></a></li>`).join("")
-  }</ul></div>`;
-  switchSidebarTab('search');
-}
-
-// ★★★ (수정 3/4) internalSearch 함수를 DeepSearch API 호출하도록 수정 (설계도 반영)
-async function internalSearch(q){
-  const s = q.replace(/^(\?|\/search)\s*/,'').trim();
-  if(!s) return renderSearch("검색어를 입력해 주세요.",[]);
-
-  renderSearch(`'${s}'에 대한 DeepSearch AI 요약 검색 중...`,[]);
-  
-  if (!FEED_API_ENDPOINT || !DEEPSEARCH_API_KEY.startsWith("5e")) {
-    renderSearch("DEEPSEARCH_API_KEY가 설정되지 않았습니다. (index.html 403번째 줄)",[]);
-    return;
-  }
-
-  try {
-    // 👈 '설계도' 반영: GET, /v1/global-articles, 쿼리 파라미터로 q
-    const res = await fetch(`${FEED_API_ENDPOINT}/v1/global-articles?q=${encodeURIComponent(s)}&limit=5&return_fields=title,url,summary_ko`, { // 👈 (추측) summary_ko 반환 요청
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${DEEPSEARCH_API_KEY}` // 👈 '설계도' 반영: 헤더 인증
-        }
-    });
-    
-    if (!res.ok) throw new Error(`DeepSearch 검색 API 에러: ${res.status}`);
-    
-    const data = await res.json();
-
-    // 🔴 (경고!) 이 부분은 내가 100% 추측한 거야! API 문서의 '응답 예시'를 봐야 해.
-    const summary = data?.summary || "AI 요약이 없습니다. (API 응답 구조 확인 필요)";
-    const sources = (data?.documents || data?.articles || data?.items || []).map(doc => ({
-        title: doc.title,
-        url: doc.url,
-        summary: doc.summary_ko // (추측)
-    })); 
-    
-    // (추측) 요약이 따로 안 오면 첫 번째 문서 요약을 씀
-    const finalSummary = summary === "AI 요약이 없습니다. (API 응답 구조 확인 필요)" 
-                         ? (sources[0]?.summary || summary) 
-                         : summary;
-
-    renderSearch(finalSummary, sources);
-
-  } catch (e) {
-    console.error("internalSearch failed:", e);
-    renderSearch(`'${s}' 검색 실패: ${e.message} (API 키/응답 구조 확인)`, []);
-  }
-}
-
-// ★★★ (수정 4/4) loadFeed 함수를 DeepSearch API 호출하도록 수정 (설계도 반영)
-async function loadFeed(topic="IT"){
-  const c=$$("rightFeed");
-  if (!FEED_API_ENDPOINT || !DEEPSEARCH_API_KEY.startsWith("5e")) {
-    c.innerHTML = `<div class="feed-item"><div class="feed-content">DEEPSEARCH_API_KEY가 설정되지 않았습니다.</div></div>`;
-    return;
-  }
-  c.innerHTML = `<div class="spinner"></div>`; 
-  
-  try {
-    // 👈 '설계도' 반영: GET, /v1/global-articles, 쿼리로 topic
-    const res = await fetch(`${FEED_API_ENDPOINT}/v1/global-articles?q=${encodeURIComponent(topic)}&limit=10&return_fields=title,url,provider_name,image_url`, {
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${DEEPSEARCH_API_KEY}` // 👈 '설계도' 반영: 헤더 인증
-        }
-    });
-    if (!res.ok) throw new Error(`DeepSearch 피드 API 에러: ${res.status}`);
-    
-    const data = await res.json();
-    
-    // 🔴 (경고!) 이 부분도 내가 100% 추측한 거야! API 문서의 '응답 예시'를 봐야 해.
-    const items = data?.documents || data?.articles || data?.items || [];
-    
-    if (!items.length) {
-        c.innerHTML = `<div class="feed-item"><div class="feed-content">실시간 피드가 없습니다. (API 응답 구조 확인 필요)</div></div>`;
-        return;
+function triggerSuggest(){ if(!settings.suggest||!editor) return; clearTimeout(suggDebounce); suggDebounce=setTimeout(openSuggest,350); }
+async function openSuggest(){ if(!editor) return closeSuggest(); var prefix=getPrefix(); if(!prefix) return closeSuggest(); var context=editor.getData().replace(/<[^>]+>/g," ").slice(-500); suggItems=await fetchAiSuggestions(context,prefix); renderSugg(suggItems);}
+async function fetchAiSuggestions(context,prefix){
+  var lang=settings.lang||"ko"; var label=(I18N[lang]||I18N.ko).suggest;
+  var est=Math.ceil((context.length+50)/APPROX_CHARS_PER_TOKEN); if(!checkTokenLimitOrWarn(est)) return getLocalSuggestions(prefix);
+  if(SERVER_API_ENDPOINT){
+    try{
+      var r=await fetch(SERVER_API_ENDPOINT+"/suggest_word",{method:"POST",headers:{"Content-Type":"application/json","Accept-Language":lang},body:JSON.stringify({context:context,prefix:prefix})});
+      if(!r.ok) throw new Error("Server "+r.status);
+      var data=await r.json();
+      var arr=(data&&data.suggestions?data.suggestions:[]).filter(function(s){return s && s!==prefix;});
+      var token=Math.ceil((context.length+(arr.join(" ").length))/APPROX_CHARS_PER_TOKEN); addUsedTokens(token);
+      if(!arr.length) return getLocalSuggestions(prefix);
+      return arr.map(function(s){return {kind:"AI",text:s,tag:label.ai};});
+    }catch(e){
+      return getLocalSuggestions(prefix);
     }
-    
-    c.innerHTML = items.map(it=>`
-      <div class="feed-item" onclick="window.open('${escapeHtml(it.url || '#')}','_blank')">
-        <img src="${escapeHtml(it.image_url || 'https://placehold.co/340x140/cccccc/333333?text=No+Image')}" alt="뉴스 썸네일">
-        <div class="feed-content">
-          <div class="feed-source">${escapeHtml(it.provider_name || "출처 불명")}</div>
-          <div class="feed-title">${escapeHtml(it.title)}</div>
-        </div>
-      </div>`).join("");
-      
-  } catch (e) {
-    console.error("loadFeed failed:", e);
-    c.innerHTML = `<div class="feed-item"><div class="feed-content">피드 로드 실패: ${e.message} (API 키/응답 구조 확인)</div></div>`;
   }
+  return getLocalSuggestions(prefix);
+}
+function renderSugg(items){
+  if(!items||!items.length){suggPopup.style.display="none"; return;}
+  var lang=settings.lang||"ko"; var labels=(I18N[lang]||I18N.ko).suggest;
+  suggList.innerHTML=items.map(function(it,i){
+    return '<li data-idx="'+i+'"><div class="kind">'+escapeHtml(it.kind)+'</div><div class="txt">'+escapeHtml(it.text)+'</div><div class="tag">'+escapeHtml(it.tag||(it.kind==="AI"?labels.ai:it.kind==="LOCAL"?labels.local:labels.error))+'</div></li>';
+  }).join("");
+  var rect=null; try{rect=editor.editing.view.getDomRoot().getBoundingClientRect();}catch(e){}
+  var wrap=($$("editorWrap")?$$("editorWrap").getBoundingClientRect():null);
+  if(rect&&wrap){suggPopup.style.top=(rect.top+80-wrap.top)+"px"; suggPopup.style.left=(rect.left+20-wrap.left)+"px";}
+  else {suggPopup.style.top="100px"; suggPopup.style.left="50px";}
+  suggPopup.style.display="block"; suggActive=0; setActive(0);
+}
+function setActive(i){var lis=[].slice.call(suggList.querySelectorAll("li")); for(var k=0;k<lis.length;k++){lis[k].dataset.active="0";} if(lis[i]) lis[i].dataset.active="1";}
+function closeSuggest(){suggPopup.style.display="none"; suggActive=-1; suggItems=[];}
+if($$("suggClose")){$$("suggClose").onclick=closeSuggest;}
+document.addEventListener("keydown",function(e){
+  if(suggPopup.style.display!=="block") return;
+  if(e.key==="ArrowDown"){e.preventDefault(); suggActive=Math.min(suggActive+1, suggItems.length-1); setActive(suggActive);}
+  else if(e.key==="ArrowUp"){e.preventDefault(); suggActive=Math.max(suggActive-1,0); setActive(suggActive);}
+  else if(e.key==="Enter"||e.key==="Tab"){e.preventDefault(); applySuggestion(suggActive);}
+  else if(e.key==="Escape"){e.preventDefault(); closeSuggest();}
+});
+if(suggList){suggList.addEventListener("click",function(e){var li=e.target.closest?e.target.closest("li[data-idx]"):null; if(li) applySuggestion(Number(li.getAttribute("data-idx")));});}
+function updateGhostSuggest(){
+  var el=$$("ghostSuggest"); if(!el||!settings.suggest){ if(el) el.textContent=""; return; }
+  var txt=(editor?editor.getData():"").replace(/<[^>]+>/g," ").trim()||"";
+  var lang=settings.lang||"ko";
+  if(!txt){el.textContent=lang==="en"?"e.g., 'Summarize today's meeting'":lang==="ja"?"例: 「今日の会議を要約」":"예: '오늘 회의 요약'";}
+  else {el.textContent=lang==="ko"?"→ 다음에 쓸 내용은?":"→ next?";}
 }
 
-/* ========= Command Bar ========= */
-function setupCommandBar(){
-  const cmdInput=$$("cmdInput"), cmdSend=$$("cmdSend");
-  async function handle(){
-    const v=(cmdInput.value||"").trim();
-    if(!v) return;
-    if(v.startsWith("/search") || v.startsWith("?")) { await internalSearch(v); }
-    else { openChat(); await sendChat(v); }
-    cmdInput.value="";
+/* Right sidebar */
+function switchSidebarTab(tab){
+  var tabs=[].slice.call(document.querySelectorAll(".sidebar-nav .tab"));
+  for(var i=0;i<tabs.length;i++){
+    var t=tabs[i]; var on=t.getAttribute("data-tab")===tab;
+    t.setAttribute("data-active", on?"1":"0");
+    if(on){ if(tab==="feed") loadFeed(); else if(tab==="topics") loadTopics(); }
   }
-  cmdSend.onclick=handle;
-  cmdInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); handle(); }});
-  $$("cmdSuggestions").addEventListener('click',(e)=>{
-    const b=e.target.closest(".chip"); if(!b) return;
-    if(b.dataset.cmd==="create_doc"){ editor.setData("<h1>새 문서 템플릿</h1><p>여기에 내용을 입력하세요.</p>"); saveDoc(); }
-    if(b.dataset.cmd==="edit_doc"){ openChat(); sendChat("이 문서 문장 다듬어줘"); }
+  var cont=[].slice.call(document.querySelectorAll(".sidebar-content"));
+  for(i=0;i<cont.length;i++){
+    var c=cont[i]; var k=c.id.toLowerCase().indexOf("search")>-1?"topics":(c.id.toLowerCase().indexOf("feed")>-1?"feed":"");
+    c.setAttribute("data-active", (k===tab)?"1":"0");
+  }
+}
+var tabBtns=document.querySelectorAll(".sidebar-nav .tab");
+for(var tb=0;tb<tabBtns.length;tb++){tabBtns[tb].onclick=function(){switchSidebarTab(this.getAttribute("data-tab"));};}
+
+/* 안전한 DOM 렌더링 (문자열 연결 제거) */
+function renderSearch(summary,sources){
+  var wrap=$$("rightSearchResults"); if(!wrap) return;
+  wrap.innerHTML="";
+  var sum=document.createElement("div");
+  sum.className="search-summary";
+  sum.textContent=summary||"";
+  wrap.appendChild(sum);
+
+  var sec=document.createElement("div"); sec.className="search-sources";
+  var h=document.createElement("h4"); h.textContent=(settings.lang==="ko"?"출처":settings.lang==="ja"?"出典":"Sources");
+  sec.appendChild(h);
+  var ul=document.createElement("ul");
+  (sources||[]).forEach(function(s){
+    var li=document.createElement("li");
+    var a=document.createElement("a");
+    a.target="_blank"; a.rel="noopener noreferrer";
+    a.href=s.url||"#";
+    var st=document.createElement("strong"); st.textContent=s.title|| (settings.lang==="ko"?"제목 없음":settings.lang==="ja"?"タイトルなし":"Untitled");
+    var sp=document.createElement("span"); sp.textContent=s.url|| (settings.lang==="ko"?"URL 없음":settings.lang==="ja"?"URLなし":"No URL");
+    a.appendChild(st); a.appendChild(sp); li.appendChild(a); ul.appendChild(li);
   });
+  sec.appendChild(ul); wrap.appendChild(sec);
 }
 
-/* ========= Helper Model (오프라인) ========= */
-// (callHelperModel 함수는 이전과 동일... 생략)
-const helperResponses={
-  greeting:["안녕하세요! 무엇을 도와드릴까요? (헬퍼 1.0)","반갑습니다! (헬퍼 1.0)"],
-  thanks:["천만에요! (헬퍼 1.0)","언제든지요! (헬퍼 1.0)"],
-  default:["조금 더 구체적으로 알려주실래요? (헬퍼 1.0)","음… 그건 어려워요. 다른 방식으로 물어볼까요? (헬퍼 1.0)"]
-};
-function callHelperModel(prompt){
-  const p=prompt.toLowerCase();
-  if(/(hi|hello|안녕)/.test(p)) return helperResponses.greeting[Math.floor(Math.random()*helperResponses.greeting.length)];
-  if(/(고마워|감사)/.test(p)) return helperResponses.thanks[Math.floor(Math.random()*helperResponses.thanks.length)];
-  if(/요약/.test(p)){
-    const text=editor.getData().replace(/<[^>]+>/g," ").trim().slice(0,600);
-    if(!text) return "요약할 내용이 없어요. (헬퍼 1.0)";
-    const bullets=text.split(/[.?!]\s+/).slice(0,5).map(s=>"- "+s.trim()).join("\n");
-    return "요약(데모):\n"+bullets+"\n(헬퍼 1.0)";
+async function internalSearch(q){
+  var s=(q||"").trim(); if(!s){ renderSearch("검색어 없음",[]); return; }
+  var lang=settings.lang||"ko"; renderSearch((lang==="ko"?"'"+s+"' 검색 중...":"Searching for '"+s+"'..."),[]);
+  if(!FEED_API_ENDPOINT||!DEEPSEARCH_API_KEY||DEEPSEARCH_API_KEY==="YOUR_DEEPSEARCH_API_KEY_HERE"){renderSearch("DEEPSEARCH_API_KEY가 설정되지 않았습니다.",[]); return;}
+  try{
+    var fields="title,url,summary_ko,published_at,provider_name";
+    var langParam=lang==="ko"?"&lang=ko":"";
+    var r=await fetch(FEED_API_ENDPOINT+"/v1/global-articles?q="+encodeURIComponent(s)+"&limit=5&return_fields="+fields+langParam,{headers:{Authorization:"Bearer "+DEEPSEARCH_API_KEY}});
+    if(!r.ok) throw new Error("DeepSearch Search API Error: "+r.status);
+    var data=await r.json();
+    var docs=data.documents||data.articles||data.items||[];
+    var summary=(docs[0]&&docs[0].summary_ko)?docs[0].summary_ko:(lang==="ko"?"'"+s+"'에 대한 검색 결과입니다.":"Search results for '"+s+"'.");
+    var src=docs.map(function(d){return {title:d.title,url:d.url};});
+    renderSearch(summary,src);
+  }catch(e){ renderSearch("'"+s+"' 검색 실패: "+e.message,[]); }
+}
+
+async function loadTopics(){
+  var c=$$("rightSearchResults"); if(!c) return;
+  c.innerHTML='<div class="spinner"></div>';
+  if(SERVER_API_ENDPOINT){
+    try{
+      var last5=chatHistory.slice(-5).map(function(m){return (m.role==="user"?"User":"AI")+": "+m.content;}).join("\n");
+      var editorCtx=(editor?editor.getData():"").replace(/<[^>]+>/g," ").trim().slice(-500)||"";
+      var r=await fetch(SERVER_API_ENDPOINT+"/get_topics",{method:"POST",headers:{"Content-Type":"application/json","Accept-Language":settings.lang||"ko"},body:JSON.stringify({context:(last5+"\n\n"+editorCtx).trim()})});
+      if(!r.ok) throw new Error("Server "+r.status);
+      var data=await r.json(); var topics=data.topics||[];
+      if(!topics.length){ c.innerHTML='<div class="search-summary">추천 주제 없음</div>'; return; }
+      var ul=document.createElement("ul");
+      topics.forEach(function(t){
+        var li=document.createElement("li");
+        li.textContent=t;
+        li.onclick=function(){internalSearch(t);};
+        ul.appendChild(li);
+      });
+      c.innerHTML=""; c.appendChild(ul);
+    }catch(e){ c.innerHTML='<div class="search-summary">주제 로딩 실패: '+e.message+'</div>'; }
+  }else{
+    c.innerHTML='<div class="search-summary">서버 설정 필요</div>';
   }
-  return helperResponses.default[Math.floor(Math.random()*helperResponses.default.length)];
 }
 
-/* ========= Chat ========= */
-// (Chat 관련 함수는 이전과 동일... EC2 서버 /ask 호출)
-const THREADS_KEY="th.threads";
-function threads(){try{return JSON.parse(localStorage.getItem(THREADS_KEY)||"[]")}catch{return[]}}
-function saveThreads(a){localStorage.setItem(THREADS_KEY,JSON.stringify(a||[]))}
-let chatHistory=[], threadId=null;
+async function loadFeed(topic){
+  if(topic===void 0) topic="IT";
+  var c=$$("rightFeed"); if(!c) return;
+  if(!FEED_API_ENDPOINT||!DEEPSEARCH_API_KEY||DEEPSEARCH_API_KEY==="YOUR_DEEPSEARCH_API_KEY_HERE"){
+    c.innerHTML='<div class="feed-item"><div class="feed-content">DEEPSEARCH_API_KEY가 설정되지 않았습니다.</div></div>'; return;
+  }
+  c.innerHTML='<div class="spinner"></div>';
+  try{
+    var langParam=settings.lang==="ko"?"&lang=ko":"";
+    var query=(topic==="IT"&&settings.lang==="ko")?"최신 IT 뉴스":topic;
+    var fields="title,url,provider_name,image_url,published_at";
+    var r=await fetch(FEED_API_ENDPOINT+"/v1/global-articles?q="+encodeURIComponent(query)+"&limit=10&sort=latest&return_fields="+fields+langParam,{headers:{Authorization:"Bearer "+DEEPSEARCH_API_KEY}});
+    if(!r.ok) throw new Error("DeepSearch Feed API Error: "+r.status);
+    var data=await r.json();
+    var items=data.documents||data.articles||data.items||[];
+    c.innerHTML="";
+    if(!items.length){ c.innerHTML='<div class="feed-item"><div class="feed-content">실시간 피드가 없습니다.</div></div>'; return; }
+
+    items.forEach(function(it){
+      var a=document.createElement("a");
+      a.className="feed-item"; a.target="_blank"; a.rel="noopener noreferrer";
+      a.href=it.url || "#";
+
+      var img=document.createElement("img");
+      img.alt="뉴스 썸네일"; img.loading="lazy";
+      img.src = it.image_url ? it.image_url : "https://placehold.co/340x140/cccccc/333333?text=No+Image";
+
+      var content=document.createElement("div"); content.className="feed-content";
+      var src=document.createElement("div"); src.className="feed-source"; src.textContent=it.provider_name || "출처 불명";
+      var title=document.createElement("div"); title.className="feed-title"; title.textContent=it.title || "";
+
+      content.appendChild(src); content.appendChild(title);
+      a.appendChild(img); a.appendChild(content);
+      c.appendChild(a);
+    });
+  }catch(e){
+    c.innerHTML='<div class="feed-item"><div class="feed-content">에러: '+e.message+'</div></div>';
+  }
+}
+
+/* Command bar & chat */
+function setupCommandBar(){
+  var input=$$("cmdInput"), send=$$("cmdSend");
+  async function handle(){var v=(input.value||"").trim(); if(!v) return; openChat(); await sendChat(v); input.value="";}
+  if(send) send.onclick=handle;
+  if(input){input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault(); handle();}});}
+  var sugWrap=$$("cmdSuggestions");
+  if(sugWrap){
+    sugWrap.addEventListener("click",function(e){
+      var b=e.target.closest?e.target.closest(".chip"):null; if(!b) return;
+      var lang=settings.lang||"ko";
+      if(b.getAttribute("data-cmd")==="create_doc"){
+        var tpl=lang==="ko"?"<h1>새 문서 템플릿</h1><p>여기에 내용을 입력하세요.</p>":lang==="ja"?"<h1>新規文書テンプレート</h1><p>ここに内容を入力してください。</p>":"<h1>New Document Template</h1><p>Start writing here.</p>";
+        if(editor) editor.setData(tpl); saveDoc();
+      }else if(b.getAttribute("data-cmd")==="edit_doc"){
+        var prompt=lang==="ko"?"이 문서 문장 다듬어줘":lang==="ja"?"この文書の文章を整えてください":"Refine the sentences in this document";
+        openChat(); sendChat(prompt);
+      }
+    });
+  }
+}
+
+var THREADS_KEY="th.threads";
+function threads(){try{return JSON.parse(localStorage.getItem(THREADS_KEY)||"[]");}catch(e){return [];}}
+function saveThreads(a){localStorage.setItem(THREADS_KEY,JSON.stringify(a||[]));}
+var chatHistory=[], threadId=null;
 function renderThreads(){
-  const list=threads();
-  const el=$$("chatThreads");
-  el.innerHTML=list.map(t=>`<div class="threadRow" data-id="${t.id}" data-active="${t.id===threadId?1:0}">
-     <div style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(t.title||"새 스레드")}</div>
-     <div class="threadActions"><button class="iconbtn" data-del="${t.id}">🗑️</button></div>
-  </div>`).join("") || `<div class="threadRow">스레드가 없습니다.</div>`;
-  el.onclick=(e)=>{
-    const d=e.target.closest("[data-del]");
-    const r=e.target.closest(".threadRow[data-id]");
-    if(d){ const id=d.dataset.del; const ls=threads().filter(x=>x.id!==id); saveThreads(ls); if(threadId===id){threadId=null; chatHistory=[]; $$("chatBody").innerHTML="";} renderThreads(); return; }
-    if(r){ openThread(r.dataset.id); }
-  };
+  var box=$$("chatThreads"); if(!box) return;
+  var list=threads().sort(function(a,b){return (b.updatedAt||0)-(a.updatedAt||0);});
+  box.innerHTML = (list.map(function(t){
+    return '<div class="threadRow" data-id="'+t.id+'" data-active="'+(t.id===threadId?'1':'0')+'">'+
+           '<div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">'+escapeHtml(t.title||"새 스레드")+'</div>'+
+           '<div style="color:#888;font-size:.8rem">'+new Date(t.updatedAt||t.createdAt).toLocaleDateString()+'</div></div>';
+  }).join("")) || '<div class="sys" style="margin:8px">스레드 없음</div>';
+  box.onclick=function(e){var row=e.target.closest?e.target.closest(".threadRow"):null; if(!row) return; openThread(row.getAttribute("data-id"));};
 }
 function newThread(){
-  const id="t_"+Date.now(); threadId=id; chatHistory=[];
-  const list=[{id, title:"새 스레드", history:[]} , ...threads()];
-  saveThreads(list); renderThreads(); $$("threadTitleInput").value="새 스레드"; $$("chatBody").innerHTML="";
+  var id="t_"+Date.now();
+  var row={id:id,title:"새 스레드",createdAt:Date.now(),updatedAt:Date.now(),history:[]};
+  var merged=[row].concat(threads());
+  saveThreads(merged);
+  threadId=id; chatHistory=[];
+  renderThreads();
+  if($$("threadTitleInput")) $$("threadTitleInput").value=row.title;
+  if($$("chatBody")) $$("chatBody").innerHTML="";
 }
 function openThread(id){
-  const t=threads().find(x=>x.id===id); if(!t) return;
+  var list=threads(); var t=null;
+  for(var i=0;i<list.length;i++){if(list[i].id===id){t=list[i]; break;}}
+  if(!t) return;
   threadId=id; chatHistory=t.history||[];
-  $$("threadTitleInput").value=t.title||"";
   $$("chatBody").innerHTML="";
-  chatHistory.forEach(m=>addBubble(m.content, m.role==='user', false));
+  for(var j=0;j<chatHistory.length;j++){var m=chatHistory[j]; addBubble(m.content,m.role==="user",false,true);}
+  if($$("threadTitleInput")) $$("threadTitleInput").value=t.title||"";
   renderThreads();
 }
 function persistThread(){
-  if(!threadId) newThread();
-  const title=$$("threadTitleInput").value.trim()||"새 스레드";
-  const list=threads();
-  const i=list.findIndex(x=>x.id===threadId);
-  const obj={ id:threadId, title, history:chatHistory.slice(-50) };
-  if(i>=0) list[i]=obj; else list.unshift(obj);
+  if(!threadId) return;
+  var list=threads(); var idx=-1; for(var i=0;i<list.length;i++){if(list[i].id===threadId){idx=i;break;}}
+  if(idx<0) return;
+  var title=($$("threadTitleInput")?($$("threadTitleInput").value.trim()||"새 스레드"):(list[idx].title||"새 스레드"));
+  list[idx]=Object.assign({}, list[idx], {
+    title: title,
+    updatedAt: Date.now(),
+    history: chatHistory.slice(-200)
+  });
   saveThreads(list); renderThreads();
 }
-$$("renameThread").onclick=persistThread;
-$$("deleteThread").onclick=()=>{ if(threadId){ const list=threads().filter(x=>x.id!==threadId); saveThreads(list); threadId=null; chatHistory=[]; $$("chatBody").innerHTML=""; renderThreads(); }};
-const chatDock=$$("chatDock"), chatInput=$$("chatInput");
-function openChat(){ chatDock.style.display="flex"; chatDock.setAttribute("aria-hidden","false"); if(!threadId) newThread(); }
-function closeChat(){ chatDock.style.display="none"; chatDock.setAttribute("aria-hidden","true"); }
-$$("chatBtn").onclick=openChat; $$("chatClose").onclick=closeChat;
-$$("btnChatPlus").onclick=(e)=>{e.stopPropagation(); const m=$$("chatPlusMenu"); m.style.display=m.style.display==="block"?"none":"block";};
-document.addEventListener("click",()=>{const m=$$("chatPlusMenu"); if(m) m.style.display="none";});
-function addBubble(text,me=false,isErr=false){
-  const b=document.createElement("div"); b.className="bubble "+(me?"me":"ai")+(isErr?" sys":""); b.textContent=text;
-  $$("chatBody").appendChild(b); b.scrollIntoView({behavior:"smooth",block:"end"}); return b;
-}
-async function typeOut(b,text,delay=4){ b.textContent=""; for(let i=1;i<=text.length;i++){ b.textContent=text.slice(0,i); if(i%3===0 && delay>0) await sleep(delay);} }
-$$("chatBody").addEventListener('click', (e)=>{ const bub=e.target.closest(".bubble.ai"); if(!bub) return; chatInput.value=bub.textContent; chatInput.focus(); });
+if($$("renameThread")){$$("renameThread").onclick=persistThread;}
+if($$("deleteThread")){$$("deleteThread").onclick=function(){ if(!threadId) return; var list=threads().filter(function(x){return x.id!==threadId;}); saveThreads(list); threadId=null; chatHistory=[]; $$("chatBody").innerHTML=""; renderThreads(); };}
 
+var chatDock=$$("chatDock"), chatInput=$$("chatInput");
+function openChat(){chatDock.style.display="flex"; chatDock.setAttribute("aria-hidden","false"); if(!threadId) newThread(); if($$("chatInput")) $$("chatInput").focus();}
+function closeChat(){chatDock.style.display="none"; chatDock.setAttribute("aria-hidden","true");}
+if($$("chatBtn")){$$("chatBtn").onclick=openChat;}
+if($$("chatClose")){$$("chatClose").onclick=closeChat;}
+if($$("btnChatPlus")){$$("btnChatPlus").onclick=function(e){e.stopPropagation(); var m=$$("chatPlusMenu"); if(m) m.style.display=m.style.display==="block"?"none":"block";};}
+document.addEventListener("click",function(){var m=$$("chatPlusMenu"); if(m) m.style.display="none";});
+function addBubble(text,me,isErr,skipPersist){ if(me===void 0) me=false; if(isErr===void 0) isErr=false; if(skipPersist===void 0) skipPersist=false;
+  var b=document.createElement("div");
+  b.className="bubble "+(me?"me":(isErr?"sys":"ai"));
+  b.textContent=text;
+  $$("chatBody").appendChild(b);
+  $$("chatBody").scrollTop=$$("chatBody").scrollHeight;
+  if(!skipPersist){chatHistory.push({role:me?"user":"assistant",content:text}); persistThread();}
+  return b;
+}
+async function typeOut(b,text,delay){ if(delay===void 0) delay=4;
+  b.textContent="";
+  for(var i=0;i<text.length;i++){ b.textContent+=text[i]; if(i%3===0) await sleep(delay); }
+  $$("chatBody").scrollTop=$$("chatBody").scrollHeight;
+}
+if($$("chatBody")){$$("chatBody").addEventListener("click",function(e){var t=e.target.closest?e.target.closest(".bubble.ai"):null; if(!t) return; $$("chatInput").value=t.textContent; $$("chatInput").focus();});}
 async function sendChat(msg){
-  addBubble(msg, true);
-  chatHistory.push({role: "user", content: msg});
-  persistThread();
-  const holder = addBubble("…", false);
-  
-  if (SERVER_API_ENDPOINT) {
-      try {
-          const res = await fetch(SERVER_API_ENDPOINT + "/ask", { 
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                  question: msg, 
-                  id: threadId || ""
-              })
-          });
-          if (!res.ok) throw new Error(`서버 에러: ${res.status}`);
-          const data = await res.json();
-          const reply = data?.answer || "(AI 응답이 없습니다)"; 
-          await typeOut(holder, reply);
-          updateChatUI(data?.plan); 
-          chatHistory.push({role: "assistant", content: holder.textContent});
-          persistThread();
-      } catch (e) {
-          console.error("Chat API failed:", e);
-          const errMsg = "서버 연결에 실패했습니다. (CORS 또는 네트워크 오류일 수 있습니다)";
-          await typeOut(holder, errMsg, 0); 
-          holder.classList.add("sys");
-          updateChatUI("offline");
-      }
-  } else {
-      const reply = callHelperModel(msg, chatHistory);
-      await typeOut(holder, reply);
-      updateChatUI("helper_1.0_offline");
-      chatHistory.push({role: "assistant", content: holder.textContent});
-      persistThread();
+  var est=Math.ceil((msg.length+150)/APPROX_CHARS_PER_TOKEN); if(!checkTokenLimitOrWarn(est)){addBubble((I18N[settings.lang]||I18N.ko).limit.hit(settings.lang==="ko"?"자정":"midnight"),false,true); return;}
+  addBubble(msg,true); chatHistory.push({role:"user",content:msg}); persistThread();
+  var holder=addBubble("...",false);
+  if(SERVER_API_ENDPOINT){
+    try{
+      var r=await fetch(SERVER_API_ENDPOINT+"/ask",{method:"POST",headers:{"Content-Type":"application/json","Accept-Language":settings.lang||"ko"},body:JSON.stringify({question:msg,id:threadId||""})});
+      if(!r.ok){var t=await r.text(); throw new Error("Server Error: "+r.status+" "+t);}
+      var data=await r.json(); var reply=(data&&data.answer)?data.answer:"(AI Response Error)";
+      var actual=Math.ceil((msg.length+reply.length)/APPROX_CHARS_PER_TOKEN); addUsedTokens(actual);
+      await typeOut(holder,reply);
+      chatHistory.push({role:"assistant",content:holder.textContent}); persistThread();
+    }catch(e){
+      await typeOut(holder,(I18N[settings.lang]||I18N.ko).error.serverConnect+" "+e.message,0); holder.classList.add("sys");
+    }
+  }else{
+    await typeOut(holder,"Server address not configured.",0); holder.classList.add("sys");
   }
 }
+if($$("chatForm")){$$("chatForm").addEventListener("submit",function(e){e.preventDefault(); var t=chatInput.value.trim(); if(!t) return; chatInput.value=""; sendChat(t);});}
+if($$("btnAttach")){$$("btnAttach").onclick=function(){$$("filePick").click();};}
+if($$("filePick")){$$("filePick").addEventListener("change",function(e){var f=e.target.files&&e.target.files[0]; if(!f) return; addBubble("File Received: "+f.name+" ("+Math.round(f.size/1024)+"KB)",false,true);});}
 
-$$("chatForm").addEventListener("submit",async (e)=>{
-  e.preventDefault(); const t=chatInput.value.trim(); if(!t) return; chatInput.value=""; sendChat(t);
-});
-$$("btnAttach").onclick=()=>$$("filePick").click();
-$$("filePick").addEventListener("change",(e)=>{ const f=e.target.files?.[0]; if(!f) return; addBubble(`파일을 받았어요: ${f.name} (${Math.round(f.size/1024)}KB)`, false); });
-
-/* ========= Footer Location ========= */
-(async function(){
-  try{
-    const r=await fetch("https://ipapi.co/json");
-    const a=await r.json();
-    if(a?.city) $$("loc").textContent=`📍 ${a.city}, ${a.country_name}`;
-    else throw new Error();
-  }catch{ $$("loc").textContent="📍 위치 확인 불가"; }
+/* footer location */
+(function(){
+  var locEl=$$("loc"); if(!locEl) return;
+  fetch("https://ipapi.co/json").then(function(r){if(!r.ok) throw new Error("ipapi status "+r.status); return r.json();})
+  .then(function(a){ if(a && a.city){ locEl.textContent="📍 "+a.city+", "+a.country_name; } else { throw new Error("no city"); } })
+  .catch(function(){ locEl.textContent="📍 위치 확인 불가"; });
 })();
 
-/* ========= Gaze Cursor ========= */
-function setupGazeCursor(){ $$("gaze").style.display = settings.gaze ? "block" : "none"; }
-document.addEventListener("mousemove",(e)=>{ if($$("gaze").style.display==="block"){ const g=$$("gaze"); g.style.left=e.clientX+"px"; g.style.top=e.clientY+"px"; }});
+/* gaze cursor */
+function setupGazeCursor(){ if($$("gaze")) $$("gaze").style.display=settings.gaze?"block":"none"; }
+document.addEventListener("mousemove",function(e){ var g=$$("gaze"); if(g && g.style.display==="block"){ g.style.left=e.clientX+"px"; g.style.top=e.clientY+"px"; }});
 
-/* ========= Keyboard Shortcuts ========= */
-document.addEventListener("keydown",(e)=>{ if((e.ctrlKey||e.metaKey)&&(e.key||"").toLowerCase()==="k"){e.preventDefault(); $$("cmdInput").focus(); $$("cmdInput").select();}});
-$$("suggList").addEventListener("click",(e)=>{const li=e.target.closest("li[data-idx]"); if(li) applySuggestion(Number(li.dataset.idx));});
+/* shortcuts */
+document.addEventListener("keydown",function(e){ if((e.ctrlKey||e.metaKey)&&String(e.key||"").toLowerCase()==="k"){e.preventDefault(); if($$("cmdInput")){$$("cmdInput").focus(); $$("cmdInput").select();}}});
 
-/* ========= Init ========= */
+/* init */
 (async function(){
-  try{ await initEditor(""); }catch(e){ alert("에디터 로딩 실패: "+e.message); return; }
-  const last=store.current(); if(last && store.get(last)) openDoc(last); else newDoc(); renderList();
-  setupCommandBar(); setupGazeCursor(); updateGhostSuggest(); renderThreads(); loadFeed();
+  loadSettings();
+  try{await initEditor("");}catch(e){return;}
+  var last=store.current(); if(last && store.get(last)) openDoc(last); else newDoc(); renderList();
+  setupCommandBar(); setupGazeCursor(); updateGhostSuggest(); renderThreads();
+  switchSidebarTab("feed");
+  checkTokenLimitOrWarn(0);
 })();
 </script>
 </body>
