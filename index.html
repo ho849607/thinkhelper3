@@ -6,26 +6,24 @@
 <title data-i18n="page.title">ThinkHelper — Editor</title>
 <link rel="icon" href="data:,"/>
 
-<!-- Google Tag Manager (optional) -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-NXBQK43Z');</script>
-
-<!-- libs -->
 <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 
 <style>
+/* --- Base Styles --- */
 :root{--bg:#f6f8fb;--fg:#0b1020;--muted:#6a7691;--panel:#fff;--card:#f2f5ff;--border:#d6deee;--hover:#e9effe;--accent:#2563eb}
 :root[data-theme="dark"]{--bg:#0b1020;--fg:#f1f5ff;--muted:#a8b4cf;--panel:#0f172a;--card:#101a30;--border:#273453;--hover:#16213b;--accent:#60a5fa}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;display:flex;flex-direction:column;padding-bottom:90px}
 
-/* topbar */
+/* --- Topbar --- */
 .topbar{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1000}
 .brand{display:flex;align-items:center;gap:8px;font-weight:900}
 .logo{width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,#60a5fa,#34d399)}
@@ -44,49 +42,40 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Seg
 .dropdown .item label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.9em}
 .dropdown .item input[type="checkbox"]{margin:0;transform:scale(.9)}
 
-/* layout */
+/* --- Main Layout (Mode Restored) --- */
 main{flex:1;min-height:0;display:grid;grid-template-columns:260px 1fr;gap:10px;padding:10px;position:relative;z-index:2}
 main[data-mode="research"]{grid-template-columns:260px 1fr 340px}
-@media (max-width:1200px){
-  main{grid-template-columns:0 1fr;padding:6px}
-  main[data-mode="research"]{grid-template-columns:0 1fr 340px}
-  #left{display:none!important}
-}
-@media (max-width:900px){
-  main{grid-template-columns:0 1fr}
-  main[data-mode="research"]{grid-template-columns:0 1fr}
-  #left{display:none!important}
-  aside#right{display:none!important}
-}
+@media (max-width:1200px){main{grid-template-columns:0 1fr;padding:6px} main[data-mode="research"]{grid-template-columns:0 1fr 340px} #left{display:none!important}}
+@media (max-width:900px){main{grid-template-columns:0 1fr} main[data-mode="research"]{grid-template-columns:0 1fr} #left{display:none!important} aside#right{display:none!important}}
 
-/* left */
+/* --- Left Sidebar (Doc List) --- */
 aside#left{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column;min-height:0;position:sticky;top:70px;height:calc(100vh - 90px)}
-.listHead{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.listHead{display:flex;gap:8px;align-items:center;margin-bottom:10px}
 #docList{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px}
 .doc{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);transition:.2s}
-.doc.active{background:var(--hover);border-color:var(--accent)}
-.doc:hover{background:var(--hover)}
+.doc.active {background:var(--hover);border-color:var(--accent)} .doc:hover{background:var(--hover)}
 .doc .title{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;padding:2px 4px}
 .doc .title[contenteditable="true"]{outline:1.5px solid var(--accent);background:#fff;border-radius:4px;padding:2px 4px;cursor:text}
 .doc .time{font-size:.78rem;color:var(--muted)}
 .doc .act{display:none}.doc:hover .act{display:inline-flex}
 
-/* center */
+/* --- Center Section (Editor & Command Bar) --- */
 section#center{display:flex;flex-direction:column;gap:10px;min-width:0;padding-bottom:50px}
 #editorWrap{flex:1;border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:8px;position:relative}
 #editor{min-height:62vh}
 .ck-balloon-panel,.ck-powered-by-balloon{display:none!important}
 .ck-editor__editable_inline{min-height:58vh!important;color:#222;background:#fff;padding:12px 12px 140px;border-radius:8px;position:relative;z-index:1}
 [data-theme="dark"] .ck-editor__editable_inline{color:#ffe7b3;background:#0b1327}
-#ghostSuggest{position:absolute;right:14px;top:10px;font-size:.9rem;color:#9aa3b2;opacity:.7;pointer-events:none;max-width:45%;text-align:right}
-#commandBar{display:flex;gap:10px;align-items:center;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
+#ghostSuggest{position:absolute;max-width:60%;font-size:1rem;line-height:1.6;opacity:.35;color:#111;pointer-events:none;z-index:5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+[data-theme="dark"] #ghostSuggest{color:#fff;opacity:.28}
+#commandBar{display:flex;gap:10px;align-items:center;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:12px;position:relative;}
 #cmdInput{flex:1;height:40px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);padding:.5rem .9rem;font-size:15px}
 #cmdSuggestions{display:flex;gap:8px}
-#cmdSuggestions .chip{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:.3rem .7rem;cursor:pointer;font-weight:900;font-size:.9rem;white-space:nowrap;transition:.2s}
-#cmdSuggestions .chip:hover{background:var(--hover)}
+.chip{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:.3rem .7rem;cursor:pointer;font-weight:900;font-size:.9rem;white-space:nowrap;transition:.2s}
+.chip:hover{background:var(--hover)}
 @media (max-width:768px){#cmdSuggestions{display:none}}
 
-/* suggest popup */
+/* --- Suggestion Popup & AI Chip --- */
 #aiChip{position:absolute;display:none;gap:6px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:.28rem .55rem;box-shadow:0 8px 20px rgba(0,0,0,.15);z-index:80;font-weight:900}
 #aiChip small{opacity:.75}
 #suggPopup{position:absolute;display:none;z-index:80;background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 24px rgba(0,0,0,.18);min-width:300px;max-width:620px}
@@ -98,9 +87,10 @@ section#center{display:flex;flex-direction:column;gap:10px;min-width:0;padding-b
 #suggPopup li .tag{border:1px solid var(--border);border-radius:6px;font-size:.72rem;padding:.05rem .35rem;opacity:.85}
 #suggPopup li[data-active="1"]{background:var(--hover);outline:1.5px solid #8ab4ff66}
 
-/* right */
+/* --- Right Sidebar (Explore & Feed - Mode Dependent) --- */
 aside#right{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:none;flex-direction:column;min-height:0;position:sticky;top:70px;height:calc(100vh - 90px)}
 main[data-mode="research"] aside#right{display:flex}
+
 .sidebar-nav{display:flex;gap:0;background:var(--card);border-radius:8px;padding:4px;border:1px solid var(--border);margin-bottom:10px}
 .sidebar-nav .tab{flex:1;padding:8px 14px;font-weight:700;font-size:.9rem;cursor:pointer;border-radius:6px;text-align:center;color:var(--muted);transition:.2s}
 .sidebar-nav .tab:hover{background:var(--hover);color:var(--fg)}
@@ -110,11 +100,10 @@ main[data-mode="research"] aside#right{display:flex}
 #rightSearchResults{display:flex;flex-direction:column;gap:12px}
 .search-summary{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;white-space:pre-wrap;font-size:.95rem;line-height:1.6}
 .search-sources h4{margin:12px 0 6px;font-size:.9rem;color:var(--muted)}
-.search-sources ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
-.search-sources li a{display:block;padding:8px;border-radius:8px;background:var(--card);border:1px solid var(--border);text-decoration:none;color:var(--fg);font-size:.85rem;transition:.2s}
-.search-sources li a:hover{background:var(--hover)}
-.search-sources li a strong{display:block;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.search-sources li a span{color:var(--muted);font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+#rightSearchResults ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+#rightSearchResults li{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;font-weight:500;transition:.2s}
+#rightSearchResults li:hover{background:var(--hover)}
+
 #rightFeed{display:flex;flex-direction:column;gap:12px}
 a.feed-item{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:.2s}
 a.feed-item:hover{background:var(--hover)}
@@ -122,8 +111,11 @@ a.feed-item img{width:100%;height:140px;object-fit:cover;display:block;backgroun
 a.feed-item .feed-content{padding:10px}
 a.feed-item .feed-source{font-size:.8rem;color:var(--muted);margin-bottom:4px}
 a.feed-item .feed-title{font-weight:900;color:var(--fg)}
+#feedMax{margin-left:auto}
+#right.max{position:fixed;inset:60px 16px 16px 16px;z-index:120;background:var(--panel);height:auto}
+#right.max #rightFeed{height:calc(100% - 52px);overflow:auto}
 
-/* chat dock */
+/* --- Chat Dock --- */
 #chatBtn{position:fixed;right:16px;bottom:80px;z-index:60}
 #chatDock{position:fixed;right:16px;bottom:16px;width:min(95vw,1000px);height:88vh;display:none;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 36px rgba(0,0,0,.28);z-index:75}
 #chatHead{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border);font-weight:900}
@@ -164,17 +156,20 @@ footer a{pointer-events:auto}
 .spinner{border:4px solid rgba(0,0,0,.1);width:24px;height:24px;border-radius:50%;border-left-color:var(--accent);animation:spin 1s ease infinite;margin:20px auto}
 @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
 #rightSearchResults ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
-#rightSearchResults li{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;font-weight:500;transition:.2s}
+#rightSearchResults li{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;font-weight:500;transition:.2s}
 #rightSearchResults li:hover{background:var(--hover)}
 .modal article h4{margin:12px 0 6px}
 .modal article p{line-height:1.6;margin:8px 0}
+#trendWrap{position:absolute;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 24px rgba(0,0,0,.12);display:none;z-index:70;min-width:260px;max-width:420px}
+#trendWrap .row{padding:8px 10px;border-bottom:1px dashed var(--border);cursor:pointer}
+#trendWrap .row:last-child{border-bottom:none}
+#trendWrap .row:hover{background:var(--hover)}
 </style>
 </head>
 <body data-lang="ko">
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NXBQK43Z" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NXBQK43Z"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div id="gaze"></div>
-
 <div class="topbar">
   <button class="iconbtn" id="btnToggleLeft" title="문서 패널 접기/펼치기">☰</button>
   <div class="brand"><div class="logo"></div><div id="t_brand" data-i18n="brand.name">ThinkHelper</div></div>
@@ -252,12 +247,13 @@ footer a{pointer-events:auto}
         <ul id="suggList"></ul>
       </div>
     </div>
-    <div id="commandBar">
+    <div id="commandBar" style="position:relative">
       <div id="cmdSuggestions">
         <button class="chip" data-cmd="create_doc" data-i18n="cmd.createDoc">✨ 문서 생성</button>
         <button class="chip" data-cmd="edit_doc" data-i18n="cmd.editDoc">✍️ 작성 도움 받기</button>
       </div>
-      <input id="cmdInput" placeholder="AI에게 요청하기" data-i18n-ph="cmd.inputPhAiOnly"/>
+      <input id="cmdInput" placeholder="AI에게 요청하기 / 검색" data-i18n-ph="cmd.inputPhAiOnly"/>
+      <div id="trendWrap"></div>
       <button class="btn" id="cmdSend" data-i18n="cmd.send">전송</button>
     </div>
   </section>
@@ -266,6 +262,7 @@ footer a{pointer-events:auto}
     <nav class="sidebar-nav">
       <button class="tab" data-tab="topics" data-active="0">🔍<span data-i18n="sidebar.tab.topics">탐색</span></button>
       <button class="tab" data-tab="feed" data-active="1">📰<span data-i18n="sidebar.tab.feed">피드</span></button>
+      <button class="btn" id="feedMax" title="피드 최대화">⤢</button>
     </nav>
     <div id="rightSearchResults" class="sidebar-content" data-active="0">
       <div class="search-summary" style="color:var(--muted);font-style:italic;" data-i18n="topics.placeholder">채팅 내용 기반 추천 토픽 (서버 구현 필요)</div>
@@ -281,7 +278,6 @@ footer a{pointer-events:auto}
   <div id="loc">📍 <span data-i18n="footer.locationLoading">위치 확인 중…</span></div>
 </footer>
 
-<!-- Chat Dock -->
 <div id="chatDock" role="dialog" aria-hidden="true" style="display:none;">
   <div id="chatHead">
     <span><span data-i18n="chat.title">AI 채팅</span> <small id="chatModelIndicator">(with Gemini)</small></span>
@@ -315,7 +311,6 @@ footer a{pointer-events:auto}
   <div id="quota" data-i18n="chat.quotaGemini">Gemini AI 연동</div>
 </div>
 
-<!-- Share Modal -->
 <div id="shareModal" class="modal-backdrop">
   <div class="modal">
     <h3 data-i18n="share.title">공유하기</h3>
@@ -325,7 +320,6 @@ footer a{pointer-events:auto}
   </div>
 </div>
 
-<!-- Guide Modal -->
 <div id="guideModal" class="modal-backdrop">
   <div class="modal">
     <h3 data-i18n="guide.title">ThinkHelper 사용 가이드</h3>
@@ -344,7 +338,6 @@ footer a{pointer-events:auto}
   </div>
 </div>
 
-<!-- Privacy Policy Modal -->
 <div id="privacyModal" class="modal-backdrop">
   <div class="modal">
     <h3>개인정보처리방침</h3>
@@ -367,7 +360,6 @@ footer a{pointer-events:auto}
   </div>
 </div>
 
-<!-- Terms of Service Modal -->
 <div id="termsModal" class="modal-backdrop">
   <div class="modal">
     <h3>서비스 이용약관</h3>
@@ -392,544 +384,912 @@ footer a{pointer-events:auto}
 </div>
 
 <script>
-function $$(id){return document.getElementById(id);}
-if($$("chatInput")){$$("chatInput").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault(); if($$("chatForm")){$$("chatForm").requestSubmit();}}});}
-function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
-function escapeHtml(s){return (s==null?"":String(s)).replace(/[&<>\"']/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m];});}
-var SKEY_SETTINGS="th.settings";
-
-var SERVER_API_ENDPOINT="http://54.250.162.208:8000";
-var FEED_API_ENDPOINT="https://api-v2.deepsearch.com";
-var DEEPSEARCH_API_KEY="YOUR_DEEPSEARCH_API_KEY_HERE";
-var TOTAL_FREE_TOKEN_LIMIT=15000, NUM_USERS=10;
-var USER_SHARE_LIMIT=TOTAL_FREE_TOKEN_LIMIT/NUM_USERS;
-var TOKEN_WARN_THRESHOLD=USER_SHARE_LIMIT*0.8;
-var TOKEN_COUNT_KEY="th.token.state";
-var APPROX_CHARS_PER_TOKEN=2;
-
-var I18N={ko:{limit:{near:function(dt){return "무료 토큰 한도가 거의 다 사용되었어요.\n"+dt+" 이후 초기화됩니다.";},hit:function(dt){return "무료 토큰 한도를 모두 사용했어요.\n"+dt+" 이후 초기화됩니다.";}} ,suggest:{ai:"AI 추천",local:"로컬 추천",error:"오류"},error:{serverConnect:"서버 연결 실패. (CORS/네트워크 오류?)"}},
-en:{limit:{near:function(dt){return "You are nearing the free token limit.\nResets around "+dt+".";},hit:function(dt){return "Free token limit reached.\nResets around "+dt+".";}} ,suggest:{ai:"AI Suggestion",local:"Local Suggestion",error:"Error"},error:{serverConnect:"Server connection failed. (CORS/Network error?)"}},
-ja:{limit:{near:function(dt){return "無料トークンの制限に近づいています。\n"+dt+"頃にリセットされます。";},hit:function(dt){return "無料トークンをすべて使用しました。\n"+dt+"頃にリセットされます。";}} ,suggest:{ai:"AI提案",local:"ローカル提案",error:"エラー"},error:{serverConnect:"サーバー接続失敗。(CORS/ネットワークエラー？)"}}};
-var I18N_TEXT={ko:{"page.title":"ThinkHelper — 에디터","brand.name":"ThinkHelper","menu.tools":"도구","menu.settings":"설정","menu.help":"도움말","tools.newDoc":"새 문서","tools.print":"프린터로 인쇄","tools.import":"불러오기","tools.savePdf":"PDF로 저장","tools.saveWord":"Word로 저장","tools.saveHwp":"HWP로 저장","tools.translate":"번역하기","tools.collab":"협업 초대","tools.makePpt":"PPT 생성","tools.share":"공유하기","settings.showSuggest":"추천어 표시","settings.aiSuggest":"맞춤형 AI 제안","settings.gazeCursor":"시선 커서","settings.language":"언어","settings.toggleTheme":"테마 전환","settings.mode":"모드","settings.mode.normal":"Normal (일반)","settings.mode.research":"Research (리서치)","help.guide":"서비스 소개 및 가이드","help.shortcuts":"단축키 목록","help.privacy":"개인정보처리방침","help.terms":"서비스 이용약관","help.feedback":"피드백 보내기","tooltip.openChat":"채팅 열기","doclist.title":"문서","tooltip.addDoc":"새 문서","aiChip.contextHelp":"문맥 도움","suggest.header":"제안 (↑/↓, Enter)","cmd.createDoc":"문서 생성","cmd.editDoc":"작성 도움","cmd.inputPhAiOnly":"AI에게 요청하기","cmd.send":"전송","sidebar.tab.topics":"탐색","sidebar.tab.feed":"피드","topics.placeholder":"채팅 내용 기반 추천 토픽 (서버 구현 필요)","footer.warning":"AI 결과는 검토 필요","footer.locationLoading":"위치 확인 중...","chat.title":"AI 채팅","tooltip.chatMore":"더보기","tooltip.attachFile":"파일 첨부","aria.close":"닫기","chat.threadTitlePh":"스레드 제목","chat.saveTitle":"제목 저장","chat.deleteThread":"삭제","chat.inputPh":"메시지 입력 (Enter=전송)","chat.send":"전송","chat.quotaGemini":"Gemini AI 연동","share.title":"공유하기","share.desc":"링크/텍스트 복사됨. QR 전송 가능.","modal.close":"닫기","guide.title":"ThinkHelper 가이드","guide.intro":"는 문서 작성과 리서치를 한 화면에서 끝내는 AI 에디터입니다.","guide.featuresTitle":"핵심 기능","guide.feature1.gemini":"AI 엔진: Google Gemini 모델 기반 응답.","guide.feature2":"탐색/피드: Research 모드에서 정보 확인","guide.feature3":"AI 글쓰기/채팅: 하단 바 또는 채팅","guide.feature4":"파일 저장: PDF/Word 지원.","guide.feature5":"PPT 생성: Google Slides 열기."}};
-
-var store={listKey:"th.docs.list",docKey:function(id){return "th.doc."+id;},curKey:"th.cur",
-  list:function(){try{return JSON.parse(localStorage.getItem(this.listKey)||"[]");}catch(e){return[];}},
-  saveList:function(a){localStorage.setItem(this.listKey,JSON.stringify(a||[]));},
-  get:function(id){try{return JSON.parse(localStorage.getItem(this.docKey(id))||"null");}catch(e){return null;}},
-  set:function(id,o){localStorage.setItem(this.docKey(id),JSON.stringify(o));},
-  remove:function(id){localStorage.removeItem(this.docKey(id));},
-  current:function(){return localStorage.getItem(this.curKey)||"";},
-  setCurrent:function(id){localStorage.setItem(this.curKey,id||"");}
-};
-var curId=""; var settings={};
-
-function loadSettings(){try{settings=JSON.parse(localStorage.getItem(SKEY_SETTINGS)||"{}");}catch(e){settings={};}
-settings.suggest = (settings.suggest!==false);
-settings.personal = !!settings.personal;
-settings.gaze = !!settings.gaze;
-settings.lang = (settings.lang || (navigator.language||"ko").slice(0,2));
-settings.mode = settings.mode || "normal";
-}
-function saveSettings(){localStorage.setItem(SKEY_SETTINGS,JSON.stringify(settings));}
-function applyI18n(){
-  var lang=(settings.lang||"ko").slice(0,2); var dict=I18N_TEXT[lang]||I18N_TEXT.ko;
-  document.body.dataset.lang=lang;
-  var n=document.querySelectorAll("[data-i18n]");
-  for(var i=0;i<n.length;i++){var el=n[i]; var k=el.getAttribute("data-i18n"); if(dict[k]) el.textContent=dict[k];}
-  n=document.querySelectorAll("[data-i18n-ph]");
-  for(i=0;i<n.length;i++){el=n[i]; k=el.getAttribute("data-i18n-ph"); if(dict[k]) el.setAttribute("placeholder",dict[k]);}
-  n=document.querySelectorAll("[data-i18n-title]");
-  for(i=0;i<n.length;i++){el=n[i]; k=el.getAttribute("data-i18n-title"); if(dict[k]) el.setAttribute("title",dict[k]);}
-  n=document.querySelectorAll("[data-i18n-aria]");
-  for(i=0;i<n.length;i++){el=n[i]; k=el.getAttribute("data-i18n-aria"); if(dict[k]) el.setAttribute("aria-label",dict[k]);}
-  updateGhostSuggest();
-}
-
-function getTokenState(){try{var s=JSON.parse(localStorage.getItem(TOKEN_COUNT_KEY)||"{}"); var today=new Date().toLocaleDateString("ko-KR"); if(s.date!==today) return {used:0,date:today}; return {used:s.used||0,date:today};}catch(e){return {used:0,date:new Date().toLocaleDateString("ko-KR")};}}
-function addUsedTokens(n){if(n<=0) return; var s=getTokenState(); s.used=(s.used||0)+n; try{localStorage.setItem(TOKEN_COUNT_KEY,JSON.stringify(s));}catch(e){}}
-function checkTokenLimitOrWarn(need){var s=getTokenState(); var cur=s.used||0; var langDict=(I18N[settings.lang]||I18N.ko).limit; var reset=settings.lang==="ko"?"자정":"midnight"; var use=Math.max(0,need||0); if(cur+use>=USER_SHARE_LIMIT){alert(langDict.hit(reset)); return false;} else if(cur+use>=TOKEN_WARN_THRESHOLD && cur<TOKEN_WARN_THRESHOLD){alert(langDict.near(reset));} return true;}
-
-(function(){
-  loadSettings();
-  var menus=[].slice.call(document.querySelectorAll("[data-menu]"));
-  function closeAll(){var d=document.querySelectorAll(".dropdown"); for(var i=0;i<d.length;i++){d[i].style.display="none";}}
-  for(var mi=0; mi<menus.length; mi++){
-    var m=menus[mi]; var btn=m.querySelector(".btn"); var drop=m.querySelector(".dropdown"); if(!btn||!drop) continue;
-    btn.addEventListener("click",function(e){e.stopPropagation(); var d=this.nextElementSibling; var open=d.style.display==="block"; closeAll(); d.style.display=open?"none":"block";});
-    drop.addEventListener("click",function(e){e.stopPropagation();});
+/* ========= Helpers ========= */
+const $$ = (id)=>document.getElementById(id);
+$$("chatInput")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    $$("chatForm")?.requestSubmit();
   }
-  document.addEventListener("click",closeAll);
-  if($$("toggleTheme")){$$("toggleTheme").addEventListener("click",function(){var root=document.documentElement; root.dataset.theme=root.dataset.theme==="dark"?"light":"dark";});}
-  if($$("btnToggleLeft")){$$("btnToggleLeft").addEventListener("click",function(){var left=$$("left"); if(!left) return; var hidden=left.style.display==="none"; left.style.display=hidden?"flex":"none"; var main=$$("mainLayout"); if(!main) return; var rightCol=settings.mode==="research"?"340px":""; if(window.innerWidth<=900){main.style.gridTemplateColumns="0 1fr"; left.style.display="none";} else if(window.innerWidth<=1200){main.style.gridTemplateColumns=("0 1fr "+(rightCol?rightCol:"")).trim(); left.style.display="none";} else {main.style.gridTemplateColumns=((hidden?"260px":"0")+" 1fr "+(rightCol?rightCol:"")).replace(/\s+/g," ").trim();}});}
-  if($$("iGuide")){$$("iGuide").addEventListener("click",function(){$$("guideModal").style.display="flex";});}
-  if($$("guideClose")){$$("guideClose").addEventListener("click",function(){$$("guideModal").style.display="none";});}
-  if($$("openPrivacy")){$$("openPrivacy").addEventListener("click",function(){$$("privacyModal").style.display="flex";});}
-  if($$("privacyClose")){$$("privacyClose").addEventListener("click",function(){$$("privacyModal").style.display="none";});}
-  if($$("openTerms")){$$("openTerms").addEventListener("click",function(){$$("termsModal").style.display="flex";});}
-  if($$("termsClose")){$$("termsClose").addEventListener("click",function(){$$("termsModal").style.display="none";});}
+});
+const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+const escapeHtml = (s)=> (s==null?"":String(s)).replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m]));
+const SKEY_SETTINGS = "th.settings";
 
-  var optSugg=$$("optSugg"); if(optSugg) optSugg.checked=!!settings.suggest;
-  var optPersonal=$$("optPersonal"); if(optPersonal) optPersonal.checked=!!settings.personal;
-  var optGaze=$$("optGaze"); if(optGaze) optGaze.checked=!!settings.gaze;
-  var langSel=$$("langSel"); if(langSel) langSel.value=settings.lang;
-  var modeSel=$$("modeSel"); if(modeSel) modeSel.value=settings.mode;
+/* ========= Config ========= */
+const SERVER_API_ENDPOINT = "http://54.250.162.208:8000"; // ★★★ 네 EC2 서버 (제미나이 뇌)
+const FEED_API_ENDPOINT = "https://api-v2.deepsearch.com"; // ★★★ 딥서치 (리서치 뇌)
+const DEEPSEARCH_API_KEY = "YOUR_DEEPSEARCH_API_KEY_HERE"; // 👈 (필수!) 여기에 네 딥서치 API 키를 넣어!
 
-  if(optSugg){optSugg.addEventListener("change",function(e){settings.suggest=e.target.checked; saveSettings(); updateGhostSuggest();});}
-  if(optPersonal){optPersonal.addEventListener("change",function(e){settings.personal=e.target.checked; saveSettings();});}
-  if(optGaze){optGaze.addEventListener("change",function(e){settings.gaze=e.target.checked; saveSettings(); setupGazeCursor();});}
-  if(langSel){langSel.addEventListener("change",function(e){settings.lang=e.target.value; saveSettings(); applyI18n();});}
-  if(modeSel){modeSel.addEventListener("change",function(e){
-    settings.mode=e.target.value; saveSettings();
-    var main=$$("mainLayout"); if(main) main.dataset.mode=settings.mode;
-    var left=$$("left"); var isLeftHidden=left?left.style.display==="none":true;
-    var leftCol=isLeftHidden?"0":"260px"; var rightCol=settings.mode==="research"?"340px":"";
-    if(window.innerWidth<=900) main.style.gridTemplateColumns="0 1fr";
-    else if(window.innerWidth<=1200) main.style.gridTemplateColumns=("0 1fr "+(rightCol?rightCol:"")).trim();
-    else main.style.gridTemplateColumns=(leftCol+" 1fr "+(rightCol?rightCol:"")).replace(/\s+/g," ").trim();
-    if(settings.mode==="research"){
-      var at=document.querySelector(".sidebar-nav .tab[data-active='1']");
-      var activeTab=at?at.getAttribute("data-tab"):null;
-      if(activeTab==="feed") loadFeed();
-      else if(activeTab==="topics") loadTopics();
-      else switchSidebarTab("feed");
+const TOTAL_FREE_TOKEN_LIMIT = 15000; // 예: 하루 총 15,000 토큰 (Gemini Free Tier 기준 참고)
+const NUM_USERS = 10; // 사용자 수
+const USER_SHARE_LIMIT = TOTAL_FREE_TOKEN_LIMIT / NUM_USERS; // 사용자당 할당량
+const TOKEN_WARN_THRESHOLD = USER_SHARE_LIMIT * 0.8; // 80% 사용 시 경고
+const TOKEN_COUNT_KEY = "th.token.state"; // 로컬 스토리지 키
+const APPROX_CHARS_PER_TOKEN = 2; // 한국어 추정치
+
+/* ========= I18n ========= */
+const I18N = { // 알림 메시지 등
+  ko: { status:{copied:"복사됨"},
+        plan:{free:"FREE", plus:"PLUS", trial:"TRIAL"},
+        limit:{ near:(dt)=>`무료 토큰 한도가 거의 다 사용되었어요.\n${dt} 이후 초기화됩니다.`,
+                hit:(dt)=>`무료 토큰 한도를 모두 사용했어요.\n${dt} 이후 초기화됩니다.`},
+        suggest:{ ai:"AI 추천", local:"로컬 추천", error:"오류"},
+        topics:{ loading:"관심 주제 로딩 중...", error:"주제 로딩 실패", empty:"추천 주제 없음"},
+        error: { serverConnect: "서버 연결 실패. (CORS/네트워크 오류?)" }
+  },
+  en: { status:{copied:"Copied"},
+        plan:{free:"FREE", plus:"PLUS", trial:"TRIAL"},
+        limit:{ near:(dt)=>`You're nearing the free token limit.\nResets around ${dt}.`,
+                hit:(dt)=>`Free token limit reached.\nResets around ${dt}.`},
+        suggest:{ ai:"AI Suggestion", local:"Local Suggestion", error:"Error"},
+        topics:{ loading:"Loading topics...", error:"Failed to load topics", empty:"No topics found"},
+        error: { serverConnect: "Server connection failed. (CORS/Network error?)" }
+  },
+  ja: { status:{copied:"コピーしました"},
+        plan:{free:"無料", plus:"プラス", trial:"トライアル"},
+        limit:{ near:(dt)=>`無料トークンの制限に近づいています。\n${dt}頃にリセットされます。`,
+                hit:(dt)=>`無料トークンをすべて使用しました。\n${dt}頃にリセットされます。`},
+        suggest:{ ai:"AI提案", local:"ローカル提案", error:"エラー"},
+        topics:{ loading:"トピックを読み込み中...", error:"トピックの読み込みに失敗しました", empty:"おすすめトピックがありません"},
+        error: { serverConnect: "サーバー接続失敗。(CORS/ネットワークエラー？)" }
+  }
+};
+const I18N_TEXT = { // UI 텍스트
+  ko: { "page.title":"ThinkHelper — 에디터", "brand.name":"ThinkHelper", "menu.tools":"도구", "menu.settings":"설정", "menu.help":"도움말",
+        "tools.newDoc":"새 문서", "tools.print":"프린터로 인쇄", "tools.import":"불러오기", "tools.savePdf":"PDF로 저장", "tools.saveWord":"Word로 저장", "tools.saveHwp":"HWP로 저장", "tools.translate":"번역하기", "tools.collab":"협업 초대", "tools.makePpt":"PPT 생성", "tools.share":"공유하기",
+        "settings.showSuggest":"추천어 표시", "settings.aiSuggest":"맞춤형 AI 제안", "settings.gazeCursor":"시선 커서", "settings.language":"언어", "settings.toggleTheme":"테마 전환", "settings.mode":"모드", "settings.mode.normal":"Normal (일반)", "settings.mode.research":"Research (리서치)",
+        "help.guide":"서비스 소개 및 가이드", "help.shortcuts":"단축키 목록", "help.privacy":"개인정보처리방침", "help.terms":"서비스 이용약관", "help.feedback":"피드백 보내기",
+        "tooltip.openChat":"채팅 열기", "doclist.title":"문서", "tooltip.addDoc":"새 문서", "aiChip.contextHelp":"문맥 도움", "suggest.header":"제안 (↑/↓, Enter)",
+        "cmd.createDoc":"문서 생성", "cmd.editDoc":"작성 도움", "cmd.inputPhAiOnly":"AI에게 요청하기", "cmd.send":"전송", // 검색 제거
+        "sidebar.tab.topics":"탐색", "sidebar.tab.feed":"피드", "topics.placeholder":"채팅 내용 기반 추천 토픽 (서버 구현 필요)",
+        "footer.warning":"AI 결과는 검토 필요", "footer.locationLoading":"위치 확인 중...",
+        "chat.title":"AI 채팅", "tooltip.chatMore":"더보기", "tooltip.attachFile":"파일 첨부", "aria.close":"닫기",
+        "chat.threadTitlePh":"스레드 제목", "chat.saveTitle":"제목 저장", "chat.deleteThread":"삭제", "chat.inputPh":"메시지 입력 (Enter=전송)", "chat.send":"전송", "chat.quotaGemini":"Gemini AI 연동", // ★★★ 헬퍼 1.0 제거 ★★★
+        "share.title":"공유하기", "share.desc":"링크/텍스트 복사됨. QR 전송 가능.", "modal.close":"닫기",
+        "guide.title":"ThinkHelper 가이드", "guide.intro":"는 문서 작성과 리서치를 한 화면에서 끝내는 AI 에디터입니다.", "guide.featuresTitle":"핵심 기능",
+        "guide.feature1.gemini":"AI 엔진: Google Gemini 모델 기반 응답.", "guide.feature2":"탐색/피드: 'Research' 모드에서 정보 확인", "guide.feature3":"AI 글쓰기/채팅: 하단 바 또는 💬", "guide.feature4":"파일 저장: PDF/Word 지원.", "guide.feature5":"PPT 생성: Google Slides 열기."
+       },
+  en: { "page.title":"ThinkHelper — Editor", "brand.name":"ThinkHelper", "menu.tools":"Tools", "menu.settings":"Settings", "menu.help":"Help",
+        "tools.newDoc":"New Document", "tools.print":"Print", "tools.import":"Import", "tools.savePdf":"Save as PDF", "tools.saveWord":"Save as Word", "tools.saveHwp":"Save as HWP", "tools.translate":"Translate", "tools.collab":"Invite Collaborators", "tools.makePpt":"Create Slides", "tools.share":"Share",
+        "settings.showSuggest":"Show Suggestions", "settings.aiSuggest":"Personalized AI (Demo)", "settings.gazeCursor":"Gaze Cursor", "settings.language":"Language", "settings.toggleTheme":"Toggle Theme", "settings.mode":"Mode", "settings.mode.normal":"Normal", "settings.mode.research":"Research",
+        "help.guide":"Guide", "help.shortcuts":"Shortcuts", "help.privacy":"Privacy Policy", "help.terms":"Terms of Service", "help.feedback":"Send Feedback",
+        "tooltip.openChat":"Open Chat", "doclist.title":"Documents", "tooltip.addDoc":"Add New", "aiChip.contextHelp":"Context Help", "suggest.header":"Suggestions (↑/↓, Enter)",
+        "cmd.createDoc":"Create Doc", "cmd.editDoc":"Writing Assist", "cmd.inputPhAiOnly":"Ask AI", "cmd.send":"Send", // Search removed
+        "sidebar.tab.topics":"Explore", "sidebar.tab.feed":"Feed", "topics.placeholder":"Topics based on chat (Server needed)",
+        "footer.warning":"Review AI results", "footer.locationLoading":"Checking location...",
+        "chat.title":"AI Chat", "tooltip.chatMore":"More", "tooltip.attachFile":"Attach File", "aria.close":"Close",
+        "chat.threadTitlePh":"Thread Title", "chat.saveTitle":"Save Title", "chat.deleteThread":"Delete", "chat.inputPh":"Enter message (Enter=Send)", "chat.send":"Send", "chat.quotaGemini":"Powered by Gemini AI", // ★★★ 헬퍼 1.0 제거 ★★★
+        "share.title":"Share", "share.desc":"Link/Text copied. QR available.", "modal.close":"Close",
+        "guide.title":"ThinkHelper Guide", "guide.intro":" is an AI editor for writing and research.", "guide.featuresTitle":"Key Features",
+        "guide.feature1.gemini":"AI Engine: Powered by Google Gemini.", "guide.feature2":"Explore/Feed: Info in 'Research' mode", "guide.feature3":"AI Writing/Chat: Use command bar or 💬", "guide.feature4":"Save Files: PDF/Word supported.", "guide.feature5":"Create PPT: Opens Google Slides."
+       },
+  ja: { "page.title":"ThinkHelper — エディタ", "brand.name":"ThinkHelper", "menu.tools":"ツール", "menu.settings":"設定", "menu.help":"ヘルプ",
+        "tools.newDoc":"新規文書", "tools.print":"印刷", "tools.import":"インポート", "tools.savePdf":"PDF保存", "tools.saveWord":"Word保存", "tools.saveHwp":"HWP保存", "tools.translate":"翻訳", "tools.collab":"共同編集者を招待", "tools.makePpt":"スライド作成", "tools.share":"共有",
+        "settings.showSuggest":"提案を表示", "settings.aiSuggest":"パーソナライズ AI (デモ)", "settings.gazeCursor":"視線カーソル", "settings.language":"言語", "settings.toggleTheme":"テーマ切替", "settings.mode":"モード", "settings.mode.normal":"ノーマル", "settings.mode.research":"リサーチ",
+        "help.guide":"ガイド", "help.shortcuts":"ショートカット", "help.privacy":"プライバシーポリシー", "help.terms":"利用規約", "help.feedback":"フィードバック",
+        "tooltip.openChat":"チャットを開く", "doclist.title":"文書", "tooltip.addDoc":"新規追加", "aiChip.contextHelp":"文脈ヘルプ", "suggest.header":"提案 (↑/↓, Enter)",
+        "cmd.createDoc":"文書作成", "cmd.editDoc":"執筆支援", "cmd.inputPhAiOnly":"AIに質問", "cmd.send":"送信", // 検索削除
+        "sidebar.tab.topics":"探索", "sidebar.tab.feed":"フィード", "topics.placeholder":"チャットに基づくトピック (サーバー実装要)",
+        "footer.warning":"AIの結果は要確認", "footer.locationLoading":"位置情報確認中...",
+        "chat.title":"AIチャット", "tooltip.chatMore":"詳細", "tooltip.attachFile":"ファイル添付", "aria.close":"閉じる",
+        "chat.threadTitlePh":"スレッドタイトル", "chat.saveTitle":"タイトル保存", "chat.deleteThread":"削除", "chat.inputPh":"メッセージ入力 (Enter=送信)", "chat.send":"送信", "chat.quotaGemini":"Gemini AI 連携", // ★★★ 헬퍼 1.0 제거 ★★★
+        "share.title":"共有", "share.desc":"リンク/テキストコピー済。QR可。", "modal.close":"閉じる",
+        "guide.title":"ThinkHelper ガイド", "guide.intro":" は執筆と調査を一つの画面で行うAIエディタです。", "guide.featuresTitle":"主な機能",
+        "guide.feature1.gemini":"AIエンジン: Google Gemini モデル使用。", "guide.feature2":"探索/フィード: 'リサーチ'モードで情報確認", "guide.feature3":"AI執筆/チャット: コマンドバーまたは💬", "guide.feature4":"ファイル保存: PDF/Word対応。", "guide.feature5":"PPT作成: Google Slidesを開く。"
+       }
+};
+function applyI18n(){
+  const lang = (settings.lang || "ko").slice(0,2);
+  const dict = I18N_TEXT[lang] || I18N_TEXT.ko;
+  document.body.dataset.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ const k=el.getAttribute("data-i18n"); if (dict[k]) el.textContent=dict[k]; });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ const k=el.getAttribute("data-i18n-ph"); if (dict[k]) el.setAttribute("placeholder", dict[k]); });
+  document.querySelectorAll("[data-i18n-title]").forEach(el=>{ const k=el.getAttribute("data-i18n-title"); if (dict[k]) el.setAttribute("title", dict[k]); });
+  document.querySelectorAll("[data-i18n-aria]").forEach(el=>{ const k=el.getAttribute("data-i18n-aria"); if (dict[k]) el.setAttribute("aria-label", dict[k]); });
+  
+  // ★★★ FIX: editor 준비됐으면 고스트 업데이트
+  if (typeof updateGhostSuggest === 'function' && typeof editor !== 'undefined' && editor) {
+    updateGhostSuggest();
+  }
+}
+
+/* ========= Store ========= */
+const store={
+  listKey:"th.docs.list",docKey:id=>`th.doc.${id}`,curKey:"th.cur",
+  list(){try{return JSON.parse(localStorage.getItem(this.listKey)||"[]")}catch{return[]}},
+  saveList(a){localStorage.setItem(this.listKey,JSON.stringify(a||[]))},
+  get(id){try{return JSON.parse(localStorage.getItem(this.docKey(id))||"null")}catch{return null}},
+  set(id,o){localStorage.setItem(this.docKey(id),JSON.stringify(o))},
+  remove(id){localStorage.removeItem(this.docKey(id))},
+  current(){return localStorage.getItem(this.curKey)||""},
+  setCurrent(id){localStorage.setItem(this.curKey,id||"")}
+};
+let curId="";
+let settings={};
+
+/* ========= Settings ========= */
+function loadSettings(){
+  settings = JSON.parse(localStorage.getItem(SKEY_SETTINGS) || '{}');
+  settings.suggest ??= true;
+  settings.personal ??= false;
+  settings.gaze ??= false;
+  settings.lang ??= (navigator.language || "ko").slice(0,2);
+  settings.mode ??= 'normal';
+}
+const saveSettings=()=>localStorage.setItem(SKEY_SETTINGS, JSON.stringify(settings));
+
+function updateChatUI(plan) {
+    const indicator = $$("chatModelIndicator");
+    const quota = $$("quota");
+    if (!indicator || !quota) return;
+    const lang = settings.lang || 'ko';
+    const planText = plan ? plan.replace('models/','').replace('-latest','') : 'Gemini';
+
+    if (plan && (plan.includes("Gemini") || plan.includes("gemini"))) {
+        indicator.textContent = `(with ${planText})`;
+        quota.textContent = lang === 'ko' ? "Gemini AI 사용 중" : lang === 'ja' ? "Gemini AI 使用中" : "Using Gemini AI";
+    } else if (plan && plan.includes("no_key")) {
+        indicator.textContent = lang === 'ko' ? "(키 없음)" : lang === 'ja' ? "(キーなし)" : "(No Key)";
+        quota.textContent = lang === 'ko' ? "서버 API 키 없음" : lang === 'ja' ? "サーバーAPIキーなし" : "Server API Key Missing";
+    } else { 
+        indicator.textContent = lang === 'ko' ? "(연결 안됨)" : lang === 'ja' ? "(接続なし)" : "(Offline)";
+        quota.textContent = lang === 'ko' ? "서버 연결 확인 필요" : lang === 'ja' ? "サーバー接続確認要" : "Check Server Connection";
     }
-  });}
+}
 
-  var main=$$("mainLayout"); if(main) main.dataset.mode=settings.mode;
-  applyI18n();
+
+/* ========= Token Limit Functions ========= */
+function getTokenState() {
+  try {
+    const state = JSON.parse(localStorage.getItem(TOKEN_COUNT_KEY) || '{}');
+    const today = new Date().toLocaleDateString('ko-KR');
+    if (state.date !== today) {
+      return { used: 0, date: today };
+    }
+    return { used: state.used || 0, date: today };
+  } catch {
+    return { used: 0, date: new Date().toLocaleDateString('ko-KR') };
+  }
+}
+
+function addUsedTokens(approxTokens) {
+  if (approxTokens <= 0) return;
+  const state = getTokenState();
+  state.used = (state.used || 0) + approxTokens;
+  try {
+    localStorage.setItem(TOKEN_COUNT_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.warn("Token save failed:", e);
+  }
+}
+
+function checkTokenLimitOrWarn(estimatedUsage) {
+  const state = getTokenState();
+  const currentUsed = state.used || 0;
+  const langDict = (I18N[settings.lang] || I18N.ko).limit;
+  const resetTime = settings.lang === 'ko' ? "자정" : "midnight";
+  const usage = Math.max(0, estimatedUsage || 0);
+
+  if (currentUsed + usage >= USER_SHARE_LIMIT) {
+    alert(langDict.hit(resetTime));
+    return false;
+  } else if (currentUsed + usage >= TOKEN_WARN_THRESHOLD && currentUsed < TOKEN_WARN_THRESHOLD) {
+    alert(langDict.near(resetTime));
+  }
+  return true;
+}
+
+
+/* ========= Menus / Theme / Panels ========= */
+(function(){
+  loadSettings(); // 1. 설정 로드
+  
+  const menus=[...document.querySelectorAll('[data-menu]')];
+  const closeAll=()=>document.querySelectorAll('.dropdown').forEach(d=>d.style.display='none');
+  menus.forEach(m=>{
+    const btn=m.querySelector('.btn'); const drop=m.querySelector('.dropdown');
+    if(!btn||!drop) return;
+    btn.addEventListener('click',(e)=>{e.stopPropagation();const open=drop.style.display==='block';closeAll();drop.style.display=open?'none':'block';});
+    drop.addEventListener('click',e=>e.stopPropagation());
+  });
+  document.addEventListener('click',closeAll);
+
+  $$("toggleTheme")?.addEventListener('click', ()=>{
+    const root=document.documentElement;
+    root.dataset.theme = root.dataset.theme==="dark"?"light":"dark";
+  });
+  $$("btnToggleLeft")?.addEventListener('click', ()=>{
+    const left=$$("left");
+    if(!left) return;
+    const isHidden = left.style.display === 'none';
+    left.style.display = isHidden ? 'flex' : 'none';
+    const mainLayout = $$('mainLayout');
+    if (!mainLayout) return;
+    const currentMode = mainLayout.dataset.mode || 'normal';
+    const leftCol = isHidden ? '260px' : '0';
+    const rightCol = settings.mode === 'research' ? '340px' : '';
+    if (window.innerWidth <= 900) {
+        mainLayout.style.gridTemplateColumns = '0 1fr';
+        left.style.display = 'none';
+    } else if (window.innerWidth <= 1200) {
+        mainLayout.style.gridTemplateColumns = `0 1fr ${rightCol ? rightCol : ''}`.trim();
+        left.style.display = 'none';
+    } else {
+         mainLayout.style.gridTemplateColumns = `${leftCol} 1fr ${rightCol ? rightCol : ''}`.trim().replace(/\s+/g, ' ');
+    }
+  });
+  $$("iGuide")?.addEventListener('click', ()=>($$("guideModal").style.display="flex"));
+  $$("guideClose")?.addEventListener('click', ()=>($$("guideModal").style.display="none"));
+  $$("openPrivacy")?.addEventListener('click', ()=>($$("privacyModal").style.display="flex"));
+  $$("privacyClose")?.addEventListener('click', ()=>($$("privacyModal").style.display="none"));
+  $$("openTerms")?.addEventListener('click', ()=>($$("termsModal").style.display="flex"));
+  $$("termsClose")?.addEventListener('click', ()=>($$("termsModal").style.display="none"));
+
+  const optSugg = $$("optSugg"); if(optSugg) optSugg.checked = !!settings.suggest;
+  const optPersonal = $$("optPersonal"); if(optPersonal) optPersonal.checked = !!settings.personal;
+  const optGaze = $$("optGaze"); if(optGaze) optGaze.checked = !!settings.gaze;
+  const langSel = $$("langSel"); if(langSel) langSel.value = settings.lang;
+  const modeSel = $$("modeSel"); if(modeSel) modeSel.value = settings.mode;
+
+  optSugg?.addEventListener('change', (e)=>{settings.suggest=e.target.checked; saveSettings(); updateGhostSuggest();});
+  optPersonal?.addEventListener('change', (e)=>{settings.personal=e.target.checked; saveSettings();});
+  optGaze?.addEventListener('change', (e)=>{settings.gaze=e.target.checked; saveSettings(); setupGazeCursor();});
+  langSel?.addEventListener('change', (e)=>{settings.lang=e.target.value; saveSettings(); applyI18n();});
+  
+  modeSel?.addEventListener('change', (e)=>{
+      settings.mode=e.target.value;
+      saveSettings();
+      const mainLayout = $$('mainLayout');
+      if (mainLayout) mainLayout.dataset.mode = settings.mode;
+      const left=$$("left");
+      const isLeftHidden = left ? left.style.display === 'none' : true;
+      const leftCol = isLeftHidden ? '0' : '260px';
+      const rightCol = settings.mode === 'research' ? '340px' : '';
+      if (window.innerWidth <= 900) {
+          mainLayout.style.gridTemplateColumns = '0 1fr';
+      } else if (window.innerWidth <= 1200) {
+          mainLayout.style.gridTemplateColumns = `0 1fr ${rightCol ? rightCol : ''}`.trim();
+      } else {
+          mainLayout.style.gridTemplateColumns = `${leftCol} 1fr ${rightCol ? rightCol : ''}`.trim().replace(/\s+/g, ' ');
+      }
+      if(settings.mode==='research'){
+          const activeTab = document.querySelector('.sidebar-nav .tab[data-active="1"]')?.dataset.tab;
+          if (activeTab === 'feed') loadFeed();
+          else if (activeTab === 'topics') loadTopics();
+          else switchSidebarTab('feed');
+      }
+  });
+
+  const mainLayout = $$('mainLayout'); if (mainLayout) mainLayout.dataset.mode = settings.mode;
+  
+  // 2. applyI18n은 아래 init 흐름에서 호출
 })();
 
-/* CKEditor */
-var editor=null, autosaveTimer=null;
+
+/* ========= Editor ========= */
+let editor=null, autosaveTimer=null;
 async function initEditor(restore){
-  try{
-    editor=await ClassicEditor.create($$("editor"),{placeholder:settings.lang==="ja"?"ここで書いてください...":settings.lang==="en"?"Start writing here...":"여기서 작성하세요..."});
-    if(restore!=null) editor.setData(restore);
-    editor.model.document.on("change:data",function(){clearTimeout(autosaveTimer); autosaveTimer=setTimeout(saveDoc,700); triggerSuggest(); updateGhostSuggest();});
-    editor.editing.view.document.on("selectionChange",function(){updateGhostSuggest();});
-  }catch(e){console.error("CKEditor init failed",e); alert(settings.lang==="ja"?"エディタの読み込みに失敗しました。再読み込みしてください。":settings.lang==="en"?"Editor failed to load. Please refresh.":"에디터 로딩 실패. 새로고침 해주세요.");}
+  try {
+      editor = await ClassicEditor.create($$("editor"), {
+          placeholder: settings.lang === 'ja' ? "ここで書いてください…" : settings.lang === 'en' ? "Start writing here…" : "여기서 작성하세요…",
+      });
+      if(restore!=null) editor.setData(restore);
+      editor.model.document.on('change:data', ()=>{
+        clearTimeout(autosaveTimer);
+        autosaveTimer=setTimeout(saveDoc, 700);
+        triggerSuggest();
+        updateGhostSuggest();
+      });
+      editor.editing.view.document.on('selectionChange', () => {
+         updateGhostSuggest();
+      });
+  } catch (e) {
+      console.error("CKEditor failed to initialize:", e);
+      alert(settings.lang === 'ja' ? "エディタの読み込みに失敗しました。再読み込みしてください。" : settings.lang === 'en' ? "Editor failed to load. Please refresh." : "에디터 로딩 실패. 새로고침 해주세요.");
+  }
 }
 function newDoc(){
-  var id="d_"+Date.now(); curId=id; store.setCurrent(id);
-  var title=settings.lang==="ja"?"無題":settings.lang==="en"?"Untitled":"무제";
-  var row={id:id,createdAt:Date.now(),updatedAt:Date.now(),title:title,html:""};
-  store.set(id,row);
-  var list=store.list().filter(function(x){return x.id!==id;});
-  list=[row].concat(list);
-  store.saveList(list);
-  if(editor) editor.setData("");
-  renderList(); updateGhostSuggest();
+  const id="d_"+Date.now(); curId=id; store.setCurrent(id);
+  const title = settings.lang === 'ja' ? "無題" : settings.lang === 'en' ? "Untitled" : "무제";
+  const row={id,createdAt:Date.now(),updatedAt:Date.now(),title:title,html:""};
+  store.set(id,row); store.saveList([row,...store.list().filter(x=>x.id!==id)]);
+  editor?.setData(""); renderList(); updateGhostSuggest();
 }
 function openDoc(id){
-  var d=store.get(id); if(!d||!editor) return;
+  const d=store.get(id); if(!d||!editor) return;
   curId=id; store.setCurrent(id); editor.setData(d.html||""); renderList(); updateGhostSuggest();
-  if(window.innerWidth<=1200){var left=$$("left"); if(left && left.style.display!=="none"){ if($$("btnToggleLeft")) $$("btnToggleLeft").click(); }}
+  if (window.innerWidth <= 1200) {
+      const left=$$("left");
+      if (left && left.style.display !== 'none') {
+          $$("btnToggleLeft")?.click();
+      }
+  }
 }
 async function saveDoc(){
-  if(!editor||!curId) return;
-  var d=store.get(curId); if(!d) return;
-  var html=editor.getData();
-  var t=d.title||(settings.lang==="ja"?"無題":settings.lang==="en"?"Untitled":"무제");
-  if(d.html===html && d.title===t) return;
-  d.html=html; d.updatedAt=Date.now();
-  var plain=d.html.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
-  if(!d.title||d.title==="무제"||d.title==="Untitled"||d.title==="無題"){
-    d.title=(plain.split(" ").slice(0,8).join(" ")||(settings.lang==="ja"?"無題":settings.lang==="en"?"Untitled":"무제"));
+  if(!editor || !curId) return;
+  const d=store.get(curId); if(!d) return;
+  const currentHtml = editor.getData();
+  const currentTitle = d.title || (settings.lang === 'ja' ? "無題" : settings.lang === 'en' ? "Untitled" : "무제");
+
+  if (d.html === currentHtml && d.title === currentTitle && d.title !== "무제" && d.title !== "Untitled" && d.title !== "無題") return;
+
+  d.html = currentHtml;
+  d.updatedAt=Date.now();
+  const plain=d.html.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+  if(!d.title || d.title === "무제" || d.title === "Untitled" || d.title === "無題"){
+      d.title=(plain.split(" ").slice(0,8).join(" ")||(settings.lang === 'ja' ? "無題" : settings.lang === 'en' ? "Untitled" : "무제"));
   }
   store.set(curId,d);
-  var list=store.list().map(function(x){return x.id===curId?{id:curId,createdAt:d.createdAt||Date.now(),updatedAt:d.updatedAt,title:d.title}:x;});
+  const list=store.list().map(x => x.id===curId ? {id:curId,createdAt:d.createdAt||Date.now(),updatedAt:d.updatedAt,title:d.title} : x);
   store.saveList(list); renderList();
 }
 function renderList(){
-  var list=store.list().sort(function(a,b){return (b.updatedAt||0)-(a.updatedAt||0);});
-  var el=$$("docList"); if(!el) return;
-  var titleTip=(settings.lang==='ko'?'제목 클릭하여 수정':'Click title to rename');
-  var delTip=(settings.lang==='ko'?'삭제':'Delete');
-  el.innerHTML = (list.map(function(it){
-    var title=it.title||(settings.lang==="ja"?"無題":settings.lang==="en"?"Untitled":"무제");
-    var when=new Date(it.updatedAt||it.createdAt||Date.now()).toLocaleString(
-      settings.lang==="ja"?"ja-JP":settings.lang==="en"?"en-US":"ko-KR",{dateStyle:"short",timeStyle:"short"});
-    return '<div class="doc '+(it.id===curId?'active':'')+'" data-id="'+it.id+'">'+
-      '<div class="title" data-rename-id="'+it.id+'" title="'+titleTip+'">'+escapeHtml(title)+'</div>'+
-      '<div class="time">'+escapeHtml(when)+'</div>'+
-      '<div class="act"><button class="iconbtn" data-del-id="'+it.id+'" title="'+delTip+'">🗑️</button></div>'+
-    '</div>';
-  }).join("")) || '<div class="doc"><div class="title" data-i18n="doclist.empty">저장된 문서가 없습니다.</div></div>';
-  if(!list.length) applyI18n();
-  el.onclick=function(e){
-    var titleEl=e.target.closest?e.target.closest(".title[data-rename-id]"):null;
-    var delBtn=e.target.closest?e.target.closest("button[data-del-id]"):null;
-    var docRow=e.target.closest?e.target.closest(".doc[data-id]:not(.active)"):null;
+  const list=store.list().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  const el=$$("docList");
+  if (!el) return;
+  el.innerHTML=list.map(it=>{
+    const title = it.title || (settings.lang === 'ja' ? "無題" : settings.lang === 'en' ? "Untitled" : "무제");
+    const when=new Date(it.updatedAt||it.createdAt||Date.now()).toLocaleString(settings.lang === 'ja' ? 'ja-JP' : settings.lang === 'en' ? 'en-US' : 'ko-KR',{dateStyle:'short',timeStyle:'short'});
+    return `<div class="doc ${it.id === curId ? 'active' : ''}" data-id="${it.id}">
+      <div class="title" data-rename-id="${it.id}" title="${settings.lang === 'ko' ? '제목 클릭하여 수정' : 'Click title to rename'}">${escapeHtml(title)}</div>
+      <div class="time">${escapeHtml(when)}</div>
+      <div class="act"><button class="iconbtn" data-del-id="${it.id}" title="${settings.lang === 'ko' ? '삭제' : 'Delete'}">🗑️</button></div>
+    </div>`;
+  }).join("") || `<div class="doc"><div class="title" data-i18n="doclist.empty">저장된 문서가 없습니다.</div></div>`;
+
+  if (!list.length) applyI18n();
+
+  el.onclick=(e)=>{
+    const titleEl=e.target.closest('.title[data-rename-id]');
+    const delBtn=e.target.closest('button[data-del-id]');
+    const docRow=e.target.closest('.doc[data-id]:not(.active)');
     if(delBtn){
-      var id=delBtn.getAttribute("data-del-id");
-      var docTitle=(store.get(id)||{}).title||(settings.lang==="ja"?"無題":settings.lang==="en"?"Untitled":"무제");
-      var msg=settings.lang==="ko"?"'"+docTitle+"' 문서를 삭제할까요?":settings.lang==="ja"?"'"+docTitle+"' 文書を削除しますか?":"Delete document '"+docTitle+"'?";
-      if(confirm(msg)){
+      const id=delBtn.dataset.delId;
+      const docTitle = store.get(id)?.title || (settings.lang === 'ja' ? "無題" : settings.lang === 'en' ? "Untitled" : "무제");
+      const confirmMsg = (settings.lang === 'ko' ? `'${docTitle}' 문서를 삭제할까요?` : settings.lang === 'ja' ? `'${docTitle}' 文書を削除しますか？` : `Delete document '${docTitle}'?`);
+      if(confirm(confirmMsg)){
         store.remove(id);
-        store.saveList(store.list().filter(function(x){return x.id!==id;}));
+        store.saveList(store.list().filter(x=>x.id!==id));
         if(curId===id){
-          var next=store.list()[0];
-          if(next) openDoc(next.id);
-          else newDoc();
-        }else{
-          renderList();
+            const nextDoc = store.list()[0];
+            if (nextDoc) openDoc(nextDoc.id);
+            else newDoc();
+        } else {
+             renderList();
         }
       }
-    } else if(titleEl){
+    }else if(titleEl){
       enableInlineRename(titleEl);
-    } else if(docRow){
-      openDoc(docRow.getAttribute("data-id"));
+    }else if(docRow){
+      openDoc(docRow.dataset.id);
     }
   };
 }
 function enableInlineRename(el){
-  var id=el.getAttribute("data-rename-id"); if(!id||el.contentEditable==="true") return;
-  var old=el.textContent; el.contentEditable="true"; el.focus(); document.execCommand("selectAll",false,null);
-  function finish(save){
-    if(save===void 0) save=true;
-    el.contentEditable="false"; el.removeEventListener("blur",onBlur); el.removeEventListener("keydown",onKey);
-    var nv=el.textContent.trim();
-    if(save && nv && nv!==old){ var d=store.get(id); if(d){ d.title=nv; d.updatedAt=Date.now(); store.set(id,d); renderList(); } }
-    else { el.textContent=old; }
-  }
-  function onBlur(){finish(true);}
-  function onKey(e){ if(e.key==="Enter"){e.preventDefault(); finish(true);} else if(e.key==="Escape"){e.preventDefault(); finish(false);} }
-  el.addEventListener("blur",onBlur); el.addEventListener("keydown",onKey);
-}
-if($$("addDoc")){$$("addDoc").onclick=newDoc;}
-if($$("iNew")){$$("iNew").onclick=newDoc;}
+  const id=el.dataset.renameId;
+  if(!id || el.contentEditable==="true") return;
+  const old=el.textContent;
+  el.contentEditable="true"; el.focus(); document.execCommand('selectAll', false, null);
 
-/* Export & Share */
+  const finish=(save=true)=>{
+    el.contentEditable="false"; el.removeEventListener('blur', handleBlur); el.removeEventListener('keydown', handleKeydown);
+    const nv=el.textContent.trim();
+    if(save && nv && nv!==old){
+      const d=store.get(id); if(d){ d.title=nv; d.updatedAt=Date.now(); store.set(id,d); renderList(); }
+    }else { el.textContent=old; }
+  };
+
+  const handleBlur = () => finish(true);
+  const handleKeydown = (e) => {
+      if (e.key === "Enter") { e.preventDefault(); finish(true); }
+      else if (e.key === "Escape") { e.preventDefault(); finish(false); }
+  };
+
+  el.addEventListener('blur', handleBlur);
+  el.addEventListener('keydown', handleKeydown);
+}
+$$("addDoc").onclick=newDoc; $$("iNew").onclick=newDoc;
+
+/* ========= Export & Share ========= */
 function exportPDF(){
   if(!editor) return alert("Editor not ready.");
-  var content=document.createElement("div");
+  const content=document.createElement('div');
   content.innerHTML=editor.getData();
-  content.style.fontFamily=getComputedStyle(document.body).fontFamily;
-  content.style.fontSize="11pt";
-  content.style.lineHeight="1.5";
-  content.style.padding="20mm";
-  var opt={margin:[20,20,20,20],filename:"ThinkHelper_"+Date.now()+".pdf",image:{type:"jpeg",quality:0.95},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}};
+  content.style.fontFamily = getComputedStyle(document.body).fontFamily;
+  content.style.fontSize = '11pt';
+  content.style.lineHeight = '1.5';
+  content.style.padding = '20mm';
+  const opt={margin:[20, 20, 20, 20],
+             filename:`ThinkHelper_${Date.now()}.pdf`,
+             image:{type:'jpeg',quality:0.95},
+             html2canvas:{scale:2, useCORS: true},
+             jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
   html2pdf().from(content).set(opt).save();
 }
 function exportWord(){
-  if(!editor) return alert("Editor not ready.");
-  var header="<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>ThinkHelper Export</title><style> body { font-family: '"+getComputedStyle(document.body).fontFamily+"'; font-size: 11pt; } </style></head><body>";
-  var src=header+editor.getData()+footer;
-  var href='data:application/vnd.ms-word;charset=utf-8,'+encodeURIComponent(src);
-  var a=document.createElement("a");
+  if(!editor) { alert("Editor not ready."); return; }
+
+  const header = `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="utf-8">
+  <title>ThinkHelper Export</title>
+  <style>
+    body { font-family: ${getComputedStyle(document.body).fontFamily}; font-size: 11pt; }
+  </style>
+</head>
+<body>`;
+
+  const sourceHTML = header + editor.getData() + footer;
+  const blob = new Blob([sourceHTML], { type: "application/msword" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url; a
+  a.download = `ThinkHelper_${Date.now()}.doc`;
   document.body.appendChild(a);
-  a.href=href; a.download="ThinkHelper_"+Date.now()+".doc"; a.click();
+  a.click();
   document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 async function sharePad(){
-  var url=location.origin+location.pathname+(curId?("?doc="+encodeURIComponent(curId)):"");
-  try{await navigator.clipboard.writeText(url);}catch(e){}
-  var wrap=$$("shareModal"); wrap.style.display="flex";
-  var q=$$("qr"); q.innerHTML="";
-  new QRCode(q,{text:url,width:200,height:200,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});
+  let url=location.href.split('?')[0];
+  if (curId) { url += `?doc=${encodeURIComponent(curId)}`; }
+  try{ await navigator.clipboard.writeText(url); }catch(e){console.warn('Clipboard write failed', e)}
+  const wrap=$$("shareModal"); wrap.style.display="flex";
+  const q=$$("qr"); q.innerHTML=""; new QRCode(q,{text:url,width:200,height:200, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H});
 }
-if($$("iSavePDF")){$$("iSavePDF").onclick=exportPDF;}
-if($$("iSaveWord")){$$("iSaveWord").onclick=exportWord;}
-if($$("iClipboard")){$$("iClipboard").onclick=sharePad;}
-if($$("shareClose")){$$("shareClose").onclick=function(){$$("shareModal").style.display="none";};}
-if($$("iPrint")){$$("iPrint").onclick=function(){window.print();};}
-if($$("iImport")){$$("iImport").onclick=function(){alert("PDF/Word/HWP 불러오기 (데모)");};}
-if($$("iSaveHWP")){$$("iSaveHWP").onclick=function(){alert("HWP로 저장은 서버 변환기가 필요합니다.");};}
-if($$("iTranslate")){$$("iTranslate").onclick=function(){alert("번역 데모: 서버 연동 필요");};}
-if($$("iMakePPT")){$$("iMakePPT").onclick=function(){window.open("https://slides.google.com/create","_blank");};}
-if($$("iCollab")){$$("iCollab").onclick=function(){var id=curId||""; var link=location.origin+location.pathname+(id?("?doc="+encodeURIComponent(id)):""); var subject=encodeURIComponent("[ThinkHelper] 문서 협업 초대"); var body=encodeURIComponent("아래 링크로 접속하면 문서를 함께 편집할 수 있어요(데모).\n\n"+link+"\n\n- ThinkHelper"); location.href="mailto:?subject="+subject+"&body="+body;};}
+$$("iSavePDF").onclick=exportPDF;
+$$("iSaveWord").onclick=exportWord;
+$$("iClipboard").onclick=sharePad;
+$$("shareClose").onclick=()=>($$("shareModal").style.display="none");
+$$("iPrint").onclick=()=>window.print();
+$$("iImport").onclick=()=>alert("PDF/Word/HWP 불러오기 (데모)");
+$$("iSaveHWP").onclick=()=>alert("HWP로 저장은 서버의 상용 변환기가 필요합니다.");
+$$("iTranslate").onclick=()=>alert("번역(데모): 서버 연동 시 실제 번역 가능합니다.");
+$$("iMakePPT").onclick=()=>window.open('https://slides.google.com/create','_blank');
+$$("iCollab").onclick=()=>{
+  const id=curId||"";
+  const link=`${location.origin}${location.pathname}${id?`?doc=${encodeURIComponent(id)}`:""}`;
+  const subject=encodeURIComponent("[ThinkHelper] 문서 협업 초대");
+  const body=encodeURIComponent(`아래 링크로 접속하면 문서를 함께 편집할 수 있어요(데모).\n\n${link}\n\n— ThinkHelper`);
+  location.href=`mailto:?subject=${subject}&body=${body}`;
+};
 
-/* Suggestions */
-var aiChip=$$("aiChip"), suggPopup=$$("suggPopup"), suggList=$$("suggList");
-var suggActive=-1, suggItems=[], suggDebounce=null;
-var KO_DICT=["감사합니다","안녕하세요","프로젝트","데이터","분석","결과","요청","확인","부탁드립니다","일정","회의","자료"];
-var EN_DICT=["Thank you","Hello","project","data","analysis","result","request","confirm","please","schedule","meeting","document"];
-var JA_DICT=["ありがとうございます","こんにちは","プロジェクト","データ","分析","結果","要請","確認","お願いします","日程","会議","資料"];
+/* ========= Suggestions / AI Chip ========= */
+const aiChip=$$("aiChip"), suggPopup=$$("suggPopup"), suggList=$$("suggList");
+let suggActive=-1, suggItems=[], suggDebounce=null;
+
+const KO_DICT=["감사합니다","안녕하세요","프로젝트","데이터","분석","결과","요청","확인","부탁드립니다","일정","회의","자료"];
+const EN_DICT=["Thank you","Hello","project","data","analysis","result","request","confirm","please","schedule","meeting","document"];
+const JA_DICT=["ありがとうございます","こんにちは","プロジェクト","データ","分析","結果","要請","確認","お願いします","日程","会議","資料"];
+
 function getPrefix(){
-  if(!editor) return "";
-  try{
-    var model=editor.model; var sel=model.document.selection; var pos=sel.getFirstPosition(); if(!pos) return "";
-    var range=model.createRange(model.createPositionAt(pos.parent,0),pos); var text="";
-    var it=range.getItems(); var item;
-    for(item of it){ if(item.is && (item.is("$text")||item.is("$textProxy"))) text+=item.data; }
-    var m=text.match(/[A-Za-z0-9_-]+$/);
-    return m?m[0]:"";
-  }catch(e){
-    var t=editor.getData().replace(/<[^>]+>/g," ");
-    var parts=t.split(/\s+/); return parts[parts.length-1]||"";
-  }
+    if (!editor) return "";
+    try {
+        const model = editor.model;
+        const selection = model.document.selection;
+        const position = selection.getFirstPosition();
+        if (!position) return "";
+        const range = model.createRange(model.createPositionAt(position.parent, 0), position);
+        let textBefore = "";
+        for (const item of range.getItems()) {
+            if (item.is('$text') || item.is('$textProxy')) {
+                textBefore += item.data;
+            }
+        }
+        const match = textBefore.match(/[\p{L}\p{N}_-]+$/u);
+        return match ? match[0] : "";
+    } catch (e) {
+        console.warn("getPrefix failed:", e);
+        const text = editor?.getData().replace(/<[^>]+>/g," ") || "";
+        const parts=text.split(/\s+/); return parts[parts.length-1]||"";
+    }
 }
-function getLocalSuggestions(prefix){
-  var lang=settings.lang||"ko"; var dict=lang==="en"?EN_DICT:lang==="ja"?JA_DICT:KO_DICT;
-  var p=(prefix||"").toLowerCase(); var tag=(I18N[lang]||I18N.ko).suggest.local;
-  return dict.filter(function(w){return (lang==="ko"?w.indexOf(prefix)===0:w.toLowerCase().indexOf(p)===0);})
-             .slice(0,5).map(function(w){return {kind:"LOCAL",text:w,tag:tag};});
+
+function getLocalSuggestions(prefix) {
+  const lang = settings.lang || 'ko';
+  const dict = lang === 'en' ? EN_DICT : lang === 'ja' ? JA_DICT : KO_DICT;
+  const p = (prefix || "").toLowerCase();
+  const suggKind = (I18N[lang] || I18N.ko).suggest.local;
+
+  return dict
+    .filter(w => (lang === 'ko' ? w.startsWith(prefix) : w.toLowerCase().startsWith(p)))
+    .slice(0, 5)
+    .map(w => ({ kind: "LOCAL", text: w, tag: suggKind }));
 }
+
 function applySuggestion(i){
-  var it=suggItems[i]; if(!it) return;
-  var prefix=getPrefix();
-  var ins=it.text.indexOf(prefix)===0?it.text.slice(prefix.length):it.text;
-  editor.model.change(function(w){
-    var sel=editor.model.document.selection;
-    if(sel.isCollapsed && prefix.length>0){
-      var pos=sel.getFirstPosition();
-      var start=pos.getShiftedBy(-prefix.length);
-      if(start){
-        var r=editor.model.createRange(start,pos); var s="";
-        var iter=r.getItems(); var itm;
-        for(itm of iter){ if(itm.is && (itm.is("$text")||itm.is("$textProxy"))) s+=itm.data; }
-        if(s===prefix){w.remove(r);}
+  const it=suggItems[i]; if (!it || it.kind === 'ERR') return;
+  const prefix=getPrefix();
+  const insert = it.text.startsWith(prefix) ? it.text.slice(prefix.length) : it.text;
+
+  editor.model.change(w=>{
+      const selection = editor.model.document.selection;
+      if (selection.isCollapsed) {
+           const position = selection.getFirstPosition();
+           if (position && prefix.length > 0) {
+               const startPos = position.getShiftedBy(-prefix.length);
+               if (startPos) {
+                   const rangeBefore = editor.model.createRange(startPos, position);
+                   let textInRange = "";
+                   for (const item of rangeBefore.getItems()) { if(item.is('$text') || item.is('$textProxy')) textInRange += item.data; }
+                   if (textInRange === prefix) {
+                       editor.model.deleteContent(selection, { range: rangeBefore });
+                   }
+               }
+           }
       }
-    }
-    editor.model.insertContent(w.createText(ins),sel);
+      editor.model.insertContent(w.createText(insert), editor.model.document.selection);
   });
-  saveDoc(); closeSuggest();
-}
-function triggerSuggest(){ if(!settings.suggest||!editor) return; clearTimeout(suggDebounce); suggDebounce=setTimeout(openSuggest,350); }
-async function openSuggest(){ if(!editor) return closeSuggest(); var prefix=getPrefix(); if(!prefix) return closeSuggest(); var context=editor.getData().replace(/<[^>]+>/g," ").slice(-500); suggItems=await fetchAiSuggestions(context,prefix); renderSugg(suggItems);}
-async function fetchAiSuggestions(context,prefix){
-  var lang=settings.lang||"ko"; var label=(I18N[lang]||I18N.ko).suggest;
-  var est=Math.ceil((context.length+50)/APPROX_CHARS_PER_TOKEN); if(!checkTokenLimitOrWarn(est)) return getLocalSuggestions(prefix);
-  if(SERVER_API_ENDPOINT){
-    try{
-      var r=await fetch(SERVER_API_ENDPOINT+"/suggest_word",{method:"POST",headers:{"Content-Type":"application/json","Accept-Language":lang},body:JSON.stringify({context:context,prefix:prefix})});
-      if(!r.ok) throw new Error("Server "+r.status);
-      var data=await r.json();
-      var arr=(data&&data.suggestions?data.suggestions:[]).filter(function(s){return s && s!==prefix;});
-      var token=Math.ceil((context.length+(arr.join(" ").length))/APPROX_CHARS_PER_TOKEN); addUsedTokens(token);
-      if(!arr.length) return getLocalSuggestions(prefix);
-      return arr.map(function(s){return {kind:"AI",text:s,tag:label.ai};});
-    }catch(e){
-      return getLocalSuggestions(prefix);
-    }
+  saveDoc();
+  closeSuggest();
+
+  if (it.kind === 'AI' && SERVER_API_ENDPOINT) {
+      const context = editor?.getData().replace(/<[^>]+>/g," ").trim().slice(-500) || "";
+      fetch(SERVER_API_ENDPOINT + "/log_suggestion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept-Language": settings.lang || "ko" },
+          body: JSON.stringify({ context: context, chosenSuggestion: it.text, allSuggestions: suggItems.map(x=>x.text) })
+      }).catch(e => console.warn("Suggestion log failed:", e));
   }
-  return getLocalSuggestions(prefix);
 }
+
+function triggerSuggest(){
+  if(!settings.suggest || !editor) return;
+  clearTimeout(suggDebounce);
+  suggDebounce=setTimeout(openSuggest, 350);
+}
+
+async function openSuggest(){
+  if (!editor) return closeSuggest();
+  const prefix = getPrefix();
+  if (!prefix || prefix.length < 1) return closeSuggest();
+  let context = "";
+  try {
+      const selection = editor.model.document.selection;
+      const position = selection.getFirstPosition();
+      const start = position.parent.startOffset === 0 ? editor.model.createPositionBefore(position.parent) : editor.model.createPositionAt(position.parent, 0);
+      const range = editor.model.createRange(start, position);
+      for (const item of range.getItems({ shallow: true })) {
+           if (item.is('$text') || item.is('$textProxy')) context += item.data;
+      }
+      context = context.slice(-500);
+  } catch (e) {
+      console.warn("Getting context failed:", e);
+      context = editor.getData().replace(/<[^>]+>/g, " ").slice(-500);
+  }
+  suggItems = await fetchAiSuggestions(context, prefix);
+  renderSugg(suggItems);
+}
+
+async function fetchAiSuggestions(context, prefix) {
+    const lang = settings.lang || 'ko';
+    const suggKind = (I18N[lang] || I18N.ko).suggest;
+    const estimatedTokens = Math.ceil((context.length + 50) / APPROX_CHARS_PER_TOKEN);
+    if (!checkTokenLimitOrWarn(estimatedTokens)) {
+        return getLocalSuggestions(prefix);
+    }
+    if (SERVER_API_ENDPOINT) {
+        try {
+            const res = await fetch(SERVER_API_ENDPOINT + "/suggest_word", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Accept-Language": lang },
+                body: JSON.stringify({ context: context, prefix: prefix })
+            });
+            if (!res.ok) throw new Error(`Server ${res.status}`);
+            const data = await res.json();
+            const responseText = (data?.suggestions || []).join(" ");
+            const actualTokens = Math.ceil((context.length + responseText.length) / APPROX_CHARS_PER_TOKEN);
+            addUsedTokens(actualTokens);
+            if (!data?.suggestions?.length) {
+                return getLocalSuggestions(prefix);
+            }
+            const uniqueSuggestions = data.suggestions.filter(s => s !== prefix);
+            if (!uniqueSuggestions.length) return getLocalSuggestions(prefix);
+            return uniqueSuggestions.map(s => ({ kind: "AI", text: s, tag: suggKind.ai }));
+        } catch (e) {
+            console.warn("AI Suggestion failed:", e);
+            return getLocalSuggestions(prefix);
+        }
+    } else {
+        return getLocalSuggestions(prefix);
+    }
+}
+
 function renderSugg(items){
-  if(!items||!items.length){suggPopup.style.display="none"; return;}
-  var lang=settings.lang||"ko"; var labels=(I18N[lang]||I18N.ko).suggest;
-  suggList.innerHTML=items.map(function(it,i){
-    return '<li data-idx="'+i+'"><div class="kind">'+escapeHtml(it.kind)+'</div><div class="txt">'+escapeHtml(it.text)+'</div><div class="tag">'+escapeHtml(it.tag||(it.kind==="AI"?labels.ai:it.kind==="LOCAL"?labels.local:labels.error))+'</div></li>';
-  }).join("");
-  var rect=null; try{rect=editor.editing.view.getDomRoot().getBoundingClientRect();}catch(e){}
-  var wrap=($$("editorWrap")?$$("editorWrap").getBoundingClientRect():null);
-  if(rect&&wrap){suggPopup.style.top=(rect.top+80-wrap.top)+"px"; suggPopup.style.left=(rect.left+20-wrap.left)+"px";}
-  else {suggPopup.style.top="100px"; suggPopup.style.left="50px";}
-  suggPopup.style.display="block"; suggActive=0; setActive(0);
+  if(!items || !items.length){suggPopup.style.display="none";return;}
+  const lang = settings.lang || 'ko';
+  const suggKind = (I18N[lang] || I18N.ko).suggest;
+  suggList.innerHTML=items.map((it,i)=>`<li data-idx="${i}">
+    <div class="kind">${it.kind}</div>
+    <div class="txt">${escapeHtml(it.text)}</div>
+    <div class="tag">${it.tag || (it.kind === 'AI' ? suggKind.ai : it.kind === 'LOCAL' ? suggKind.local : suggKind.error)}</div>
+    </li>`).join("");
+  let rect;
+  try {
+     rect = editor.editing.view.domConverter.viewRangeToDom(editor.editing.view.document.selection.getFirstRange()).getBoundingClientRect();
+  } catch { /* ignore */ }
+  const editorRect = $$("editorWrap")?.getBoundingClientRect();
+  if (rect && editorRect) {
+      suggPopup.style.top = `${rect.bottom - editorRect.top + 5}px`;
+      suggPopup.style.left = `${rect.left - editorRect.left}px`;
+      suggPopup.style.maxWidth = `${window.innerWidth - (rect.left - editorRect.left) - 20}px`;
+      suggPopup.style.maxHeight = `${window.innerHeight - (rect.bottom - editorRect.top) - 20}px`;
+  } else {
+      suggPopup.style.top = '100px';
+      suggPopup.style.left = '50px';
+  }
+  suggPopup.style.display="block";
+  suggActive=0; setActive(0);
 }
-function setActive(i){var lis=[].slice.call(suggList.querySelectorAll("li")); for(var k=0;k<lis.length;k++){lis[k].dataset.active="0";} if(lis[i]) lis[i].dataset.active="1";}
+function setActive(i){ const lis=[...suggList.querySelectorAll("li")]; lis.forEach(li=>li.dataset.active="0"); if(lis[i]) lis[i].dataset.active="1"; }
 function closeSuggest(){suggPopup.style.display="none"; suggActive=-1; suggItems=[];}
-if($$("suggClose")){$$("suggClose").onclick=closeSuggest;}
+$$("suggClose").onclick=closeSuggest;
 document.addEventListener("keydown",function(e){
   if(suggPopup.style.display!=="block") return;
-  if(e.key==="ArrowDown"){e.preventDefault(); suggActive=Math.min(suggActive+1, suggItems.length-1); setActive(suggActive);}
-  else if(e.key==="ArrowUp"){e.preventDefault(); suggActive=Math.max(suggActive-1,0); setActive(suggActive);}
-  else if(e.key==="Enter"||e.key==="Tab"){e.preventDefault(); applySuggestion(suggActive);}
+  if(e.key==="ArrowDown"){e.preventDefault();suggActive=Math.min(suggActive+1, suggItems.length-1); setActive(suggActive);}
+  else if(e.key==="ArrowUp"){e.preventDefault();suggActive=Math.max(suggActive-1,0); setActive(suggActive);}
+  else if(e.key==="Enter" || e.key === "Tab"){ e.preventDefault(); applySuggestion(suggActive); }
   else if(e.key==="Escape"){e.preventDefault(); closeSuggest();}
 });
-if(suggList){suggList.addEventListener("click",function(e){var li=e.target.closest?e.target.closest("li[data-idx]"):null; if(li) applySuggestion(Number(li.getAttribute("data-idx")));});}
+$$("suggList").addEventListener("click",function(e){const li=e.target.closest("li[data-idx]"); if(li) applySuggestion(Number(li.dataset.idx));});
+
+// ★★★ FIX: setGhost 유틸 추가
+function setGhost(text){
+  const el = $$("ghostSuggest");
+  if(!el) return;
+  el.textContent = text || "";
+  el.style.display = text ? "block" : "none";
+}
+
+// ★★★ FIX: txt 지역변수 선언 포함
 function updateGhostSuggest(){
-  var el=$$("ghostSuggest"); if(!el||!settings.suggest){ if(el) el.textContent=""; return; }
-  var txt=(editor?editor.getData():"").replace(/<[^>]+>/g," ").trim()||"";
-  var lang=settings.lang||"ko";
-  if(!txt){el.textContent=lang==="en"?"e.g., 'Summarize today's meeting'":lang==="ja"?"例: 「今日の会議を要約」":"예: '오늘 회의 요약'";}
-  else {el.textContent=lang==="ko"?"→ 다음에 쓸 내용은?":"→ next?";}
+  const el=$$("ghostSuggest"); if(!el||!settings.suggest){ if(el) el.style.display="none"; return; }
+  const txt=(editor?editor.getData():"").replace(/<[^>]+>/g," ").trim()||"";
+  const lang=settings.lang||"ko";
+  var hint=settings.lang==="en"?"e.g., “Summarize today's meeting”":settings.lang==="ja"?"例: 「今日の会議を要約」":"예: ‘오늘 회의 요약’";
+  if(!txt){ setGhost(hint); } else { setGhost(""); }
 }
 
-/* Right sidebar */
+/* ========= Right Sidebar ========= */
 function switchSidebarTab(tab){
-  var tabs=[].slice.call(document.querySelectorAll(".sidebar-nav .tab"));
-  for(var i=0;i<tabs.length;i++){
-    var t=tabs[i]; var on=t.getAttribute("data-tab")===tab;
-    t.setAttribute("data-active", on?"1":"0");
-    if(on){ if(tab==="feed") loadFeed(); else if(tab==="topics") loadTopics(); }
-  }
-  var cont=[].slice.call(document.querySelectorAll(".sidebar-content"));
-  for(i=0;i<cont.length;i++){
-    var c=cont[i]; var k=c.id.toLowerCase().indexOf("search")>-1?"topics":(c.id.toLowerCase().indexOf("feed")>-1?"feed":"");
-    c.setAttribute("data-active", (k===tab)?"1":"0");
-  }
-}
-var tabBtns=document.querySelectorAll(".sidebar-nav .tab");
-for(var tb=0;tb<tabBtns.length;tb++){tabBtns[tb].onclick=function(){switchSidebarTab(this.getAttribute("data-tab"));};}
-
-/* 안전한 DOM 렌더링 (문자열 연결 제거) */
-function renderSearch(summary,sources){
-  var wrap=$$("rightSearchResults"); if(!wrap) return;
-  wrap.innerHTML="";
-  var sum=document.createElement("div");
-  sum.className="search-summary";
-  sum.textContent=summary||"";
-  wrap.appendChild(sum);
-
-  var sec=document.createElement("div"); sec.className="search-sources";
-  var h=document.createElement("h4"); h.textContent=(settings.lang==="ko"?"출처":settings.lang==="ja"?"出典":"Sources");
-  sec.appendChild(h);
-  var ul=document.createElement("ul");
-  (sources||[]).forEach(function(s){
-    var li=document.createElement("li");
-    var a=document.createElement("a");
-    a.target="_blank"; a.rel="noopener noreferrer";
-    a.href=s.url||"#";
-    var st=document.createElement("strong"); st.textContent=s.title|| (settings.lang==="ko"?"제목 없음":settings.lang==="ja"?"タイトルなし":"Untitled");
-    var sp=document.createElement("span"); sp.textContent=s.url|| (settings.lang==="ko"?"URL 없음":settings.lang==="ja"?"URLなし":"No URL");
-    a.appendChild(st); a.appendChild(sp); li.appendChild(a); ul.appendChild(li);
-  });
-  sec.appendChild(ul); wrap.appendChild(sec);
-}
-
-async function internalSearch(q){
-  var s=(q||"").trim(); if(!s){ renderSearch("검색어 없음",[]); return; }
-  var lang=settings.lang||"ko"; renderSearch((lang==="ko"?"'"+s+"' 검색 중...":"Searching for '"+s+"'..."),[]);
-  if(!FEED_API_ENDPOINT||!DEEPSEARCH_API_KEY||DEEPSEARCH_API_KEY==="YOUR_DEEPSEARCH_API_KEY_HERE"){renderSearch("DEEPSEARCH_API_KEY가 설정되지 않았습니다.",[]); return;}
-  try{
-    var fields="title,url,summary_ko,published_at,provider_name";
-    var langParam=lang==="ko"?"&lang=ko":"";
-    var r=await fetch(FEED_API_ENDPOINT+"/v1/global-articles?q="+encodeURIComponent(s)+"&limit=5&return_fields="+fields+langParam,{headers:{Authorization:"Bearer "+DEEPSEARCH_API_KEY}});
-    if(!r.ok) throw new Error("DeepSearch Search API Error: "+r.status);
-    var data=await r.json();
-    var docs=data.documents||data.articles||data.items||[];
-    var summary=(docs[0]&&docs[0].summary_ko)?docs[0].summary_ko:(lang==="ko"?"'"+s+"'에 대한 검색 결과입니다.":"Search results for '"+s+"'.");
-    var src=docs.map(function(d){return {title:d.title,url:d.url};});
-    renderSearch(summary,src);
-  }catch(e){ renderSearch("'"+s+"' 검색 실패: "+e.message,[]); }
-}
-
-async function loadTopics(){
-  var c=$$("rightSearchResults"); if(!c) return;
-  c.innerHTML='<div class="spinner"></div>';
-  if(SERVER_API_ENDPOINT){
-    try{
-      var last5=chatHistory.slice(-5).map(function(m){return (m.role==="user"?"User":"AI")+": "+m.content;}).join("\n");
-      var editorCtx=(editor?editor.getData():"").replace(/<[^>]+>/g," ").trim().slice(-500)||"";
-      var r=await fetch(SERVER_API_ENDPOINT+"/get_topics",{method:"POST",headers:{"Content-Type":"application/json","Accept-Language":settings.lang||"ko"},body:JSON.stringify({context:(last5+"\n\n"+editorCtx).trim()})});
-      if(!r.ok) throw new Error("Server "+r.status);
-      var data=await r.json(); var topics=data.topics||[];
-      if(!topics.length){ c.innerHTML='<div class="search-summary">추천 주제 없음</div>'; return; }
-      var ul=document.createElement("ul");
-      topics.forEach(function(t){
-        var li=document.createElement("li");
-        li.textContent=t;
-        li.onclick=function(){internalSearch(t);};
-        ul.appendChild(li);
-      });
-      c.innerHTML=""; c.appendChild(ul);
-    }catch(e){ c.innerHTML='<div class="search-summary">주제 로딩 실패: '+e.message+'</div>'; }
-  }else{
-    c.innerHTML='<div class="search-summary">서버 설정 필요</div>';
-  }
-}
-
-async function loadFeed(topic){
-  if(topic===void 0) topic="IT";
-  var c=$$("rightFeed"); if(!c) return;
-  if(!FEED_API_ENDPOINT||!DEEPSEARCH_API_KEY||DEEPSEARCH_API_KEY==="YOUR_DEEPSEARCH_API_KEY_HERE"){
-    c.innerHTML='<div class="feed-item"><div class="feed-content">DEEPSEARCH_API_KEY가 설정되지 않았습니다.</div></div>'; return;
-  }
-  c.innerHTML='<div class="spinner"></div>';
-  try{
-    var langParam=settings.lang==="ko"?"&lang=ko":"";
-    var query=(topic==="IT"&&settings.lang==="ko")?"최신 IT 뉴스":topic;
-    var fields="title,url,provider_name,image_url,published_at";
-    var r=await fetch(FEED_API_ENDPOINT+"/v1/global-articles?q="+encodeURIComponent(query)+"&limit=10&sort=latest&return_fields="+fields+langParam,{headers:{Authorization:"Bearer "+DEEPSEARCH_API_KEY}});
-    if(!r.ok) throw new Error("DeepSearch Feed API Error: "+r.status);
-    var data=await r.json();
-    var items=data.documents||data.articles||data.items||[];
-    c.innerHTML="";
-    if(!items.length){ c.innerHTML='<div class="feed-item"><div class="feed-content">실시간 피드가 없습니다.</div></div>'; return; }
-
-    items.forEach(function(it){
-      var a=document.createElement("a");
-      a.className="feed-item"; a.target="_blank"; a.rel="noopener noreferrer";
-      a.href=it.url || "#";
-
-      var img=document.createElement("img");
-      img.alt="뉴스 썸네일"; img.loading="lazy";
-      img.src = it.image_url ? it.image_url : "https://placehold.co/340x140/cccccc/333333?text=No+Image";
-
-      var content=document.createElement("div"); content.className="feed-content";
-      var src=document.createElement("div"); src.className="feed-source"; src.textContent=it.provider_name || "출처 불명";
-      var title=document.createElement("div"); title.className="feed-title"; title.textContent=it.title || "";
-
-      content.appendChild(src); content.appendChild(title);
-      a.appendChild(img); a.appendChild(content);
-      c.appendChild(a);
-    });
-  }catch(e){
-    c.innerHTML='<div class="feed-item"><div class="feed-content">에러: '+e.message+'</div></div>';
-  }
-}
-
-/* Command bar & chat */
-function setupCommandBar(){
-  var input=$$("cmdInput"), send=$$("cmdSend");
-  async function handle(){var v=(input.value||"").trim(); if(!v) return; openChat(); await sendChat(v); input.value="";}
-  if(send) send.onclick=handle;
-  if(input){input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault(); handle();}});}
-  var sugWrap=$$("cmdSuggestions");
-  if(sugWrap){
-    sugWrap.addEventListener("click",function(e){
-      var b=e.target.closest?e.target.closest(".chip"):null; if(!b) return;
-      var lang=settings.lang||"ko";
-      if(b.getAttribute("data-cmd")==="create_doc"){
-        var tpl=lang==="ko"?"<h1>새 문서 템플릿</h1><p>여기에 내용을 입력하세요.</p>":lang==="ja"?"<h1>新規文書テンプレート</h1><p>ここに内容を入力してください。</p>":"<h1>New Document Template</h1><p>Start writing here.</p>";
-        if(editor) editor.setData(tpl); saveDoc();
-      }else if(b.getAttribute("data-cmd")==="edit_doc"){
-        var prompt=lang==="ko"?"이 문서 문장 다듬어줘":lang==="ja"?"この文書の文章を整えてください":"Refine the sentences in this document";
-        openChat(); sendChat(prompt);
+  document.querySelectorAll(".sidebar-nav .tab").forEach(t=> {
+      const isActive = t.dataset.tab === tab;
+      t.dataset.active = isActive ? "1" : "0";
+      if (isActive) {
+          if (tab === 'feed') loadFeed();
+          else if (tab === 'topics') loadTopics();
       }
+  });
+  document.querySelectorAll(".sidebar-content").forEach(c => {
+      const contentTab = c.id.toLowerCase().includes('search') ? 'topics' :
+                         c.id.toLowerCase().includes('feed') ? 'feed' : '';
+      c.dataset.active = (contentTab === tab) ? "1" : "0";
+  });
+}
+document.querySelectorAll(".sidebar-nav .tab").forEach(t=>t.onclick=()=>switchSidebarTab(t.dataset.tab));
+
+function renderSearch(summary, sources){
+  const c=$$("rightSearchResults");
+  if (!c) return;
+  const lang = settings.lang || 'ko';
+  const sourceTitle = lang === 'ko' ? '출처' : lang === 'ja' ? '出典' : 'Sources';
+  const noTitle = lang === 'ko' ? '제목 없음' : lang === 'ja' ? 'タイトルなし' : 'Untitled';
+  const noUrl = lang === 'ko' ? 'URL 없음' : lang === 'ja' ? 'URLなし' : 'No URL';
+
+  c.innerHTML=`<div class="search-summary">${escapeHtml(summary)}</div>
+  <div class="search-sources"><h4>${sourceTitle}</h4><ul>${
+    (sources || []).map(s=>`<li><a href="${escapeHtml(s.url || '#')}" target="_blank" rel="noopener noreferrer"><strong>${escapeHtml(s.title || noTitle)}</strong><span>${escapeHtml(s.url || noUrl)}</span></a></li>`).join("")
+  }</ul></div>`;
+}
+
+async function internalSearch(q){ // Called by clicking topic
+  const s = q.trim();
+  if(!s) return renderSearch((I18N[settings.lang]||I18N.ko).topics.empty,[]);
+
+  const lang = settings.lang || 'ko';
+  const loadingMsg = lang === 'ko' ? `'${s}' 검색 중...` : `Searching for '${s}'...`;
+  renderSearch(loadingMsg ,[]);
+  switchSidebarTab('topics'); // 검색 결과는 '탐색' 탭에 표시
+
+  if (!FEED_API_ENDPOINT || !DEEPSEARCH_API_KEY || DEEPSEARCH_API_KEY === "YOUR_DEEPSEARCH_API_KEY_HERE") {
+    renderSearch("DEEPSEARCH_API_KEY가 설정되지 않았습니다.",[]);
+    return;
+  }
+
+  try {
+    const langParam = lang === 'ko' ? '&lang=ko' : '';
+    const fields = 'title,url,summary_ko,published_at,provider_name';
+    const res = await fetch(`${FEED_API_ENDPOINT}/v1/global-articles?q=${encodeURIComponent(s)}&limit=5&return_fields=${fields}${langParam}`, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${DEEPSEARCH_API_KEY}` }
     });
+    if (!res.ok) throw new Error(`DeepSearch Search API Error: ${res.status}`);
+    const data = await res.json();
+    const docs = data?.documents || data?.articles || data?.items || [];
+    const summary = docs[0]?.summary_ko || (lang === 'ko' ? `'${s}'에 대한 검색 결과입니다.` : `Search results for '${s}'.`);
+    const sources = docs.map(doc => ({ title: doc.title, url: doc.url }));
+    renderSearch(summary, sources);
+  } catch (e) {
+    console.error("internalSearch failed:", e);
+    renderSearch(`'${s}' 검색 실패: ${e.message}`, []);
   }
 }
 
-var THREADS_KEY="th.threads";
-function threads(){try{return JSON.parse(localStorage.getItem(THREADS_KEY)||"[]");}catch(e){return [];}}
-function saveThreads(a){localStorage.setItem(THREADS_KEY,JSON.stringify(a||[]));}
-var chatHistory=[], threadId=null;
+async function loadTopics() {
+    const c = $$("rightSearchResults");
+    if (!c) return;
+    const lang = settings.lang || 'ko';
+    const dict = (I18N[lang] || I18N.ko).topics;
+    c.innerHTML = `<div class="spinner"></div>`;
+
+    if (SERVER_API_ENDPOINT) {
+        try {
+            const chatContext = chatHistory.slice(-5).map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`).join("\n");
+            const editorContext = editor?.getData().replace(/<[^>]+>/g," ").trim().slice(-500) || "";
+            const context = `${chatContext}\n\n${editorContext}`.trim();
+
+            const res = await fetch(SERVER_API_ENDPOINT + "/get_topics", { // 👈 Need this endpoint on server!
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Accept-Language": lang },
+                body: JSON.stringify({ context: context })
+            });
+            if (!res.ok) throw new Error(`Server ${res.status}`);
+            const data = await res.json();
+
+            const topics = data?.topics || [];
+            if (!topics.length) {
+                c.innerHTML = `<div class="search-summary">${dict.empty}</div>`;
+                return;
+            }
+            c.innerHTML = `<ul>${
+                topics.map(topic => `<li onclick="internalSearch('${escapeHtml(topic)}')">${escapeHtml(topic)}</li>`).join("")
+            }</ul>`;
+
+        } catch (e) {
+            console.error("loadTopics failed:", e);
+            c.innerHTML = `<div class="search-summary">${dict.error}: ${e.message}</div>`;
+        }
+    } else {
+        c.innerHTML = `<div class="search-summary">${dict.error}: Server endpoint not set</div>`;
+    }
+}
+
+
+async function loadFeed(topic="IT"){
+  const c=$$("rightFeed");
+  if (!c) return;
+  if (!FEED_API_ENDPOINT || !DEEPSEARCH_API_KEY || DEEPSEARCH_API_KEY === "YOUR_DEEPSEARCH_API_KEY_HERE") {
+    c.innerHTML = `<div class="feed-item"><div class="feed-content" data-i18n="error.noApiKey">DEEPSEARCH_API_KEY가 설정되지 않았습니다.</div></div>`;
+    applyI18n();
+    return;
+  }
+  c.innerHTML = `<div class="spinner"></div>`;
+
+  try {
+    const langParam = settings.lang === 'ko' ? '&lang=ko' : '';
+    const query = (topic === "IT" && settings.lang === 'ko') ? "최신 IT 뉴스" : topic;
+    const fields = 'title,url,provider_name,image_url,published_at';
+    const res = await fetch(`${FEED_API_ENDPOINT}/v1/global-articles?q=${encodeURIComponent(query)}&limit=10&sort=latest&return_fields=${fields}${langParam}`, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${DEEPSEARCH_API_KEY}` }
+    });
+    if (!res.ok) throw new Error(`DeepSearch Feed API Error: ${res.status}`);
+    const data = await res.json();
+    const items = data?.documents || data?.articles || data?.items || [];
+
+    if (!items.length) {
+        c.innerHTML = `<div class="feed-item"><div class="feed-content" data-i18n="feed.empty">실시간 피드가 없습니다.</div></div>`;
+        applyI18n();
+        return;
+    }
+
+    c.innerHTML = items.map(it=>`
+      <a href="${escapeHtml(it.url || '#')}" target="_blank" rel="noopener noreferrer" class="feed-item">
+        <img src="${escapeHtml(it.image_url || 'https://placehold.co/340x140/cccccc/333333?text=No+Image')}" alt="뉴스 썸네일" loading="lazy">
+        <div class="feed-content">
+          <div class="feed-source">${escapeHtml(it.provider_name || "출처 불명")}</div>
+          <div class="feed-title">${escapeHtml(it.title)}</div>
+        </div>
+      </a>`).join("");
+
+  } catch (e) {
+    console.error("loadFeed failed:", e);
+    c.innerHTML = `<div class="feed-item"><div class="feed-content">${(I18N[settings.lang]||I18N.ko).topics.error}: ${e.message}</div></div>`;
+  }
+}
+if($$("feedMax")){
+  $$("feedMax").addEventListener("click",function(){
+    var r=$$("right");
+    if(!r) return;
+    if(r.classList.contains("max")) r.classList.remove("max");
+    else r.classList.add("max");
+  });
+}
+
+/* ========= Command Bar ========= */
+function setupCommandBar(){
+  const cmdInput=$$("cmdInput"), cmdSend=$$("cmdSend");
+  async function handle(){
+    const v=(cmdInput.value||"").trim();
+    if(!v) return;
+    // ★★★ 검색 제거: Only send to AI Chat ★★★
+    openChat();
+    await sendChat(v);
+    cmdInput.value="";
+  }
+  cmdSend.onclick=handle;
+  cmdInput.addEventListener("keydown",function(e){ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); handle(); }});
+  $$("cmdSuggestions").addEventListener('click',function(e){
+    const b=e.target.closest?e.target.closest(".chip"):null; if(!b) return;
+    const lang=settings.lang||"ko";
+    if(b.dataset.cmd==="create_doc"){
+        const template=lang==="ko"?"<h1>새 문서 템플릿</h1><p>여기에 내용을 입력하세요.</p>":lang==="ja"?"<h1>新規文書テンプレート</h1><p>ここに内容を入力してください。</p>":"<h1>New Document Template</h1><p>Start writing here.</p>";
+        editor.setData(template); saveDoc();
+    }else if(b.dataset.cmd==="edit_doc"){
+        const prompt=lang==="ko"?"이 문서 문장 다듬어줘":lang==="ja"?"この文書の文章を整えてください":"Refine the sentences in this document";
+        openChat(); sendChat(prompt);
+    }
+  });
+}
+
+/* ========= Chat ========= */
+const THREADS_KEY="th.threads";
+function threads(){try{return JSON.parse(localStorage.getItem(THREADS_KEY)||"[]")}catch{return[]}}
+function saveThreads(a){localStorage.setItem(THREADS_KEY,JSON.stringify(a||[]))}
+let chatHistory=[], threadId=null;
 function renderThreads(){
   var box=$$("chatThreads"); if(!box) return;
   var list=threads().sort(function(a,b){return (b.updatedAt||0)-(a.updatedAt||0);});
+  var newThreadText=(settings.lang||"ko")==="ko"?"새 스레드":(settings.lang==="ja"?"新規スレッド":"New Thread");
   box.innerHTML = (list.map(function(t){
     return '<div class="threadRow" data-id="'+t.id+'" data-active="'+(t.id===threadId?'1':'0')+'">'+
-           '<div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">'+escapeHtml(t.title||"새 스레드")+'</div>'+
+           '<div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">'+escapeHtml(t.title||newThreadText)+'</div>'+
            '<div style="color:#888;font-size:.8rem">'+new Date(t.updatedAt||t.createdAt).toLocaleDateString()+'</div></div>';
-  }).join("")) || '<div class="sys" style="margin:8px">스레드 없음</div>';
-  box.onclick=function(e){var row=e.target.closest?e.target.closest(".threadRow"):null; if(!row) return; openThread(row.getAttribute("data-id"));};
+  }).join("")) || '<div class="sys" style="margin:8px" data-i18n="chat.noThreads">스레드 없음</div>';
+  if(!list.length) applyI18n();
+
+  box.onclick=function(e){
+    var row=e.target.closest?e.target.closest(".threadRow"):null;
+    if(!row) return;
+    if(row.getAttribute("data-id")!==threadId) openThread(row.getAttribute("data-id"));
+  };
 }
 function newThread(){
-  var id="t_"+Date.now();
-  var row={id:id,title:"새 스레드",createdAt:Date.now(),updatedAt:Date.now(),history:[]};
-  var merged=[row].concat(threads());
-  saveThreads(merged);
-  threadId=id; chatHistory=[];
-  renderThreads();
-  if($$("threadTitleInput")) $$("threadTitleInput").value=row.title;
-  if($$("chatBody")) $$("chatBody").innerHTML="";
+  var id="t_"+Date.now(); var title=(settings.lang||"ko")==="ko"?"새 스레드":(settings.lang==="ja"?"新規スレッド":"New Thread");
+  var row={id:id,title:title,createdAt:Date.now(),updatedAt:Date.now(),history:[]};
+  saveThreads([row].concat(threads())); threadId=id; chatHistory=[]; renderThreads(); if($$("threadTitleInput")) $$("threadTitleInput").value=row.title; if($$("chatBody")) $$("chatBody").innerHTML="";
 }
 function openThread(id){
   var list=threads(); var t=null;
   for(var i=0;i<list.length;i++){if(list[i].id===id){t=list[i]; break;}}
   if(!t) return;
-  threadId=id; chatHistory=t.history||[];
-  $$("chatBody").innerHTML="";
-  for(var j=0;j<chatHistory.length;j++){var m=chatHistory[j]; addBubble(m.content,m.role==="user",false,true);}
-  if($$("threadTitleInput")) $$("threadTitleInput").value=t.title||"";
-  renderThreads();
+  threadId=id; chatHistory=t.history||[]; if($$("chatBody")) $$("chatBody").innerHTML="";
+  for(var j=0;j<chatHistory.length;j++){var m=chatHistory[j]; addBubble(m.content,m.role==="user",m.role==="system",true);}
+  if($$("threadTitleInput")) $$("threadTitleInput").value=t.title||""; renderThreads();
+  if($$("chatBody")) $$("chatBody").scrollTop=$$("chatBody").scrollHeight;
 }
 function persistThread(){
-  if(!threadId) return;
-  var list=threads(); var idx=-1; for(var i=0;i<list.length;i++){if(list[i].id===threadId){idx=i;break;}}
+  if(!threadId) return; var list=threads(); var idx=-1; for(var i=0;i<list.length;i++){if(list[i].id===threadId){idx=i;break;}}
   if(idx<0) return;
-  var title=($$("threadTitleInput")?($$("threadTitleInput").value.trim()||"새 스레드"):(list[idx].title||"새 스레드"));
-  list[idx]=Object.assign({}, list[idx], {
-    title: title,
-    updatedAt: Date.now(),
-    history: chatHistory.slice(-200)
-  });
+  var title=($$("threadTitleInput")?($$("threadTitleInput").value.trim()||(settings.lang==='ko'?"새 스레드":(settings.lang==='en'?"New Thread":"新規スレッド"))):(list[idx].title||"새 스레드"));
+  list[idx]=Object.assign({}, list[idx], {title:title, updatedAt:Date.now(), history:chatHistory.slice(-200)});
   saveThreads(list); renderThreads();
 }
 if($$("renameThread")){$$("renameThread").onclick=persistThread;}
-if($$("deleteThread")){$$("deleteThread").onclick=function(){ if(!threadId) return; var list=threads().filter(function(x){return x.id!==threadId;}); saveThreads(list); threadId=null; chatHistory=[]; $$("chatBody").innerHTML=""; renderThreads(); };}
+if($$("deleteThread")){$$("deleteThread").onclick=function(){
+    if(!threadId) return;
+    var currentTitle = threads().find(function(t){return t.id===threadId;})?.title || "새 스레드";
+    var confirmMsg=settings.lang==="ko"?"'"+currentTitle+"' 스레드를 삭제할까요?":"Delete thread '"+currentTitle+"'?";
+    if(confirm(confirmMsg)){
+      saveThreads(threads().filter(function(x){return x.id!==threadId;}));
+      var next=threads()[0]; if(next) openThread(next.id); else newThread();
+    }
+};}
 
 var chatDock=$$("chatDock"), chatInput=$$("chatInput");
 function openChat(){chatDock.style.display="flex"; chatDock.setAttribute("aria-hidden","false"); if(!threadId) newThread(); if($$("chatInput")) $$("chatInput").focus();}
@@ -938,24 +1298,28 @@ if($$("chatBtn")){$$("chatBtn").onclick=openChat;}
 if($$("chatClose")){$$("chatClose").onclick=closeChat;}
 if($$("btnChatPlus")){$$("btnChatPlus").onclick=function(e){e.stopPropagation(); var m=$$("chatPlusMenu"); if(m) m.style.display=m.style.display==="block"?"none":"block";};}
 document.addEventListener("click",function(){var m=$$("chatPlusMenu"); if(m) m.style.display="none";});
-function addBubble(text,me,isErr,skipPersist){ if(me===void 0) me=false; if(isErr===void 0) isErr=false; if(skipPersist===void 0) skipPersist=false;
+
+function addBubble(text,me,isErr,skipPersist){
+  if(me===void 0) me=false; if(isErr===void 0) isErr=false; if(skipPersist===void 0) skipPersist=false;
   var b=document.createElement("div");
   b.className="bubble "+(me?"me":(isErr?"sys":"ai"));
   b.textContent=text;
   $$("chatBody").appendChild(b);
   $$("chatBody").scrollTop=$$("chatBody").scrollHeight;
-  if(!skipPersist){chatHistory.push({role:me?"user":"assistant",content:text}); persistThread();}
+  if(!skipPersist){chatHistory.push({role:me?"user":(isErr?"system":"assistant"),content:text}); persistThread();}
   return b;
 }
-async function typeOut(b,text,delay){ if(delay===void 0) delay=4;
-  b.textContent="";
-  for(var i=0;i<text.length;i++){ b.textContent+=text[i]; if(i%3===0) await sleep(delay); }
+async function typeOut(b,text,delay){
+  if(delay===void 0) delay=4; b.textContent="";
+  for(var i=0;i<text.length;i++){ if(!document.body.contains(b)){return;} b.textContent+=text[i]; if(i%3===0) await sleep(delay); }
   $$("chatBody").scrollTop=$$("chatBody").scrollHeight;
 }
 if($$("chatBody")){$$("chatBody").addEventListener("click",function(e){var t=e.target.closest?e.target.closest(".bubble.ai"):null; if(!t) return; $$("chatInput").value=t.textContent; $$("chatInput").focus();});}
+
 async function sendChat(msg){
-  var est=Math.ceil((msg.length+150)/APPROX_CHARS_PER_TOKEN); if(!checkTokenLimitOrWarn(est)){addBubble((I18N[settings.lang]||I18N.ko).limit.hit(settings.lang==="ko"?"자정":"midnight"),false,true); return;}
-  addBubble(msg,true); chatHistory.push({role:"user",content:msg}); persistThread();
+  var est=Math.ceil((msg.length+150)/APPROX_CHARS_PER_TOKEN);
+  if(!checkTokenLimitOrWarn(est)){addBubble((I18N[settings.lang]||I18N.ko).limit.hit(settings.lang==="ko"?"자정":"midnight"),false,true); return;}
+  addBubble(msg,true);
   var holder=addBubble("...",false);
   if(SERVER_API_ENDPOINT){
     try{
@@ -964,19 +1328,24 @@ async function sendChat(msg){
       var data=await r.json(); var reply=(data&&data.answer)?data.answer:"(AI Response Error)";
       var actual=Math.ceil((msg.length+reply.length)/APPROX_CHARS_PER_TOKEN); addUsedTokens(actual);
       await typeOut(holder,reply);
+      var plan=(data&&data.plan)||'Gemini';
+      updateChatUI(plan); // Call UI update function
       chatHistory.push({role:"assistant",content:holder.textContent}); persistThread();
     }catch(e){
-      await typeOut(holder,(I18N[settings.lang]||I18N.ko).error.serverConnect+" "+e.message,0); holder.classList.add("sys");
+      var err=(I18N[settings.lang]||I18N.ko).error.serverConnect;
+      await typeOut(holder,err+" "+e.message,0); holder.classList.add("sys");
+      updateChatUI("offline");
     }
   }else{
-    await typeOut(holder,"Server address not configured.",0); holder.classList.add("sys");
+     await typeOut(holder,"Server address not configured.",0); holder.classList.add("sys");
+     updateChatUI("offline");
   }
 }
-if($$("chatForm")){$$("chatForm").addEventListener("submit",function(e){e.preventDefault(); var t=chatInput.value.trim(); if(!t) return; chatInput.value=""; sendChat(t);});}
-if($$("btnAttach")){$$("btnAttach").onclick=function(){$$("filePick").click();};}
-if($$("filePick")){$$("filePick").addEventListener("change",function(e){var f=e.target.files&&e.target.files[0]; if(!f) return; addBubble("File Received: "+f.name+" ("+Math.round(f.size/1024)+"KB)",false,true);});}
+if($$("chatForm")) $$("chatForm").addEventListener("submit",function(e){e.preventDefault();var t=$$("chatInput").value.trim(); if(!t) return; $$("chatInput").value=""; sendChat(t);});
+if($$("btnAttach")) $$("btnAttach").onclick=function(){$$("filePick").click();};
+if($$("filePick")) $$("filePick").addEventListener("change",function(e){var f=e.target.files&&e.target.files[0]; if(!f) return; addBubble("File Received: "+f.name+" ("+Math.round(f.size/1024)+"KB)",false,true);});
 
-/* footer location */
+// footer location
 (function(){
   var locEl=$$("loc"); if(!locEl) return;
   fetch("https://ipapi.co/json").then(function(r){if(!r.ok) throw new Error("ipapi status "+r.status); return r.json();})
@@ -984,20 +1353,21 @@ if($$("filePick")){$$("filePick").addEventListener("change",function(e){var f=e.
   .catch(function(){ locEl.textContent="📍 위치 확인 불가"; });
 })();
 
-/* gaze cursor */
+// gaze cursor
 function setupGazeCursor(){ if($$("gaze")) $$("gaze").style.display=settings.gaze?"block":"none"; }
 document.addEventListener("mousemove",function(e){ var g=$$("gaze"); if(g && g.style.display==="block"){ g.style.left=e.clientX+"px"; g.style.top=e.clientY+"px"; }});
 
-/* shortcuts */
+// shortcuts
 document.addEventListener("keydown",function(e){ if((e.ctrlKey||e.metaKey)&&String(e.key||"").toLowerCase()==="k"){e.preventDefault(); if($$("cmdInput")){$$("cmdInput").focus(); $$("cmdInput").select();}}});
 
-/* init */
+// init
 (async function(){
   loadSettings();
+  applyI18n(); // ★★★ FIX: Move i18n *after* loadSettings, *before* initEditor ★★★
   try{await initEditor("");}catch(e){return;}
   var last=store.current(); if(last && store.get(last)) openDoc(last); else newDoc(); renderList();
   setupCommandBar(); setupGazeCursor(); updateGhostSuggest(); renderThreads();
-  switchSidebarTab("feed");
+  if(settings.mode==='research') switchSidebarTab("feed");
   checkTokenLimitOrWarn(0);
 })();
 </script>
