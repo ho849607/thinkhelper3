@@ -1,1146 +1,981 @@
 <!DOCTYPE html>
 <html lang="ko" data-theme="light">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title data-i18n="page.title">ThinkHelper — Editor</title>
-<link rel="icon" href="data:,"/>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>ThinkHelper 2.1 — Workspace & Discover</title>
+  <link rel="icon" href="data:,"/>
 
-<!-- GTM -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-NXBQK43Z');</script>
+  <!-- CKEditor -->
+  <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script>
+  <!-- Optional helpers -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 
-<!-- CKEditor -->
-<script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script>
-<!-- Export libs -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <style>
+    :root{
+      --bg:#f6f8fb;--fg:#0b1020;--muted:#6a7691;--panel:#fff;--card:#f2f5ff;--border:#d6deee;--hover:#e9effe;--accent:#2563eb;
+      --touch:48px;
+    }
+    :root[data-theme="dark"]{--bg:#0b1020;--fg:#f1f5ff;--muted:#a8b4cf;--panel:#0f172a;--card:#101a30;--border:#273453;--hover:#16213b;--accent:#60a5fa}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;background:var(--bg);color:var(--fg);
+      font-family:-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
+      display:flex;flex-direction:column;min-height:100vh;overflow:hidden;
+    }
 
-<style>
-/* --- Base Styles --- */
-:root{--bg:#f6f8fb;--fg:#0b1020;--muted:#6a7691;--panel:#fff;--card:#f2f5ff;--border:#d6deee;--hover:#e9effe;--accent:#2563eb}
-:root[data-theme="dark"]{--bg:#0b1020;--fg:#f1f5ff;--muted:#a8b4cf;--panel:#0f172a;--card:#101a30;--border:#273453;--hover:#16213b;--accent:#60a5fa}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;display:flex;flex-direction:column;padding-bottom:90px}
+    /* ===== Topbar ===== */
+    .topbar{
+      position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:8px;
+      padding:calc(8px + env(safe-area-inset-top,0)) 12px 10px;
+      background:var(--panel);border-bottom:1px solid var(--border)
+    }
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900}
+    .logo{width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,#60a5fa,#34d399)}
+    .modes{display:flex;gap:8px}
+    .tab{border:1px solid var(--border);background:var(--card);padding:.55rem .9rem;border-radius:10px;font-weight:800;cursor:pointer;min-height:var(--touch)}
+    .tab[aria-selected="true"]{background:var(--panel);outline:2px solid var(--accent)}
+    .actions{display:flex;gap:8px;align-items:center}
+    .iconbtn,.btn{border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:10px;padding:.55rem .9rem;font-weight:800;cursor:pointer;min-height:var(--touch)}
+    .iconbtn:hover,.btn:hover{background:var(--hover)}
 
-/* --- Topbar --- */
-.topbar{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1000}
-.brand{display:flex;align-items:center;gap:8px;font-weight:900}
-.logo{width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,#60a5fa,#34d399)}
-.btn{border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:8px;padding:.45rem .7rem;font-weight:900;cursor:pointer;transition:.2s}
-.btn:hover{background:var(--hover)} .btn[disabled]{opacity:.6;cursor:not-allowed}
-.iconbtn{border:1px solid var(--border);background:transparent;color:var(--fg);border-radius:6px;padding:.25rem .45rem;cursor:pointer;transition:.2s}
-.iconbtn:hover{background:var(--hover)}
-.selectlike{height:34px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--fg);padding:.25rem .5rem}
-.menu{position:relative;z-index:1001}
-.menu>.btn{font-weight:900}
-.dropdown{display:none;position:absolute;top:42px;left:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:320px;box-shadow:0 12px 24px rgba(0,0,0,.12);z-index:1002}
-.dropdown .item{padding:.55rem .7rem;border-bottom:1px dashed var(--border);cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}
-.dropdown .item:last-child{border-bottom:none}
-.dropdown .item:hover{background:var(--hover)}
-.dropdown a.item{text-decoration:none;color:inherit}
-.dropdown .item label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.9em}
-.dropdown .item input[type="checkbox"]{margin:0;transform:scale(.9)}
+    /* ===== Main / Grid ===== */
+    main{flex:1;min-height:0}
+    #workspace{
+      height:100%;
+      display:grid;
+      grid-template-columns:280px 1fr 320px;
+      gap:12px;
+      padding:12px;
+      overflow:hidden;
+    }
+    aside#left,aside#right,#center{
+      background:var(--panel);border:1px solid var(--border);border-radius:12px;min-height:0;
+      display:flex;flex-direction:column;overflow:hidden;
+    }
 
-/* --- Main Layout --- */
-main{flex:1;min-height:0;display:grid;grid-template-columns:260px 1fr;gap:10px;padding:10px;position:relative;z-index:2}
-main[data-mode="research"]{grid-template-columns:260px 1fr 340px}
-@media (max-width:1200px){main{grid-template-columns:0 1fr;padding:6px} main[data-mode="research"]{grid-template-columns:0 1fr 340px} #left{display:none!important}}
-@media (max-width:900px){main{grid-template-columns:0 1fr} main[data-mode="research"]{grid-template-columns:0 1fr} #left{display:none!important} aside#right{display:none!important}}
+    /* ===== Left ===== */
+    #left{padding:10px}
+    .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+    .tabs button{border:1px solid var(--border);background:var(--card);border-radius:8px;padding:.5rem .7rem;font-weight:800;cursor:pointer;min-height:40px}
+    .tabs button[data-active="1"]{background:var(--panel);color:var(--accent)}
+    .left-search{display:flex;gap:8px;margin:6px 0 10px}
+    .left-search input{flex:1;border:1px solid var(--border);background:var(--card);border-radius:10px;padding:.6rem .8rem;font-size:.95rem}
+    .panel{flex:1;overflow:auto;display:none}
+    .panel[data-active="1"]{display:block}
+    .panel-head{display:flex;justify-content:space-between;align-items:center;margin:6px 0 8px}
+    .doc{display:flex;justify-content:space-between;align-items:center;padding:.55rem .7rem;border:1px solid var(--border);border-radius:8px;background:var(--card);margin-bottom:6px;cursor:pointer}
+    .doc:hover{background:var(--hover)}
+    .doc .ttl{font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .doc .date{color:var(--muted);font-size:.82rem;margin-left:8px;white-space:nowrap}
+    .tmpl{display:grid;grid-template-columns:1fr;gap:8px}
+    .card{border:1px solid var(--border);background:var(--card);border-radius:12px;padding:.9rem;cursor:pointer}
+    .card:hover{background:var(--hover)}
+    .slist{display:flex;flex-direction:column;gap:2px;padding-bottom:52px}
+    .srow{display:flex;align-items:center;gap:8px;padding:.55rem .7rem;border-radius:8px;border:1px solid var(--border);background:var(--card);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .srow:hover{background:var(--hover)}
+    .srow .q{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+    .srow .meta{color:var(--muted);font-size:.82rem;margin-left:6px;white-space:nowrap}
+    .srow .del{margin-left:auto;border:none;background:transparent;cursor:pointer;border-radius:8px;padding:.25rem .4rem;display:none}
+    .srow:hover .del{display:block}
+    .sfooter{position:sticky;bottom:0;background:var(--panel);padding:8px;border-top:1px dashed var(--border);display:flex;justify-content:flex-end}
 
-/* --- Left Sidebar --- */
-aside#left{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column;min-height:0;position:sticky;top:70px;height:calc(100vh - 90px)}
-.listHead{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-#docList{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px}
-.doc{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);transition:.2s}
-.doc.active{background:var(--hover);border-color:var(--accent)} .doc:hover{background:var(--hover)}
-.doc .title{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;padding:2px 4px}
-.doc .title[contenteditable="true"]{outline:1.5px solid var(--accent);background:#fff;border-radius:4px;padding:2px 4px;cursor:text}
-.doc .time{font-size:.78rem;color:var(--muted)}
-.doc .act{display:none}.doc:hover .act{display:inline-flex}
+    /* ===== Center / Editor ===== */
+    #center{padding:0}
+    #center-inner{display:flex;flex-direction:column;height:100%}
+    .ck-sticky-panel .ck-toolbar{position:sticky;top:0;z-index:5}
+    .editor-wrap{flex:1;min-height:0;overflow:auto;padding:10px}
+    .ck-editor__editable_inline{
+      min-height:60vh!important;background:#fff;color:#222;border-radius:8px;box-shadow:none !important;
+    }
+    [data-theme="dark"] .ck-editor__editable_inline{color:#ffe7b3;background:#0b1327}
+    .doc-title{font-weight:900;font-size:1.05rem;padding:10px;color:var(--muted);border-bottom:1px dashed var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* --- Center --- */
-section#center{display:flex;flex-direction:column;gap:10px;min-width:0;padding-bottom:50px}
-#editorWrap{flex:1;border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:8px;position:relative}
-#editor{min-height:62vh}
-.ck-balloon-panel,.ck-powered-by-balloon{display:none!important}
-.ck-editor__editable_inline{min-height:58vh!important;color:#222;background:#fff;padding:12px 12px 140px;border-radius:8px;position:relative;z-index:1}
-[data-theme="dark"] .ck-editor__editable_inline{color:#ffe7b3;background:#0b1327}
-#ghostSuggest{position:absolute;max-width:60%;font-size:1rem;line-height:1.6;opacity:.35;color:#111;pointer-events:none;z-index:5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-[data-theme="dark"] #ghostSuggest{color:#fff;opacity:.28}
-#commandBar{display:flex;gap:10px;align-items:center;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:12px;position:relative;}
-#cmdInput{flex:1;height:40px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);padding:.5rem .9rem;font-size:15px}
-#cmdSuggestions{display:flex;gap:8px}
-.chip{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:.3rem .7rem;cursor:pointer;font-weight:900;font-size:.9rem;white-space:nowrap;transition:.2s}
-.chip:hover{background:var(--hover)}
-@media (max-width:768px){#cmdSuggestions{display:none}}
+    /* ===== Right / AI ===== */
+    #right{padding:10px}
+    .ai-head{display:flex;justify-content:space-between;align-items:center}
+    .ai-box{flex:1;overflow:auto;margin-top:8px;display:flex;flex-direction:column;gap:8px}
+    .bubble{max-width:85%;padding:.9rem 1rem;border:1px solid var(--border);border-radius:14px;background:var(--card);line-height:1.6;white-space:pre-wrap}
+    .me{margin-left:auto;background:#143763;color:#fff;border-color:#143763}
+    .ai{margin-right:auto;border-color:#314264;background:#122142;color:#fff}
+    .ai-form{display:flex;gap:8px;margin-top:auto}
+    .ai-form textarea{flex:1;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);padding:.7rem .9rem;min-height:64px;resize:vertical}
+    .ai-form button{min-width:92px}
 
-/* --- Suggestion Popup & AI Chip --- */
-#aiChip{position:absolute;display:none;gap:6px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:.28rem .55rem;box-shadow:0 8px 20px rgba(0,0,0,.15);z-index:80;font-weight:900}
-#aiChip small{opacity:.75}
-#suggPopup{position:absolute;display:none;z-index:80;background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 24px rgba(0,0,0,.18);min-width:300px;max-width:620px}
-#suggPopup header{padding:6px 10px;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
-#suggPopup ul{list-style:none;margin:0;padding:6px;max-height:280px;overflow:auto}
-#suggPopup li{padding:8px 10px;border-radius:8px;display:grid;grid-template-columns:90px 1fr auto;gap:10px;cursor:pointer;align-items:center}
-#suggPopup li .kind{opacity:.75;font-size:.75rem}
-#suggPopup li .txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#suggPopup li .tag{border:1px solid var(--border);border-radius:6px;font-size:.72rem;padding:.05rem .35rem;opacity:.85}
-#suggPopup li[data-active="1"]{background:var(--hover);outline:1.5px solid #8ab4ff66}
+    /* ===== Discover ===== */
+    #discover{display:none;padding:12px;height:100%;overflow:auto}
+    #discover[data-active="1"]{display:block}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .news{border:1px solid var(--border);background:var(--panel);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+    .news img{width:100%;height:160px;object-fit:cover;background:var(--border)}
+    .news .meta{font-size:.82rem;color:var(--muted);padding:6px 10px 0}
+    .news .title{padding:6px 10px 6px;font-weight:900}
+    .news .desc{padding:0 10px 10px;color:var(--muted);font-size:.92rem}
+    .news .actions{margin-top:auto;display:flex;gap:6px;padding:8px;border-top:1px dashed var(--border)}
+    .news .actions button{flex:1}
 
-/* --- Right Sidebar --- */
-aside#right{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:none;flex-direction:column;min-height:0;position:sticky;top:70px;height:calc(100vh - 90px)}
-main[data-mode="research"] aside#right{display:flex}
+    /* ===== Footer ===== */
+    footer{padding:8px 12px calc(8px + env(safe-area-inset-bottom,0));border-top:1px solid var(--border);background:var(--panel);font-size:.95rem;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
+    .status-left,.status-right{display:flex;gap:12px;align-items:center}
+    .tip{color:var(--muted)}
 
-.sidebar-nav{display:flex;gap:0;background:var(--card);border-radius:8px;padding:4px;border:1px solid var(--border);margin-bottom:10px}
-.sidebar-nav .tab{flex:1;padding:8px 14px;font-weight:700;font-size:.9rem;cursor:pointer;border-radius:6px;text-align:center;color:var(--muted);transition:.2s}
-.sidebar-nav .tab:hover{background:var(--hover);color:var(--fg)}
-.sidebar-nav .tab[data-active="1"]{background:var(--panel);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.sidebar-content{flex:1;overflow:auto;display:none}
-.sidebar-content[data-active="1"]{display:block}
-#rightSearchResults{display:flex;flex-direction:column;gap:12px}
-.search-summary{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;white-space:pre-wrap;font-size:.95rem;line-height:1.6}
-.search-sources h4{margin:12px 0 6px;font-size:.9rem;color:var(--muted)}
-#rightSearchResults ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
-#rightSearchResults li{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;font-weight:500;transition:.2s}
-#rightSearchResults li:hover{background:var(--hover)}
-#rightFeed{display:flex;flex-direction:column;gap:12px}
-a.feed-item{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:.2s}
-a.feed-item:hover{background:var(--hover)}
-a.feed-item img{width:100%;height:140px;object-fit:cover;display:block;background-color:var(--border)}
-a.feed-item .feed-content{padding:10px}
-a.feed-item .feed-source{font-size:.8rem;color:var(--muted);margin-bottom:4px}
-a.feed-item .feed-title{font-weight:900;color:var(--fg)}
-#feedMax{margin-left:auto}
-#right.max{position:fixed;inset:60px 16px 16px 16px;z-index:120;background:var(--panel);height:auto}
-#right.max #rightFeed{height:calc(100% - 52px);overflow:auto}
+    /* ===== Modal ===== */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:80}
+    .modal{position:fixed;inset:0;display:none;z-index:90;align-items:center;justify-content:center}
+    .modal-inner{width:min(640px,92vw);max-height:80vh;overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px}
+    .modal h3{margin:.2rem 0 0.6rem}
+    .row{display:flex;gap:10px;align-items:center;margin:8px 0}
+    .row label{flex:1}
+    .sep{height:1px;background:var(--border);margin:10px 0}
+    .row .btnbar{display:flex;gap:8px}
 
-/* --- Chat Dock --- */
-#chatBtn{position:fixed;right:16px;bottom:80px;z-index:60}
-#chatDock{position:fixed;right:16px;bottom:16px;width:min(95vw,1000px);height:88vh;display:none;flex-direction:column;background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 36px rgba(0,0,0,.28);z-index:75}
-#chatHead{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border);font-weight:900}
-#chatHead .actions{position:relative;display:flex;align-items:center;gap:6px}
-#chatPlusMenu{position:absolute;display:none;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px;right:40px;top:40px;z-index:90;width:150px}
-#chatPlusMenu .item{padding:6px 8px;border-radius:6px;cursor:pointer;font-size:.9em}
-#chatPlusMenu .item:hover{background:var(--hover)}
-#chatWrap{flex:1;display:grid;grid-template-columns:220px 1fr;min-height:0}
-#chatThreads{border-right:1px solid var(--border);padding:8px;overflow:auto}
-.threadRow{display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;margin-bottom:8px;justify-content:space-between;transition:.2s}
-.threadRow:hover{background:var(--hover)} .threadRow[data-active="1"]{outline:2px solid #9bbcff;background:var(--hover)}
-#chatMain{display:flex;flex-direction:column;min-width:0}
-#chatBody{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
-.bubble{max-width:85%;padding:.8rem 1.2rem;border:1px solid var(--border);border-radius:14px;background:var(--card);word-break:break-word;font-size:1.05rem;line-height:1.6;white-space:pre-wrap}
-.bubble.ai{cursor:pointer}
-.me{margin-left:auto;background:#143763;color:#fff;border-color:#143763}
-.ai{margin-right:auto;border-color:#3b4b72;background:#15284f;color:#fff}
-[data-theme="dark"] .ai{background:#15203baa;border-color:#273453}
-.sys{margin:0 auto;background:#eef2ff;border-style:dashed;color:#111;font-size:.9em;text-align:center}
-#chatForm{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border)}
-#chatInput{flex:1;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);padding:.6rem .8rem;font-size:1.02rem;resize:vertical;min-height:80px}
-#quota{position:absolute;left:12px;bottom:12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.25rem .55rem;font-size:.85rem;color:#666}
-#filePick{display:none}
+    /* ===== Suggestion Box (VS Code Style) ===== */
+    #suggestionBox {
+      position: absolute;
+      display: none;
+      z-index: 9999;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      min-width: 150px;
+      max-width: 240px;
+      overflow: hidden;
+      font-family: monospace, sans-serif;
+    }
+    #suggestionBox ul {list-style:none;margin:0;padding:4px 0}
+    #suggestionBox li {
+      padding:6px 12px;cursor:pointer;font-size:.9rem;color:var(--fg);
+      display:flex;justify-content:space-between
+    }
+    #suggestionBox li.active {background:#007AFF;color:#fff}
+    #suggestionBox li:hover:not(.active){background:var(--hover)}
+    #suggestionBox li .sub {font-size:.75rem;opacity:.7;margin-left:8px}
 
-/* footer */
-footer{position:fixed;bottom:0;left:0;right:0;background:var(--panel);padding:8px 10px;border-top:1px solid var(--border);font-size:.92rem;text-align:center;user-select:none;z-index:10}
-footer a{pointer-events:auto}
-
-/* misc and modals */
-#gaze{position:fixed;pointer-events:none;width:14px;height:14px;border-radius:50%;background:rgba(37,99,235,.75);box-shadow:0 0 0 3px rgba(37,99,235,.2);mix-blend-mode:multiply;z-index:100;transform:translate(-50%,-50%);display:none}
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:120;align-items:center;justify-content:center}
-.modal{background:#fff;color:#111;border-radius:12px;max-width:760px;width:92vw;max-height:86vh;overflow:auto;padding:18px;border:1px solid var(--border);box-shadow:0 18px 36px rgba(0,0,0,.25)}
-[data-theme="dark"] .modal{background:#0f172a;color:#f1f5ff}
-.modal h3{margin:.2rem 0 .6rem}
-.modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
-.modal .btn-plain{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:.45rem .8rem;cursor:pointer}
-[data-theme="dark"] .modal .btn-plain{background:#1e293b;border-color:#334155;color:#f1f5ff}
-.spinner{border:4px solid rgba(0,0,0,.1);width:24px;height:24px;border-radius:50%;border-left-color:var(--accent);animation:spin 1s ease infinite;margin:20px auto}
-@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-#trendWrap{position:absolute;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 24px rgba(0,0,0,.12);display:none;z-index:70;min-width:260px;max-width:420px}
-#trendWrap .row{padding:8px 10px;border-bottom:1px dashed var(--border);cursor:pointer}
-#trendWrap .row:last-child{border-bottom:none}
-#trendWrap .row:hover{background:var(--hover)}
-</style>
+    /* ===== Responsive ===== */
+    @media (max-width:1024px){ #workspace{grid-template-columns:240px 1fr 300px} .grid{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:820px){ #workspace{grid-template-columns:220px 1fr} #right{display:none} .grid{grid-template-columns:1fr} }
+    @media (max-width:480px){
+      .modes{gap:6px}
+      .tab,.iconbtn,.btn{border-radius:12px}
+      #workspace{grid-template-columns:1fr}
+      #left{display:none} #right{display:none}
+      .ck-editor__editable_inline{min-height:50vh!important}
+      .topbar{gap:6px}
+      .brand div:last-child{font-size:1rem}
+      .quickbar{
+        position:fixed;bottom:0;left:0;right:0;z-index:60;display:flex;gap:8px;
+        padding:8px calc(12px + env(safe-area-inset-left,0)) calc(8px + env(safe-area-inset-bottom,0)) calc(12px + env(safe-area-inset-right,0));
+        background:var(--panel);border-top:1px solid var(--border)
+      }
+      .quickbar .btn{flex:1}
+      footer{padding-bottom:calc(56px + env(safe-area-inset-bottom,0))}
+    }
+    @media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto;animation:none!important;transition:none!important} }
+  </style>
 </head>
-<body data-lang="ko">
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NXBQK43Z"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-
-<div id="gaze"></div>
-
-<div class="topbar">
-  <button class="iconbtn" id="btnToggleLeft" title="문서 패널 접기/펼치기">☰</button>
-  <div class="brand"><div class="logo"></div><div id="t_brand" data-i18n="brand.name">ThinkHelper</div></div>
-
-  <div class="menu" data-menu>
-    <button class="btn" data-i18n="menu.tools">도구 ▾</button>
-    <div class="dropdown">
-      <div class="item" id="iNew"><span data-i18n="tools.newDoc">새 문서</span><span>⌘/Ctrl+N</span></div>
-      <div class="item" id="iPrint"><span data-i18n="tools.print">🖨️ 프린터로 인쇄</span></div>
-      <div class="item" id="iImport"><span data-i18n="tools.import">📥 불러오기 (데모)</span></div>
-      <div class="item" id="iSavePDF"><span data-i18n="tools.savePdf">💾 PDF로 저장</span></div>
-      <div class="item" id="iSaveWord"><span data-i18n="tools.saveWord">💾 Word로 저장</span></div>
-      <div class="item" id="iSaveHWP"><span data-i18n="tools.saveHwp">💾 HWP로 저장 (데모)</span></div>
-      <div class="item" id="iTranslate"><span data-i18n="tools.translate">🌐 번역하기 (데모)</span></div>
-      <div class="item" id="iCollab"><span data-i18n="tools.collab">👥 협업 초대하기</span></div>
-      <div class="item" id="iMakePPT"><span data-i18n="tools.makePpt">✨ PPT 슬라이드 생성</span></div>
-      <div class="item" id="iClipboard"><span data-i18n="tools.share">공유하기 (QR/링크)</span><span>↗</span></div>
+<body>
+  <!-- Header -->
+  <div class="topbar">
+    <div class="brand"><div class="logo"></div><div data-i18n="brand">ThinkHelper</div></div>
+    <div class="modes" role="tablist" aria-label="Main modes">
+      <button class="tab" id="tabDiscover" role="tab" aria-selected="true" data-i18n="tab.discover">📰 디스커버</button>
+      <button class="tab" id="tabWorkspace" role="tab" aria-selected="false" data-i18n="tab.work">📝 작업실</button>
+    </div>
+    <div class="actions">
+      <button class="iconbtn" id="btnTheme" data-i18n-title="tip.theme" title="다크/라이트 전환(⌘/Ctrl+J)">🌓</button>
+      <button class="iconbtn" id="btnHelp" data-i18n-title="tip.help" title="도움말/단축키">❓</button>
+      <button class="iconbtn" id="btnSettings" data-i18n-title="tip.settings" title="환경설정">⚙️</button>
     </div>
   </div>
 
-  <div class="menu" data-menu>
-    <button class="btn" data-i18n="menu.settings">설정 ▾</button>
-    <div class="dropdown" id="dropSettings">
-      <div class="item" style="flex-direction:column;align-items:flex-start;gap:8px">
-        <label><input type="checkbox" id="optSugg"> <span data-i18n="settings.showSuggest">추천어 표시 (VSCode 스타일)</span></label>
-        <label><input type="checkbox" id="optPersonal"> <span data-i18n="settings.aiSuggest">맞춤형 AI 제안 (데모)</span></label>
-        <label><input type="checkbox" id="optGaze"> <span data-i18n="settings.gazeCursor">시선 커서</span></label>
-      </div>
-      <div class="item">
-        <span data-i18n="settings.mode">모드</span>
-        <select id="modeSel" class="selectlike" style="width:180px">
-          <option value="normal" selected data-i18n="settings.mode.normal">Normal (일반)</option>
-          <option value="research" data-i18n="settings.mode.research">Research (리서치)</option>
-        </select>
-      </div>
-      <div class="item">
-        <span data-i18n="settings.language">언어</span>
-        <select id="langSel" class="selectlike" style="width:180px">
-          <option value="ko" selected>한국어</option>
-          <option value="en">English</option>
-          <option value="ja">日本語</option>
-        </select>
-      </div>
-      <div class="item" id="toggleTheme">🌓 <span data-i18n="settings.toggleTheme">테마 전환</span></div>
+  <!-- Discover -->
+  <section id="discover" data-active="1" aria-label="Discover feed">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0 12px">
+      <h3 style="margin:0" data-i18n="insight.today">오늘의 인사이트</h3>
+      <div class="toolbar-hint" data-i18n="insight.hint">관심사 설정 후 더 정확한 피드가 보여요.</div>
     </div>
-  </div>
-
-  <div class="menu" data-menu>
-    <button class="btn" data-i18n="menu.help">도움말 ▾</button>
-    <div class="dropdown">
-      <div class="item" id="iGuide"><span data-i18n="help.guide">서비스 소개 및 가이드</span></div>
-      <div class="item" id="iShortcuts"><span data-i18n="help.shortcuts">단축키 목록</span></div>
-      <div class="item" id="openPrivacy"><span data-i18n="help.privacy">개인정보처리방침</span><span>↗</span></div>
-      <div class="item" id="openTerms"><span data-i18n="help.terms">서비스 이용약관</span><span>↗</span></div>
-      <a class="item" href="mailto:ho849607@gmail.com"><span data-i18n="help.feedback">피드백 보내기</span><span>↗</span></a>
+    <div id="apiNotice" style="display:none;border:1px dashed var(--border);border-radius:10px;padding:8px;margin:0 0 10px;color:var(--muted)">
+      <span data-i18n="insight.apiNotice">실시간 뉴스 API 실패, 샘플 피드를 표시합니다.</span>
+      <span> </span>
+      <a href="https://news.google.com/?hl=ko&gl=KR&ceid=KR:ko" target="_blank" rel="noopener" data-i18n="insight.openGnews">Google 뉴스 열기</a>
     </div>
-  </div>
-
-  <button class="btn" id="chatBtn" style="margin-left:auto" title="채팅 열기" data-i18n-title="tooltip.openChat">💬</button>
-</div>
-
-<main id="mainLayout" data-mode="normal">
-  <aside id="left" aria-label="문서목록" data-collapsed="0">
-    <div class="listHead"><b data-i18n="doclist.title">문서</b><button class="btn" id="addDoc" title="새 문서 추가" data-i18n-title="tooltip.addDoc">＋</button></div>
-    <div id="docList"></div>
-  </aside>
-
-  <section id="center">
-    <div id="editorWrap">
-      <div id="editor" aria-label="에디터"></div>
-      <div id="ghostSuggest" aria-hidden="true"></div>
-      <button id="aiChip">✨ AI <small data-i18n="aiChip.contextHelp">문맥 도움</small></button>
-      <div id="suggPopup" aria-live="polite">
-        <header><span data-i18n="suggest.header">제안 (↑/↓, Enter 선택)</span><div><button class="min" id="suggClose">✖</button></div></header>
-        <ul id="suggList"></ul>
-      </div>
-    </div>
-    <div id="commandBar" style="position:relative">
-      <div id="cmdSuggestions">
-        <button class="chip" data-cmd="create_doc" data-i18n="cmd.createDoc">✨ 문서 생성</button>
-        <button class="chip" data-cmd="edit_doc" data-i18n="cmd.editDoc">✍️ 작성 도움 받기</button>
-      </div>
-      <input id="cmdInput" placeholder="AI에게 요청하기 / 검색" data-i18n-ph="cmd.inputPhAiOnly"/>
-      <div id="trendWrap"></div>
-      <button class="btn" id="cmdSend" data-i18n="cmd.send">전송</button>
-    </div>
+    <div class="grid" id="discoverGrid"></div>
   </section>
 
-  <aside id="right" aria-label="리서치 패널">
-    <nav class="sidebar-nav">
-      <button class="tab" data-tab="topics" data-active="0">🔍<span data-i18n="sidebar.tab.topics">탐색</span></button>
-      <button class="tab" data-tab="feed" data-active="1">📰<span data-i18n="sidebar.tab.feed">피드</span></button>
-      <button class="btn" id="feedMax" title="피드 최대화">⤢</button>
-    </nav>
-    <div id="rightSearchResults" class="sidebar-content" data-active="0">
-      <div class="search-summary" style="color:var(--muted);font-style:italic;" data-i18n="topics.placeholder">채팅 내용 기반 추천 토픽 (서버 구현 필요)</div>
-    </div>
-    <div id="rightFeed" class="sidebar-content" data-active="1">
-      <div class="spinner"></div>
-    </div>
-  </aside>
-</main>
-
-<footer>
-  <div>© ThinkHelper — <span data-i18n="footer.warning">⚠️ 인공지능 결과는 검토가 필요합니다.</span></div>
-  <div id="loc">📍 <span data-i18n="footer.locationLoading">위치 확인 중…</span></div>
-</footer>
-
-<!-- Chat Dock -->
-<div id="chatDock" role="dialog" aria-hidden="true" style="display:none;">
-  <div id="chatHead">
-    <span><span data-i18n="chat.title">AI 채팅</span> <small id="chatModelIndicator">(with Gemini)</small></span>
-    <div class="actions">
-      <input type="file" id="filePick" accept=".pdf,.txt,image/*"/>
-      <button class="iconbtn" id="btnChatPlus" title="더보기" data-i18n-title="tooltip.chatMore">➕</button>
-      <div id="chatPlusMenu">
-        <div class="item" data-action="github">↗️ GitHub (데모)</div>
-        <div class="item" data-action="word">📄 Word (데모)</div>
-        <div class="item" data-action="email">✉️ 메일 (데모)</div>
+  <!-- Workspace -->
+  <main id="workspace" style="display:none" aria-label="Workspace">
+    <!-- Left -->
+    <aside id="left" aria-label="문서/템플릿/라이브러리/검색기록">
+      <div class="tabs">
+        <button id="tFiles" data-active="1" data-i18n="left.files">🗂️ 파일</button>
+        <button id="tTmpl" data-active="0" data-i18n="left.templates">🎨 템플릿</button>
+        <button id="tLib"  data-active="0" data-i18n="left.library">📚 라이브러리</button>
+        <button id="tSearch" data-active="0" data-i18n="left.search">🔎 검색기록</button>
       </div>
-      <button class="iconbtn" id="btnAttach" title="파일 첨부 (이미지/텍스트)" data-i18n-title="tooltip.attachFile">📎</button>
-      <button class="iconbtn" id="chatClose" aria-label="닫기" data-i18n-aria="aria.close">✖</button>
-    </div>
-  </div>
-  <div id="chatWrap">
-    <aside id="chatThreads" aria-label="채팅 스레드"></aside>
-    <section id="chatMain">
-      <div style="padding:6px 10px;border-bottom:1px dashed var(--border);display:flex;gap:8px;align-items:center">
-        <input id="threadTitleInput" placeholder="스레드 제목" data-i18n-ph="chat.threadTitlePh" style="flex:1;border:1px solid var(--border);border-radius:8px;padding:.35rem .55rem;background:var(--card)"/>
-        <button class="btn" id="renameThread" data-i18n="chat.saveTitle">제목 저장</button>
-        <button class="btn" id="deleteThread" data-i18n="chat.deleteThread">삭제</button>
+
+      <div class="left-search" role="search">
+        <input id="leftSearchInput" type="search" placeholder="검색어를 입력하세요..." aria-label="검색어 입력"/>
+        <button class="btn" id="leftSearchBtn">검색</button>
       </div>
-      <div id="chatBody"></div>
-      <form id="chatForm">
-        <textarea id="chatInput" rows="3" placeholder="메시지 입력 (Enter=전송, Shift+Enter=줄바꿈)" data-i18n-ph="chat.inputPh"></textarea>
-        <button class="btn" type="submit" data-i18n="chat.send">전송</button>
-      </form>
+
+      <div id="pFiles" class="panel" data-active="1">
+        <div class="panel-head">
+          <b>내 파일</b>
+          <button class="btn" id="btnNewDocLeft">＋ 새 문서</button>
+        </div>
+        <div id="fileList"></div>
+      </div>
+
+      <div id="pTmpl" class="panel" data-active="0">
+        <div class="panel-head"><b>템플릿</b></div>
+        <div class="tmpl" id="tmplList"></div>
+      </div>
+
+      <div id="pLib" class="panel" data-active="0">
+        <div class="panel-head"><b>라이브러리</b></div>
+        <div id="libList"></div>
+      </div>
+
+      <div id="pSearch" class="panel" data-active="0">
+        <div class="panel-head"><b>검색기록</b></div>
+        <div id="searchList" class="slist"></div>
+        <div class="sfooter">
+          <button class="btn" id="btnClearSearch">🗑️ 기록 지우기</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center -->
+    <section id="center" aria-label="에디터">
+      <div class="doc-title" id="docTitleBar">무제</div>
+      <div id="center-inner">
+        <div class="editor-wrap">
+          <div id="editor"></div>
+        </div>
+      </div>
     </section>
-  </div>
-  <div id="quota" data-i18n="chat.quotaGemini">Gemini AI 연동</div>
-</div>
 
-<!-- Share / Guide / Policies -->
-<div id="shareModal" class="modal-backdrop">
-  <div class="modal">
-    <h3 data-i18n="share.title">공유하기</h3>
-    <p data-i18n="share.desc">링크/텍스트가 클립보드에 복사되었습니다. QR로도 전송할 수 있어요.</p>
-    <div id="qr" style="margin:10px auto;width:200px;height:200px"></div>
-    <div class="actions"><button class="btn-plain" id="shareClose" data-i18n="modal.close">닫기</button></div>
-  </div>
-</div>
+    <!-- Right -->
+    <aside id="right" aria-label="AI 어시스턴트">
+      <div class="ai-head">
+        <b data-i18n="ai.title">🤖 AI 도우미</b>
+        <button class="iconbtn" id="aiToggle" data-i18n="ai.toggle" title="접기/펼치기">−</button>
+      </div>
+      <div class="ai-box" id="aiBox">
+        <div class="bubble ai" data-i18n="ai.welcome">안녕! 필요한 템플릿을 넣어주거나, 선택한 텍스트를 요약해줄게.</div>
+      </div>
+      <form class="ai-form" id="aiForm">
+        <textarea id="aiInput" data-i18n-placeholder="ai.placeholder" placeholder="예) 선택 부분 요약해줘 / SWOT 틀 넣어줘"></textarea>
+        <button class="btn" type="submit" data-i18n="ai.send">전송</button>
+      </form>
+    </aside>
+  </main>
 
-<div id="guideModal" class="modal-backdrop">
-  <div class="modal">
-    <h3 data-i18n="guide.title">ThinkHelper 사용 가이드</h3>
-    <div class="content" style="line-height:1.6">
-      <p><b data-i18n="brand.name">ThinkHelper</b><span data-i18n="guide.intro">는 문서 작성과 리서치를 한 화면에서 끝내는 AI 에디터입니다.</span></p>
-      <h4 data-i18n="guide.featuresTitle">핵심 기능</h4>
-      <ul>
-        <li data-i18n="guide.feature1.gemini"><b>AI 엔진:</b> Google Gemini 모델 기반 응답.</li>
-        <li data-i18n="guide.feature2"><b>탐색/피드:</b> Research 모드에서 최신 정보 확인.</li>
-        <li data-i18n="guide.feature3"><b>AI 글쓰기/채팅:</b> 하단 바 요청 또는 우측 하단 채팅.</li>
-        <li data-i18n="guide.feature4"><b>파일 저장:</b> PDF/Word 저장.</li>
-        <li data-i18n="guide.feature5"><b>PPT 생성:</b> Google Slides 새 탭.</li>
-      </ul>
+  <!-- Mobile quick bar -->
+  <div class="quickbar" id="quickbar" style="display:none">
+    <button class="btn" id="qbDiscover" data-i18n="tab.discover">📰 디스커버</button>
+    <button class="btn" id="qbWorkspace" data-i18n="tab.work">📝 작업실</button>
+    <button class="btn" id="qbNew" data-i18n="btn.new">＋ 새 문서</button>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="status-left">
+      <span>© <span data-i18n="brand">ThinkHelper</span></span>
+      <span id="wordCount" data-i18n-prefix="status.words.prefix">Words: </span>
+      <span id="docState" data-i18n="status.saved">문서 상태: 저장됨</span>
     </div>
-    <div class="actions"><button class="btn-plain" id="guideClose" data-i18n="modal.close">닫기</button></div>
-  </div>
-</div>
+    <div class="status-right">
+      <span class="tip" id="tip">💡 <span id="tipText">Tab=자동완성 · Esc=닫기 · ↑/↓=이동</span></span>
+      <span id="aiStatus">AI: <span id="net" data-i18n="net.online">온라인</span></span>
+      <span id="langDisp" data-i18n-prefix="status.lang">언어: <b id="langGuess">ko</b></span>
+    </div>
+  </footer>
 
-<div id="privacyModal" class="modal-backdrop">
-  <div class="modal">
-    <h3>개인정보처리방침</h3>
-    <article>
-      <p>본 서비스는 사용자 개인정보를 중요하게 생각합니다. 본 방침은 수집하는 정보, 이용 목적, 보관 기간, 제3자 제공, 사용자 권리 및 문의처를 설명합니다.</p>
-      <h4>1. 수집 항목</h4>
-      <p>필수: 이메일, 서비스 이용 로그, 쿠키. 선택: 프로필 정보.</p>
-      <h4>2. 이용 목적</h4>
-      <p>계정 관리, 고객 지원, 서비스 품질 향상, 보안 모니터링.</p>
-      <h4>3. 보관 및 파기</h4>
-      <p>관련 법령 또는 서비스 이용 목적 달성 시까지 보관하며, 목적 달성 시 안전하게 파기합니다.</p>
-      <h4>4. 제3자 제공</h4>
-      <p>법령에 의한 경우를 제외하고 동의 없이 제공하지 않습니다.</p>
-      <h4>5. 이용자 권리</h4>
-      <p>열람, 정정, 삭제, 처리정지 요구가 가능하며, 문의처로 연락하면 지체 없이 조치합니다.</p>
-      <h4>6. 문의처</h4>
-      <p>이메일:ho849607@gmail.com</p>
-    </article>
-    <div class="actions"><button class="btn-plain" id="privacyClose">닫기</button></div>
-  </div>
-</div>
+  <!-- Settings Modal -->
+  <div class="modal-backdrop" id="backdrop"></div>
+  <div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-inner">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 id="settingsTitle" data-i18n="settings.title">환경설정</h3>
+        <button class="iconbtn" id="btnCloseSettings" data-i18n-title="settings.closeTip" title="닫기">✕</button>
+      </div>
+      <div class="sep"></div>
 
-<div id="termsModal" class="modal-backdrop">
-  <div class="modal">
-    <h3>서비스 이용약관</h3>
-    <article>
-      <h4>1. 목적</h4>
-      <p>이 약관은 본 서비스의 이용과 관련하여 회사와 사용자 간 권리, 의무 및 책임 사항을 규정합니다.</p>
-      <h4>2. 계정</h4>
-      <p>사용자는 정확한 정보를 제공해야 하며 계정 보안을 유지할 책임이 있습니다.</p>
-      <h4>3. 사용 조건</h4>
-      <p>불법, 침해, 스팸 활동 금지. 서비스 정책을 준수해야 합니다.</p>
-      <h4>4. 지적재산권</h4>
-      <p>서비스 및 콘텐츠의 저작권은 회사 또는 해당 권리자에게 있으며, 사용자는 허용된 범위 내에서만 이용할 수 있습니다.</p>
-      <h4>5. 책임 제한</h4>
-      <p>불가항력, 제3자 사유, 사용자의 귀책으로 발생한 손해에 대해서는 책임을 지지 않습니다.</p>
-      <h4>6. 변경</h4>
-      <p>약관이 변경되는 경우 서비스 내 공지 또는 이메일로 통지합니다.</p>
-      <h4>7. 문의</h4>
-      <p>이메일: support@example.com</p>
-    </article>
-    <div class="actions"><button class="btn-plain" id="termsClose">닫기</button></div>
+      <div class="row">
+        <label for="selLang" data-i18n="settings.lang">기본 언어</label>
+        <select id="selLang" style="padding:.45rem .6rem;border:1px solid var(--border);border-radius:8px;background:var(--card)">
+          <option value="ko">한국어 (ko)</option>
+          <option value="ja">日本語 (ja)</option>
+          <option value="en">English (en)</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label for="toggleSuggest" data-i18n="settings.suggest">추천어(자동완성) 사용</label>
+        <input id="toggleSuggest" type="checkbox"/>
+      </div>
+
+      <div class="row">
+        <label for="togglePersonal" data-i18n="settings.personal">맞춤형 추천(학습 반영) 사용</label>
+        <input id="togglePersonal" type="checkbox"/>
+      </div>
+
+      <div class="row">
+        <label for="toggleEye" data-i18n="settings.eye">아이컨택 모드(카메라 접근) 사용</label>
+        <input id="toggleEye" type="checkbox"/>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="row">
+        <label data-i18n="settings.learnData">학습 데이터</label>
+        <div class="btnbar">
+          <button class="btn" id="btnMemExport" data-i18n="settings.backup">💾 백업 내보내기</button>
+          <button class="btn" id="btnMemImport" data-i18n="settings.restore">📥 가져오기</button>
+          <button class="btn" id="btnMemReset" data-i18n="settings.reset">🗑️ 초기화</button>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn" id="btnSettingsReset" data-i18n="settings.default">기본값</button>
+        <button class="btn" id="btnSettingsSave" data-i18n="settings.save">저장</button>
+      </div>
+    </div>
   </div>
-</div>
 
 <script>
-/* ========= Helpers ========= */
-const $$ = (id)=>document.getElementById(id);
-$$("chatInput")?.addEventListener("keydown",(e)=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$$("chatForm")?.requestSubmit();}});
-const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
-const escapeHtml=(s)=>{
-  // 작은따옴표도 이스케이프해서 onclick내 문자열 깨짐 방지
-  return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+/* ================= I18N ================= */
+const I18N = {
+  ko:{brand:"ThinkHelper","tab.discover":"📰 디스커버","tab.work":"📝 작업실","tip.theme":"다크/라이트 전환(⌘/Ctrl+J)","tip.help":"도움말/단축키","tip.settings":"환경설정","insight.today":"오늘의 인사이트","insight.hint":"관심사 설정 후 더 정확한 피드가 보여요.","insight.apiNotice":"실시간 뉴스 API 실패, 샘플 피드를 표시합니다.","insight.openGnews":"Google 뉴스 열기","left.files":"🗂️ 파일","left.templates":"🎨 템플릿","left.library":"📚 라이브러리","left.search":"🔎 검색기록","btn.sync":"🔄 사전 동기화","btn.new":"＋ 새 문서","ai.title":"🤖 AI 도우미","ai.toggle":"−","ai.welcome":"안녕! 필요한 템플릿을 넣어주거나, 선택한 텍스트를 요약해줄게.","ai.placeholder":"예) 선택 부분 요약해줘 / SWOT 틀 넣어줘","ai.send":"전송","status.words.prefix":"Words: ","status.saved":"문서 상태: 저장됨","status.lang":"언어: ","net.online":"온라인","net.offline":"오프라인","settings.title":"환경설정","settings.closeTip":"닫기","settings.lang":"기본 언어","settings.suggest":"추천어(자동완성) 사용","settings.personal":"맞춤형 추천(학습 반영) 사용","settings.eye":"아이컨택 모드(카메라 접근) 사용","settings.learnData":"학습 데이터","settings.backup":"💾 백업 내보내기","settings.restore":"📥 가져오기","settings.reset":"🗑️ 초기화","settings.default":"기본값","settings.save":"저장","toast.eye.on":"아이컨택 모드가 준비되었습니다. (데모: 권한만 확보)","toast.eye.offDeny":"카메라 접근이 거부되었습니다.","toast.settingsSaved":"설정이 저장되었습니다.","toast.mem.import.ok":"학습 데이터를 불러왔습니다.","toast.mem.import.fail":"가져오기에 실패했습니다. JSON을 확인하세요.","toast.mem.reset.ok":"학습 데이터가 초기화되었습니다.","confirm.mem.reset":"정말 초기화할까요? (되돌릴 수 없음)"},
+  ja:{brand:"ThinkHelper","tab.discover":"📰 ディスカバー","tab.work":"📝 ワークスペース","tip.theme":"ライト/ダーク切替(⌘/Ctrl+J)","tip.help":"ヘルプ/ショートカット","tip.settings":"設定","insight.today":"今日のインサイト","insight.hint":"関心分野を設定すると精度が上がります。","insight.apiNotice":"ニュースAPIに接続できません。サンプルフィードを表示します。","insight.openGnews":"Google ニュースを開く","left.files":"🗂️ ファイル","left.templates":"🎨 テンプレ","left.library":"📚 ライブラリ","left.search":"🔎 検索履歴","btn.sync":"🔄 辞書同期","btn.new":"＋ 新規ドキュメント","ai.title":"🤖 AI アシスタント","ai.toggle":"−","ai.welcome":"必要なテンプレを入れたり、選択範囲を要約します。","ai.placeholder":"例) 選択部分を要約 / SWOT を入れて","ai.send":"送信","status.words.prefix":"Words: ","status.saved":"保存済み","status.lang":"言語: ","net.online":"オンライン","net.offline":"オフライン","settings.title":"設定","settings.closeTip":"閉じる","settings.lang":"既定の言語","settings.suggest":"サジェストを使う","settings.personal":"パーソナライズ","settings.eye":"アイコンタクト(カメラ)使用","settings.learnData":"学習データ","settings.backup":"💾 バックアップ","settings.restore":"📥 復元","settings.reset":"🗑️ 初期化","settings.default":"デフォルト","settings.save":"保存","toast.eye.on":"アイコンタクトの準備ができました(権限のみ)。","toast.eye.offDeny":"カメラアクセスが拒否されました。","toast.settingsSaved":"設定を保存しました。","toast.mem.import.ok":"学習データを読み込みました。","toast.mem.import.fail":"読み込みに失敗しました。JSONを確認してください。","toast.mem.reset.ok":"学習データを初期化しました。","confirm.mem.reset":"本当に初期化しますか？(元に戻せません)"},
+  en:{brand:"ThinkHelper","tab.discover":"📰 Discover","tab.work":"📝 Workspace","tip.theme":"Toggle Dark/Light (⌘/Ctrl+J)","tip.help":"Help/Shortcuts","tip.settings":"Settings","insight.today":"Today’s Insights","insight.hint":"Set interests for a sharper feed.","insight.apiNotice":"News API failed. Showing sample feed.","insight.openGnews":"Open Google News","left.files":"🗂️ Files","left.templates":"🎨 Templates","left.library":"📚 Library","left.search":"🔎 Search History","btn.sync":"🔄 Sync Dict","btn.new":"＋ New Doc","ai.title":"🤖 AI Assistant","ai.toggle":"−","ai.welcome":"Hi! Drop a template or summarize any selection.","ai.placeholder":"e.g., Summarize selection / Insert SWOT","ai.send":"Send","status.words.prefix":"Words: ","status.saved":"Saved","status.lang":"Lang: ","net.online":"Online","net.offline":"Offline","settings.title":"Settings","settings.closeTip":"Close","settings.lang":"Default language","settings.suggest":"Use suggestions (autocomplete)","settings.personal":"Personalized suggestions","settings.eye":"Eye contact mode (camera)","settings.learnData":"Learning data","settings.backup":"💾 Export backup","settings.restore":"📥 Import","settings.reset":"🗑️ Reset","settings.default":"Defaults","settings.save":"Save","toast.eye.on":"Eye-contact mode ready (permission only).","toast.eye.offDeny":"Camera access denied.","toast.settingsSaved":"Settings saved.","toast.mem.import.ok":"Learning data imported.","toast.mem.import.fail":"Import failed. Check JSON.","toast.mem.reset.ok":"Learning data reset.","confirm.mem.reset":"Reset learning data? (Irreversible)"}
 };
-const SKEY_SETTINGS="th.settings";
-
-/* ========= Config ========= */
-const SERVER_API_ENDPOINT="http://54.250.162.208:8000";
-const FEED_API_ENDPOINT="https://api-v2.deepsearch.com";
-const DEEPSEARCH_API_KEY="";
-
-const TOTAL_FREE_TOKEN_LIMIT=15000;
-const NUM_USERS=10;
-const USER_SHARE_LIMIT=TOTAL_FREE_TOKEN_LIMIT/NUM_USERS;
-const TOKEN_WARN_THRESHOLD=USER_SHARE_LIMIT*0.8;
-const TOKEN_COUNT_KEY="th.token.state";
-const APPROX_CHARS_PER_TOKEN=2;
-
-/* ========= I18n ========= */
-const I18N={
-  ko:{status:{copied:"복사됨"},plan:{free:"FREE",plus:"PLUS",trial:"TRIAL"},
-      limit:{near:(dt)=>`무료 토큰 한도가 거의 다 사용되었어요.\n${dt} 이후 초기화됩니다.`,
-             hit:(dt)=>`무료 토큰 한도를 모두 사용했어요.\n${dt} 이후 초기화됩니다.`},
-      suggest:{ai:"AI 추천",local:"로컬 추천",error:"오류"},
-      topics:{loading:"관심 주제 로딩 중...",error:"주제 로딩 실패",empty:"추천 주제 없음"},
-      error:{serverConnect:"서버 연결 실패. (CORS/네트워크 오류?)"} },
-  en:{status:{copied:"Copied"},plan:{free:"FREE",plus:"PLUS",trial:"TRIAL"},
-      limit:{near:(dt)=>`You're nearing the free token limit.\nResets around ${dt}.`,
-             hit:(dt)=>`Free token limit reached.\nResets around ${dt}.`},
-      suggest:{ai:"AI Suggestion",local:"Local Suggestion",error:"Error"},
-      topics:{loading:"Loading topics...",error:"Failed to load topics",empty:"No topics found"},
-      error:{serverConnect:"Server connection failed. (CORS/Network error?)"} },
-  ja:{status:{copied:"コピーしました"},plan:{free:"無料",plus:"プラス",trial:"トライアル"},
-      limit:{near:(dt)=>`無料トークンの制限に近づいています。\n${dt}頃にリセットされます。`,
-             hit:(dt)=>`無料トークンをすべて使用しました。\n${dt}頃にリセットされます。`},
-      suggest:{ai:"AI提案",local:"ローカル提案",error:"エラー"},
-      topics:{loading:"トピックを読み込み中...",error:"トピックの読み込みに失敗しました",empty:"おすすめトピックがありません"},
-      error:{serverConnect:"サーバー接続失敗。(CORS/ネットワークエラー？)"} }
-};
-const I18N_TEXT={
-  ko:{"page.title":"ThinkHelper — 에디터","brand.name":"ThinkHelper","menu.tools":"도구","menu.settings":"설정","menu.help":"도움말",
-      "tools.newDoc":"새 문서","tools.print":"프린터로 인쇄","tools.import":"불러오기","tools.savePdf":"PDF로 저장","tools.saveWord":"Word로 저장","tools.saveHwp":"HWP로 저장","tools.translate":"번역하기","tools.collab":"협업 초대","tools.makePpt":"PPT 생성","tools.share":"공유하기",
-      "settings.showSuggest":"추천어 표시","settings.aiSuggest":"맞춤형 AI 제안 (데모)","settings.gazeCursor":"시선 커서","settings.language":"언어","settings.toggleTheme":"테마 전환","settings.mode":"모드","settings.mode.normal":"Normal (일반)","settings.mode.research":"Research (리서치)",
-      "help.guide":"서비스 소개 및 가이드","help.shortcuts":"단축키 목록","help.privacy":"개인정보처리방침","help.terms":"서비스 이용약관","help.feedback":"피드백 보내기",
-      "tooltip.openChat":"채팅 열기","doclist.title":"문서","tooltip.addDoc":"새 문서","aiChip.contextHelp":"문맥 도움","suggest.header":"제안 (↑/↓, Enter)",
-      "cmd.createDoc":"문서 생성","cmd.editDoc":"작성 도움","cmd.inputPhAiOnly":"AI에게 요청하기","cmd.send":"전송",
-      "sidebar.tab.topics":"탐색","sidebar.tab.feed":"피드","topics.placeholder":"채팅 내용 기반 추천 토픽 (서버 구현 필요)",
-      "footer.warning":"AI 결과는 검토 필요","footer.locationLoading":"위치 확인 중...",
-      "chat.title":"AI 채팅","tooltip.chatMore":"더보기","tooltip.attachFile":"파일 첨부","aria.close":"닫기",
-      "chat.threadTitlePh":"스레드 제목","chat.saveTitle":"제목 저장","chat.deleteThread":"삭제","chat.inputPh":"메시지 입력 (Enter=전송)","chat.send":"전송","chat.quotaGemini":"Gemini AI 연동",
-      "share.title":"공유하기","share.desc":"링크/텍스트 복사됨. QR 전송 가능.","modal.close":"닫기",
-      "guide.title":"ThinkHelper 가이드","guide.intro":"는 문서 작성과 리서치를 한 화면에서 끝내는 AI 에디터입니다.","guide.featuresTitle":"핵심 기능",
-      "guide.feature1.gemini":"AI 엔진: Google Gemini 모델 기반 응답.","guide.feature2":"탐색/피드: 'Research' 모드에서 정보 확인","guide.feature3":"AI 글쓰기/채팅: 하단 바 또는 💬","guide.feature4":"파일 저장: PDF/Word 지원.","guide.feature5":"PPT 생성: Google Slides 열기."},
-  en:{"page.title":"ThinkHelper — Editor","brand.name":"ThinkHelper","menu.tools":"Tools","menu.settings":"Settings","menu.help":"Help",
-      "tools.newDoc":"New Document","tools.print":"Print","tools.import":"Import","tools.savePdf":"Save as PDF","tools.saveWord":"Save as Word","tools.saveHwp":"Save as HWP","tools.translate":"Translate","tools.collab":"Invite Collaborators","tools.makePpt":"Create Slides","tools.share":"Share",
-      "settings.showSuggest":"Show Suggestions","settings.aiSuggest":"Personalized AI (Demo)","settings.gazeCursor":"Gaze Cursor","settings.language":"Language","settings.toggleTheme":"Toggle Theme","settings.mode":"Mode","settings.mode.normal":"Normal","settings.mode.research":"Research",
-      "help.guide":"Guide","help.shortcuts":"Shortcuts","help.privacy":"Privacy Policy","help.terms":"Terms of Service","help.feedback":"Send Feedback",
-      "tooltip.openChat":"Open Chat","doclist.title":"Documents","tooltip.addDoc":"Add New","aiChip.contextHelp":"Context Help","suggest.header":"Suggestions (↑/↓, Enter)",
-      "cmd.createDoc":"Create Doc","cmd.editDoc":"Writing Assist","cmd.inputPhAiOnly":"Ask AI","cmd.send":"Send",
-      "sidebar.tab.topics":"Explore","sidebar.tab.feed":"Feed","topics.placeholder":"Topics based on chat (Server needed)",
-      "footer.warning":"Review AI results","footer.locationLoading":"Checking location...",
-      "chat.title":"AI Chat","tooltip.chatMore":"More","tooltip.attachFile":"Attach File","aria.close":"Close",
-      "chat.threadTitlePh":"Thread Title","chat.saveTitle":"Save Title","chat.deleteThread":"Delete","chat.inputPh":"Enter message (Enter=Send)","chat.send":"Send","chat.quotaGemini":"Powered by Gemini AI",
-      "share.title":"Share","share.desc":"Link/Text copied. QR available.","modal.close":"Close",
-      "guide.title":"ThinkHelper Guide","guide.intro":" is an AI editor for writing and research.","guide.featuresTitle":"Key Features",
-      "guide.feature1.gemini":"AI Engine: Powered by Google Gemini.","guide.feature2":"Explore/Feed: Info in 'Research' mode","guide.feature3":"AI Writing/Chat: Use command bar or 💬","guide.feature4":"Save Files: PDF/Word supported.","guide.feature5":"Create PPT: Opens Google Slides."},
-  ja:{"page.title":"ThinkHelper — エディタ","brand.name":"ThinkHelper","menu.tools":"ツール","menu.settings":"設定","menu.help":"ヘルプ",
-      "tools.newDoc":"新規文書","tools.print":"印刷","tools.import":"インポート","tools.savePdf":"PDF保存","tools.saveWord":"Word保存","tools.saveHwp":"HWP保存","tools.translate":"翻訳","tools.collab":"共同編集者を招待","tools.makePpt":"スライド作成","tools.share":"共有",
-      "settings.showSuggest":"提案を表示","settings.aiSuggest":"パーソナライズ AI (デモ)","settings.gazeCursor":"視線カーソル","settings.language":"言語","settings.toggleTheme":"テーマ切替","settings.mode":"モード","settings.mode.normal":"ノーマル","settings.mode.research":"リサーチ",
-      "help.guide":"ガイド","help.shortcuts":"ショートカット","help.privacy":"プライバシーポリシー","help.terms":"利用規約","help.feedback":"フィードバック",
-      "tooltip.openChat":"チャットを開く","doclist.title":"文書","tooltip.addDoc":"新規追加","aiChip.contextHelp":"文脈ヘルプ","suggest.header":"提案 (↑/↓, Enter)",
-      "cmd.createDoc":"文書作成","cmd.editDoc":"執筆支援","cmd.inputPhAiOnly":"AIに質問","cmd.send":"送信",
-      "sidebar.tab.topics":"探索","sidebar.tab.feed":"フィード","topics.placeholder":"チャットに基づくトピック (サーバー実装要)",
-      "footer.warning":"AIの結果は要確認","footer.locationLoading":"位置情報確認中...",
-      "chat.title":"AIチャット","tooltip.chatMore":"詳細","tooltip.attachFile":"ファイル添付","aria.close":"閉じる",
-      "chat.threadTitlePh":"スレッドタイトル","chat.saveTitle":"タイトル保存","chat.deleteThread":"削除","chat.inputPh":"メッセージ入力 (Enter=送信)","chat.send":"送信","chat.quotaGemini":"Gemini AI 連携",
-      "share.title":"共有","share.desc":"リンク/テキストコピー済。QR可。","modal.close":"閉じる",
-      "guide.title":"ThinkHelper ガイド","guide.intro":" は執筆と調査を一つの画面で行うAIエディタです。","guide.featuresTitle":"主な機能",
-      "guide.feature1.gemini":"AIエンジン: Google Gemini モデル使用。","guide.feature2":"'リサーチ'モードで情報確認","guide.feature3":"コマンドバーまたは💬でAI執筆/チャット","guide.feature4":"PDF/Word保存対応。","guide.feature5":"Google Slidesを開く。"}
-};
-function applyI18n(){
-  const lang=(settings.lang||"ko").slice(0,2);
-  const dict=I18N_TEXT[lang]||I18N_TEXT.ko;
-  document.body.dataset.lang=lang;
-  document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.getAttribute("data-i18n"); if(dict[k]) el.textContent=dict[k];});
-  document.querySelectorAll("[data-i18n-ph]").forEach(el=>{const k=el.getAttribute("data-i18n-ph"); if(dict[k]) el.setAttribute("placeholder",dict[k]);});
-  document.querySelectorAll("[data-i18n-title]").forEach(el=>{const k=el.getAttribute("data-i18n-title"); if(dict[k]) el.setAttribute("title",dict[k]);});
-  document.querySelectorAll("[data-i18n-aria]").forEach(el=>{const k=el.getAttribute("data-i18n-aria"); if(dict[k]) el.setAttribute("aria-label",dict[k]);});
-  if(typeof updateGhostSuggest==='function' && typeof editor!=='undefined' && editor){updateGhostSuggest();}
+let LANG = (localStorage.getItem("th.ui.lang") || "ko");
+function t(key){ const pack=I18N[LANG]||I18N.ko; return pack[key] ?? (I18N.ko[key]||key); }
+function translateDOM(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-title]").forEach(el=>{ el.title = t(el.dataset.i18nTitle); });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{ el.placeholder = t(el.dataset.i18nPlaceholder); });
+  const wc=document.getElementById("wordCount");
+  if(wc){ const prefix=t("status.words.prefix"); const count=wc.dataset.count||"0"; wc.textContent=prefix + count; }
+  const netEl=document.getElementById("net");
+  if(netEl){ netEl.textContent = navigator.onLine ? t("net.online") : t("net.offline"); }
+  document.documentElement.lang = LANG;
+  document.title = "ThinkHelper 2.1 — Workspace & Discover";
+}
+function setLang(newLang){
+  LANG=newLang; localStorage.setItem("th.ui.lang", newLang);
+  SETTINGS.langPref = newLang; save(SETTINGS_KEY, SETTINGS);
+  MEM.langPref = newLang; persistMEM();
+  translateDOM();
 }
 
-/* ========= Store ========= */
-const store={
-  listKey:"th.docs.list",docKey:id=>`th.doc.${id}`,curKey:"th.cur",
-  list(){try{return JSON.parse(localStorage.getItem(this.listKey)||"[]")}catch{return[]}},
-  saveList(a){localStorage.setItem(this.listKey,JSON.stringify(a||[]))},
-  get(id){try{return JSON.parse(localStorage.getItem(this.docKey(id))||"null")}catch{return null}},
-  set(id,o){localStorage.setItem(this.docKey(id),JSON.stringify(o))},
-  remove(id){localStorage.removeItem(this.docKey(id))},
-  current(){return localStorage.getItem(this.curKey)||""},
-  setCurrent(id){localStorage.setItem(this.curKey,id||"")}
-};
-let curId=""; let settings={};
+/* ========= Utils ========= */
+const $ = (id)=>document.getElementById(id);
+const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
+function escapeHtml(s){return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[m]));}
+function plain(html){return (html||"").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function load(k,def){try{const v=JSON.parse(localStorage.getItem(k)||"null");return v??def;}catch{return def}}
+function daysSince(ts){ if(!ts) return 9999; const d=(Date.now()-ts)/(1000*60*60*24); return Math.max(0, Math.floor(d)); }
 
 /* ========= Settings ========= */
-function loadSettings(){
-  settings=JSON.parse(localStorage.getItem(SKEY_SETTINGS)||'{}');
-  settings.suggest ??= true;
-  settings.personal ??= false;
-  settings.gaze ??= false;
-  settings.lang ??= (navigator.language||"ko").slice(0,2);
-  settings.mode ??= 'normal';
+const DEFAULT_SETTINGS = { langPref: LANG||"ko", suggestOn: true, personalOn: true, eyeContactOn: false };
+const SETTINGS_KEY = "th.settings";
+let SETTINGS = Object.assign({}, DEFAULT_SETTINGS, load(SETTINGS_KEY, DEFAULT_SETTINGS));
+
+/* ========= Modes ========= */
+const tabDiscover=$("tabDiscover"), tabWorkspace=$("tabWorkspace");
+const discover=$("discover"), workspace=$("workspace");
+function setMode(m){
+  const disc = (m==="discover");
+  discover.dataset.active = disc?"1":"0";
+  discover.style.display = disc ? "block" : "none";
+  workspace.style.display = disc?"none":"grid";
+  tabDiscover.setAttribute("aria-selected", disc?"true":"false");
+  tabWorkspace.setAttribute("aria-selected", disc?"false":"true");
+  if(window.matchMedia("(max-width: 480px)").matches){ $("quickbar").style.display = "flex"; }
 }
-const saveSettings=()=>localStorage.setItem(SKEY_SETTINGS,JSON.stringify(settings));
+tabDiscover.onclick=()=>setMode("discover");
+tabWorkspace.onclick=()=>setMode("workspace");
 
-function updateChatUI(plan){
-  const indicator=$$("chatModelIndicator"); const quota=$$("quota");
-  if(!indicator||!quota) return;
-  const lang=settings.lang||'ko';
-  const planText=plan?plan.replace('models/','').replace('-latest',''):'Gemini';
-  if(plan && (plan.includes("Gemini")||plan.includes("gemini"))){
-    indicator.textContent=`(with ${planText})`;
-    quota.textContent=lang==='ko'?"Gemini AI 사용 중":(lang==='ja'?"Gemini AI 使用中":"Using Gemini AI");
-  }else if(plan && plan.includes("no_key")){
-    indicator.textContent=lang==='ko'?"(키 없음)":(lang==='ja'?"(キーなし)":"(No Key)");
-    quota.textContent=lang==='ko'?"서버 API 키 없음":(lang==='ja'?"サーバーAPIキーなし":"Server API Key Missing");
-  }else{
-    indicator.textContent=lang==='ko'?"(연결 안됨)":(lang==='ja'?"(接続なし)":"(Offline)");
-    quota.textContent=lang==='ko'?"서버 연결 확인 필요":(lang==='ja'?"サーバー接続確認要":"Check Server Connection");
-  }
+/* Mobile quickbar */
+$("qbDiscover").onclick=()=>setMode("discover");
+$("qbWorkspace").onclick=()=>setMode("workspace");
+$("qbNew").onclick=()=>{ newDoc(); if(editor){ editor.setData(""); $("starter")?.remove(); updateWordCount(); } };
+
+/* ========= Theme & Network ========= */
+$("btnTheme").onclick=()=>{ const root=document.documentElement; root.dataset.theme = root.dataset.theme==="dark"?"light":"dark"; };
+function refreshNet(){ $("net").textContent = navigator.onLine ? t("net.online") : t("net.offline"); }
+window.addEventListener('online',refreshNet); window.addEventListener('offline',refreshNet); refreshNet();
+
+/* ========= Left panels ========= */
+const tabsLeft = [
+  {btn:$("tFiles"), panel:$("pFiles")},
+  {btn:$("tTmpl"), panel:$("pTmpl")},
+  {btn:$("tLib"),  panel:$("pLib")},
+  {btn:$("tSearch"), panel:$("pSearch")}
+];
+tabsLeft.forEach(({btn,panel})=>{
+  btn.onclick=()=>{ tabsLeft.forEach(tg=>{tg.btn.dataset.active="0"; tg.panel.dataset.active="0";}); btn.dataset.active="1"; panel.dataset.active="1"; };
+});
+
+/* ========= Data stores ========= */
+const DB = {
+  filesKey:"th.files",
+  fileKey:(id)=>"th.file."+id,
+  list(){return load(this.filesKey,[])},
+  saveList(a){save(this.filesKey,a)},
+  get(id){return load(this.fileKey(id),null)},
+  set(id,o){save(this.fileKey(id),o)},
+  del(id){localStorage.removeItem(this.fileKey(id))}
+};
+function renderFiles(){
+  const box=$("fileList");
+  const list = DB.list().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  box.innerHTML = list.length
+    ? list.map(it=>`<div class="doc" data-id="${it.id}">
+        <div class="ttl">${escapeHtml(it.title||"Untitled")}</div>
+        <div class="date">${new Date(it.updatedAt||it.createdAt||Date.now()).toLocaleDateString(LANG==="ja"?"ja-JP":LANG==="en"?"en-US":"ko-KR")}</div>
+      </div>`).join("")
+    : `<div class="doc"><div class="ttl">${LANG==="en"?"No documents":LANG==="ja"?"ドキュメントなし":"문서 없음"}</div></div>`;
+  box.querySelectorAll('.doc').forEach(d=>d.onclick=()=>openDoc(d.dataset.id));
+}
+function renderLibrary(){
+  const box=$("libList");
+  const items = load("th.library",[]);
+  const none = LANG==="en"?"No saved items":LANG==="ja"?"保存されたスクラップなし":"저장된 스크랩 없음";
+  box.innerHTML = items.length? items.map((it)=>`<div class="doc">
+    <div class="ttl">${escapeHtml(it.title|| (LANG==="en"?"Saved item":"저장 항목"))}</div>
+    <div class="date" style="max-width:60%;overflow:hidden;text-overflow:ellipsis">${escapeHtml(it.url||"")}</div>
+  </div>`).join("") : `<div class="doc"><div class="ttl">${none}</div></div>`;
 }
 
-/* ========= Token Limit ========= */
-function getTokenState(){try{const s=JSON.parse(localStorage.getItem(TOKEN_COUNT_KEY)||'{}');const today=new Date().toLocaleDateString('ko-KR');if(s.date!==today){return{used:0,date:today}}return{used:s.used||0,date:today}}catch{return{used:0,date:new Date().toLocaleDateString('ko-KR')}}}
-function addUsedTokens(n){if(n<=0)return;const s=getTokenState();s.used=(s.used||0)+n;try{localStorage.setItem(TOKEN_COUNT_KEY,JSON.stringify(s));}catch{}}
-function checkTokenLimitOrWarn(estimated){const s=getTokenState();const cur=s.used||0;const langDict=(I18N[settings.lang]||I18N.ko).limit;const reset=settings.lang==='ko'?"자정":"midnight";const usage=Math.max(0,estimated||0);if(cur+usage>=USER_SHARE_LIMIT){alert(langDict.hit(reset));return false}else if(cur+usage>=TOKEN_WARN_THRESHOLD&&cur<TOKEN_WARN_THRESHOLD){alert(langDict.near(reset))}return true}
-
-/* ========= Menus / Theme / Panels ========= */
-(function(){
-  loadSettings();
-  const menus=[...document.querySelectorAll('[data-menu]')];
-  const closeAll=()=>document.querySelectorAll('.dropdown').forEach(d=>d.style.display='none');
-  menus.forEach(m=>{
-    const btn=m.querySelector('.btn'); const drop=m.querySelector('.dropdown');
-    if(!btn||!drop) return;
-    btn.addEventListener('click',(e)=>{e.stopPropagation();const open=drop.style.display==='block';closeAll();drop.style.display=open?'none':'block';});
-    drop.addEventListener('click',e=>e.stopPropagation());
+/* Templates */
+function renderTemplates(){
+  const list = [
+    {id:"swot", key:"tmpl.swot", body:`<h2>SWOT</h2><p><b>Strengths</b>:</p><p><b>Weaknesses</b>:</p><p><b>Opportunities</b>:</p><p><b>Threats</b>:</p>`},
+    {id:"memo", key:"tmpl.memo", body:`<h2>Meeting Minutes</h2><p><b>Time</b>:</p><p><b>Attendees</b>:</p><p><b>Agenda</b>:</p><p><b>Notes</b>:</p><p><b>Action Items</b>:</p>`},
+    {id:"press", key:"tmpl.press", body:`<h2>Press Release Title</h2><p>Subheadline</p><p><b>Overview</b>:</p><p><b>Key Message</b>:</p><p><b>Quote</b>:</p>`},
+    {id:"resume", key:"tmpl.resume", body:`<div>...이력서 템플릿...</div>`},
+    {id:"cover", key:"tmpl.cover", body:`<div>...자소서 템플릿...</div>`},
+    {id:"email", key:"tmpl.email", body:`<div>...메일 템플릿...</div>`},
+    {id:"docs", key:"tmpl.docs", body:`<div>...Docs 스타일 템플릿...</div>`}
+  ];
+  $("tmplList").innerHTML = list.map(tpl=>`<div class="card" data-id="${tpl.id}">${t(tpl.key)}</div>`).join("");
+  $("tmplList").querySelectorAll('.card').forEach(c=>c.onclick=()=>{
+    const id=c.dataset.id; const row=list.find(x=>x.id===id);
+    if(editor){ editor.setData(row.body); updateWordCount(); }
+    setMode("workspace");
   });
-  document.addEventListener('click',closeAll);
+}
 
-  $$("toggleTheme")?.addEventListener('click',()=>{
-    const root=document.documentElement; root.dataset.theme=root.dataset.theme==="dark"?"light":"dark";
+/* Discover (fallback) */
+const FALLBACK_FEED = [
+  {title:"국내 반도체 업계, AI 가속기 투자 확대", img:"https://picsum.photos/seed/semis/800/450", meta:"산업·AI", desc:"HPC 수요에 따라 차세대 패키징과 전력 효율 기술에 대한 관심이 커지고 있다."},
+  {title:"EU, 생성형 AI 규제 가이드 업데이트", img:"https://picsum.photos/seed/eu/800/450", meta:"정책", desc:"투명성과 책임성이 재정비되며 스타트업 샌드박스 확대."},
+  {title:"오픈소스 LLM 경량화, 온디바이스 경쟁 본격화", img:"https://picsum.photos/seed/oss/800/450", meta:"모델", desc:"4~8B 모델들이 모바일·엣지 상용권으로 진입."}
+];
+function gnewsUrl(title){
+  const hl = LANG==="ja"?"ja":LANG==="en"?"en":"ko";
+  const ceid = LANG==="ja"?"JP:ja":LANG==="en"?"US:en":"KR:ko";
+  const gl = LANG==="ja"?"JP":LANG==="en"?"US":"KR";
+  return "https://news.google.com/search?q="+encodeURIComponent(title||"")+"&hl="+hl+"&gl="+gl+"&ceid="+ceid;
+}
+function renderDiscoverCards(list){
+  $("discoverGrid").innerHTML = list.map((it,i)=>{
+    const gnews = gnewsUrl(it.title);
+    const openTxt = LANG==="en"?"Open source":"원문보기";
+    const toDocTxt = LANG==="en"?"New doc":"새 글쓰기";
+    const toLibTxt = LANG==="en"?"Library":"라이브러리";
+    const analyzeTxt = LANG==="en"?"Summarize/Analyze":"요약/분석";
+    return `
+      <div class="news" data-i="${i}">
+        <img src="${it.img}" alt="">
+        <div class="meta">${escapeHtml(it.meta||"")}</div>
+        <div class="title">${escapeHtml(it.title)}</div>
+        <div class="desc">${escapeHtml(it.desc||"")}</div>
+        <div class="actions">
+          <button class="btn addLib">📚 ${escapeHtml(toLibTxt)}</button>
+          <a class="btn" href="${gnews}" target="_blank" rel="noopener">🔗 ${escapeHtml(openTxt)}</a>
+          <button class="btn toAI">🤖 ${escapeHtml(analyzeTxt)}</button>
+          <button class="btn newDoc">✍️ ${escapeHtml(toDocTxt)}</button>
+        </div>
+      </div>`;
+  }).join("");
+  document.querySelectorAll('.news .addLib').forEach((b,idx)=>{
+    b.onclick=()=>{ const it=list[idx]; const g=gnewsUrl(it.title);
+      const ar=load("th.library",[]); ar.unshift({title:it.title,url:g,ts:Date.now()}); save("th.library",ar);
+      renderLibrary(); setMode("workspace"); tabsLeft.forEach(t=>t.btn.dataset.active="0"); $("tLib").dataset.active="1"; $("pLib").dataset.active="1";
+    };
   });
-  $$("btnToggleLeft")?.addEventListener('click',()=>{
-    const left=$$("left"); if(!left) return;
-    const isHidden=left.style.display==='none'; left.style.display=isHidden?'flex':'none';
-    const mainLayout=$$('mainLayout'); if(!mainLayout) return;
-    const rightCol=settings.mode==='research'?'340px':'';
-    if(window.innerWidth<=900){mainLayout.style.gridTemplateColumns='0 1fr'; left.style.display='none';}
-    else if(window.innerWidth<=1200){mainLayout.style.gridTemplateColumns=`0 1fr ${rightCol}`.trim(); left.style.display='none';}
-    else{mainLayout.style.gridTemplateColumns=`${isHidden?'260px':'0'} 1fr ${rightCol}`.trim().replace(/\s+/g,' ');}
+  document.querySelectorAll('.news .toAI').forEach((b,idx)=>{
+    b.onclick=()=>{ const it=list[idx];
+      setMode("workspace"); addAI(`이 기사 요약해줘:\n${it.title}\n${gnewsUrl(it.title)}`, true);
+    };
   });
-  $$("iGuide")?.addEventListener('click',()=>($$("guideModal").style.display="flex"));
-  $$("guideClose")?.addEventListener('click',()=>($$("guideModal").style.display="none"));
-  $$("openPrivacy")?.addEventListener('click',()=>($$("privacyModal").style.display="flex"));
-  $$("privacyClose")?.addEventListener('click',()=>($$("privacyModal").style.display="none"));
-  $$("openTerms")?.addEventListener('click',()=>($$("termsModal").style.display="flex"));
-  $$("termsClose")?.addEventListener('click',()=>($$("termsModal").style.display="none"));
-
-  const optSugg=$$("optSugg"); if(optSugg) optSugg.checked=!!settings.suggest;
-  const optPersonal=$$("optPersonal"); if(optPersonal) optPersonal.checked=!!settings.personal;
-  const optGaze=$$("optGaze"); if(optGaze) optGaze.checked=!!settings.gaze;
-  const langSel=$$("langSel"); if(langSel) langSel.value=settings.lang;
-  const modeSel=$$("modeSel"); if(modeSel) modeSel.value=settings.mode;
-
-  optSugg?.addEventListener('change',(e)=>{settings.suggest=e.target.checked;saveSettings();updateGhostSuggest();});
-  optPersonal?.addEventListener('change',(e)=>{settings.personal=e.target.checked;saveSettings();});
-  optGaze?.addEventListener('change',(e)=>{settings.gaze=e.target.checked;saveSettings();setupGazeCursor();});
-  langSel?.addEventListener('change',(e)=>{settings.lang=e.target.value;saveSettings();applyI18n();});
-  modeSel?.addEventListener('change',(e)=>{
-    settings.mode=e.target.value; saveSettings();
-    const mainLayout=$$('mainLayout'); if(mainLayout) mainLayout.dataset.mode=settings.mode;
-    const left=$$("left"); const isLeftHidden=left ? left.style.display==='none' : true;
-    const leftCol=isLeftHidden?'0':'260px';
-    const rightCol=settings.mode==='research'?'340px':'';
-    if(window.innerWidth<=900){mainLayout.style.gridTemplateColumns='0 1fr';}
-    else if(window.innerWidth<=1200){mainLayout.style.gridTemplateColumns=`0 1fr ${rightCol}`.trim();}
-    else{mainLayout.style.gridTemplateColumns=`${leftCol} 1fr ${rightCol}`.trim().replace(/\s+/g,' ');}
-    if(settings.mode==='research'){const active=document.querySelector('.sidebar-nav .tab[data-active="1"]')?.dataset.tab; if(active==='feed') loadFeed(); else if(active==='topics') loadTopics(); else switchSidebarTab('feed');}
+  document.querySelectorAll('.news .newDoc').forEach((b,idx)=>{
+    b.onclick=()=>{ const it=list[idx]; const g=gnewsUrl(it.title);
+      setMode("workspace"); newDoc(`새 글: ${it.title}`);
+      if(editor){
+        editor.setData(`<h2>${escapeHtml(it.title)}</h2><p><a href="${g}" target="_blank" rel="noopener">Google 뉴스에서 보기</a></p><p>여기서부터 분석을 시작하세요…</p>`);
+        updateWordCount(); updateTitleBar();
+      }
+    };
   });
+}
+function renderDiscover(){ renderDiscoverCards(FALLBACK_FEED); }
 
-  const mainLayout=$$('mainLayout'); if(mainLayout) mainLayout.dataset.mode=settings.mode;
-})();
+/* ========= Real-time local learning ========= */
+const MEM_KEY = 'th.mem';
+const DEFAULT_MEM = { acceptCounts:{}, lastUsedAt:{}, perDoc:{}, userDict:{ko:[],ja:[],en:[]}, docFreq:{}, langPref: SETTINGS.langPref || LANG };
+let MEM = Object.assign({}, DEFAULT_MEM, load(MEM_KEY, DEFAULT_MEM));
+function persistMEM(){ save(MEM_KEY, MEM); }
 
 /* ========= Editor ========= */
-let editor=null, autosaveTimer=null;
-async function initEditor(restore){
-  try{
-    editor=await ClassicEditor.create($$("editor"),{placeholder:settings.lang==='ja'?"ここで書いてください…":(settings.lang==='en'?"Start writing here…":"여기서 작성하세요…")});
-    if(restore!=null) editor.setData(restore);
-    editor.model.document.on('change:data',()=>{
-      clearTimeout(autosaveTimer); autosaveTimer=setTimeout(saveDoc,700);
-      trackUserTokens(); triggerSuggest(); updateGhostSuggest();
-    });
-    editor.editing.view.document.on('selectionChange',()=>{updateGhostSuggest();});
-  }catch(e){
-    console.error("CKEditor init failed:",e);
-    alert(settings.lang==='ja'?"エディタの読み込みに失敗しました。再読み込みしてください。":(settings.lang==='en'?"Editor failed to load. Please refresh.":"에디터 로딩 실패. 새로고침 해주세요."));
-  }
+let editor=null, curDocId=null;
+ClassicEditor.create($("editor"),{
+  placeholder: (LANG==="en"?"Start writing… e.g., competitor analysis":"여기서 작성하세요… (예: 경쟁사 분석, 회의록, 보도자료)")
+}).then(ed=>{
+  editor=ed;
+  editor.model.document.on('change:data', ()=>{ saveDoc(); updateWordCount(); scheduleScanTF(); updateTitleBar(); });
+  setupAutocomplete();  // 자동완성 초기화
+  updateWordCount();
+}).catch(console.error);
+
+function updateWordCount(){
+  const count=(plain(editor?editor.getData():"").split(/\s+/).filter(Boolean).length||0);
+  const wc=$("wordCount");
+  wc.dataset.count = String(count);
+  wc.textContent = t("status.words.prefix") + count;
 }
-function newDoc(){
-  const id="d_"+Date.now(); curId=id; store.setCurrent(id);
-  const title=settings.lang==='ja'?"無題":(settings.lang==='en'?"Untitled":"무제");
+function updateTitleBar(){
+  const d = curDocId ? DB.get(curDocId) : null;
+  $("docTitleBar").textContent = d?.title || "무제";
+}
+
+/* Files */
+function newDoc(title= (LANG==="en"?"Untitled":"무제")){
+  const id="d_"+Date.now();
+  curDocId=id;
   const row={id,createdAt:Date.now(),updatedAt:Date.now(),title,html:""};
-  store.set(id,row); store.saveList([row,...store.list().filter(x=>x.id!==id)]);
-  editor?.setData(""); renderList(); updateGhostSuggest();
+  DB.set(id,row); DB.saveList([row,...DB.list()]); renderFiles();
+  if(!MEM.perDoc[id]) MEM.perDoc[id] = {acceptCounts:{}, lastUsedAt:{}}; if(!MEM.docFreq[id]) MEM.docFreq[id] = {};
+  persistMEM(); updateTitleBar();
 }
 function openDoc(id){
-  const d=store.get(id); if(!d||!editor) return;
-  curId=id; store.setCurrent(id); editor.setData(d.html||""); renderList(); updateGhostSuggest();
-  if(window.innerWidth<=1200){const left=$$("left"); if(left && left.style.display!=='none'){$$("btnToggleLeft")?.click();}}
+  const d=DB.get(id); if(!d||!editor) return;
+  curDocId=id; editor.setData(d.html||""); updateWordCount();
+  if(!MEM.perDoc[id]) MEM.perDoc[id] = {acceptCounts:{}, lastUsedAt:{}}; if(!MEM.docFreq[id]) MEM.docFreq[id] = {};
+  persistMEM(); updateTitleBar();
 }
-async function saveDoc(){
-  if(!editor||!curId) return;
-  const d=store.get(curId); if(!d) return;
-  const currentHtml=editor.getData();
-  if(d.html===currentHtml) return;
-  d.html=currentHtml; d.updatedAt=Date.now();
-  const plain=d.html.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
-  if(!d.title || ["무제","Untitled","無題"].includes(d.title)){ d.title=(plain.split(" ").slice(0,8).join(" ")||(settings.lang==='ja'?"無題":(settings.lang==='en'?"Untitled":"무제"))); }
-  store.set(curId,d);
-  const list=store.list().map(x=>x.id===curId?{id:curId,createdAt:d.createdAt||Date.now(),updatedAt:d.updatedAt,title:d.title}:x);
-  store.saveList(list); renderList();
-}
-function renderList(){
-  const list=store.list().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
-  const el=$$("docList"); if(!el) return;
-  el.innerHTML=list.map(it=>{
-    const title=it.title || (settings.lang==='ja'?"無題":(settings.lang==='en'?"Untitled":"무제"));
-    const when=new Date(it.updatedAt||it.createdAt||Date.now()).toLocaleString(settings.lang==='ja'?'ja-JP':(settings.lang==='en'?'en-US':'ko-KR'),{dateStyle:'short',timeStyle:'short'});
-    return `<div class="doc ${it.id===curId?'active':''}" data-id="${it.id}">
-      <div class="title" data-rename-id="${it.id}" title="${settings.lang==='ko'?'제목 클릭하여 수정':'Click title to rename'}">${escapeHtml(title)}</div>
-      <div class="time">${escapeHtml(when)}</div>
-      <div class="act"><button class="iconbtn" data-del-id="${it.id}" title="${settings.lang==='ko'?'삭제':'Delete'}">🗑️</button></div>
-    </div>`;
-  }).join("") || `<div class="doc"><div class="title" data-i18n="doclist.empty">저장된 문서가 없습니다.</div></div>`;
-  if(!list.length) applyI18n();
-  el.onclick=(e)=>{
-    const titleEl=e.target.closest('.title[data-rename-id]');
-    const delBtn=e.target.closest('button[data-del-id]');
-    const docRow=e.target.closest('.doc[data-id]:not(.active)');
-    if(delBtn){
-      const id=delBtn.dataset.delId;
-      const docTitle=store.get(id)?.title || (settings.lang==='ja'?"無題":(settings.lang==='en'?"Untitled":"무제"));
-      const confirmMsg=settings.lang==='ko'?`'${docTitle}' 문서를 삭제할까요?`:(settings.lang==='ja'?`'${docTitle}' 文書を削除しますか？`:`Delete document '${docTitle}'?`);
-      if(confirm(confirmMsg)){ store.remove(id); store.saveList(store.list().filter(x=>x.id!==id)); if(curId===id){ const next=store.list()[0]; if(next) openDoc(next.id); else newDoc(); } else { renderList(); } }
-    }else if(titleEl){ enableInlineRename(titleEl);
-    }else if(docRow){ openDoc(docRow.dataset.id); }
-  };
-}
-function enableInlineRename(el){
-  const id=el.dataset.renameId; if(!id||el.contentEditable==="true") return;
-  const old=el.textContent; el.contentEditable="true"; el.focus(); document.execCommand('selectAll',false,null);
-  const finish=(save=true)=>{ el.contentEditable="false"; el.removeEventListener('blur',onBlur); el.removeEventListener('keydown',onKey); const nv=el.textContent.trim(); if(save && nv && nv!==old){ const d=store.get(id); if(d){ d.title=nv; d.updatedAt=Date.now(); store.set(id,d); renderList();}} else { el.textContent=old; } };
-  const onBlur=()=>finish(true);
-  const onKey=(e)=>{ if(e.key==="Enter"){e.preventDefault();finish(true);} else if(e.key==="Escape"){e.preventDefault();finish(false);} };
-  el.addEventListener('blur',onBlur); el.addEventListener('keydown',onKey);
-}
-$$("addDoc").onclick=newDoc; $$("iNew").onclick=newDoc;
-
-/* ========= Export & Share ========= */
-function exportPDF(){
-  if(!editor) return alert("Editor not ready.");
-  const content=document.createElement('div');
-  content.innerHTML=editor.getData();
-  content.style.fontFamily=getComputedStyle(document.body).fontFamily;
-  content.style.fontSize='11pt'; content.style.lineHeight='1.5'; content.style.padding='20mm';
-  const opt={margin:[20,20,20,20],filename:`ThinkHelper_${Date.now()}.pdf`,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
-  html2pdf().from(content).set(opt).save();
-}
-function exportWord(){
-  if(!editor){alert("Editor not ready.");return;}
-  const header = `<!DOCTYPE html>
-<html xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:w="urn:schemas-microsoft-com:office:word"
-      xmlns="http://www.w3.org/TR/REC-html40">
-<head><meta charset="utf-8"><title>ThinkHelper Export</title>
-<style>body{font-family:${getComputedStyle(document.body).fontFamily};font-size:11pt;}</style></head><body>`;
-  const sourceHTML = header + editor.getData() + footer;
-  const blob=new Blob([sourceHTML],{type:"application/msword"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a"); a.href=url; a.download=`ThinkHelper_${Date.now()}.doc`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-}
-async function sharePad(){
-  let urlBase = location.origin + location.pathname;
-  if(curId){
-    urlBase += "?doc=" + encodeURIComponent(curId);
+function saveDoc(){
+  if(!editor||!curDocId) return;
+  const d=DB.get(curDocId); if(!d) return;
+  const html=editor.getData(); if(d.html===html) return;
+  d.html=html; d.updatedAt=Date.now();
+  const txt=plain(html);
+  if(!d.title||/^무제$|^Untitled$/.test(d.title)){
+    const fallback = LANG==="en"?"Untitled":"무제";
+    d.title=(txt.split(" ").slice(0,8).join(" ")||fallback);
   }
-  try{await navigator.clipboard.writeText(urlBase);}catch(e){}
-  const wrap=$$("shareModal"); wrap.style.display="flex";
-  const q=$$("qr"); q.innerHTML=""; new QRCode(q,{text:urlBase,width:200,height:200,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});
+  DB.set(curDocId,d);
+  DB.saveList(DB.list().map(x=>x.id===curDocId?{id:curDocId,createdAt:d.createdAt,updatedAt:d.updatedAt,title:d.title}:x));
+  $("docState").textContent=t("status.saved");
 }
-$$("iSavePDF").onclick=exportPDF;
-$$("iSaveWord").onclick=exportWord;
-$$("iClipboard").onclick=sharePad;
-$$("shareClose").onclick=()=>($$("shareModal").style.display="none");
-$$("iPrint").onclick=()=>window.print();
-$$("iImport").onclick=()=>alert("PDF/Word/HWP 불러오기 (데모)");
-$$("iSaveHWP").onclick=()=>alert("HWP로 저장은 서버의 상용 변환기가 필요합니다.");
-$$("iTranslate").onclick=()=>alert("번역(데모): 서버 연동 시 실제 번역 가능합니다.");
-$$("iMakePPT").onclick=()=>window.open('https://slides.google.com/create','_blank');
-$$("iCollab").onclick=()=>{
-  const idCur=curId||"";
-  const link = location.origin + location.pathname + (idCur ? ("?doc=" + encodeURIComponent(idCur)) : "");
-  const subject=encodeURIComponent("[ThinkHelper] 문서 협업 초대");
-  const body=encodeURIComponent("아래 링크로 접속하면 문서를 함께 편집할 수 있어요(데모).\n\n"+link+"\n\n— ThinkHelper");
-  location.href=`mailto:?subject=${subject}&body=${body}`;
+
+/* ========= Tokenization & learning ========= */
+const DICT_KO_BASE = ["분석","연구","결과","방법","과정","결론","참고","출처","데이터","요약","종합","한계","전망","쟁점","법리","판례","형법","형사소송법","대법원","요지","사실관계","쟁점정리","알고리즘","프로토타입","컨텍스트","토큰","임베딩","오프라인","캐시","스레드","비동기","이벤트루프","렌더링","성능최적화"];
+const JA_ROWS = [["あ","い","う","え","お"],["か","き","く","け","こ"],["さ","し","す","せ","そ"],["た","ち","つ","て","と"],["な","に","ぬ","ね","の"],["は","ひ","ふ","へ","ほ"],["ま","み","む","め","も"],["や","ゆ","よ"],["ら","り","る","れ","ろ"],["わ","を","ん"]];
+const DICT_JA_BASE = ["あんない","あんぜん","いんしょう","うけつけ","えいぎょう","おしらせ","かいせつ","きろく","くべつ","けんさく","こうせい","こたえ","さぎょう","しゅうろく","すいしょう","せつめい","そうさ","そしき","たいおう","ちゅうい","ついか","ていあん","とうろく","とりまとめ","ないよう","にんしき","ぬけもれ","ねんしょ","のうりょく","はっぴょう","ひょうか","ふくせい","へんこう","ほぞん","みなおし","みとおし","むだ","めいれい","もうしこみ","やくわり","ゆうせん","ようけん","らんきんぐ","りよう","るーる","れんけい","ろーどまっぷ","わかりやすい","をつける","んしょう"];
+const DICT_EN_BASE = ["analysis","baseline","benchmark","context","dataset","design","embedding","evaluation","fallback","feature","guide","heuristic","insight","journey","knowledge","latency","model","note","optimize","pipeline","quality","research","summary","template","unit-test","validation","workflow","x-factor","yield","zero-copy"];
+const STOP_KO = new Set(["그리고","그러나","하지만","또","또는","및","이다","하는","하게","에서","으로","에게","부터","까지","보다","보다도","수","것","등","때"]);
+const STOP_EN = new Set(["the","a","an","and","or","to","of","in","on","for","by","with","is","are","this","that","it","be","as","at","from","was","were","will","can","not","we","you","i"]);
+function extractTokens(text){
+  const out = {ko:[], ja:[], en:[]};
+  const ko = text.match(/[가-힣]{2,}/g) || []; out.ko = ko.filter(w=>!STOP_KO.has(w) && w.length<=20);
+  const ja = text.match(/[\u3040-\u30FF\u4E00-\u9FFF]{2,}/g) || []; out.ja = ja.slice(0,500);
+  const en = text.match(/[A-Za-z][A-Za-z\-]{2,}/g) || []; out.en = en.map(w=>w.toLowerCase()).filter(w=>!STOP_EN.has(w) && w.length<=24);
+  return out;
+}
+let tfScanTimer=null;
+function scheduleScanTF(){ if(tfScanTimer) clearTimeout(tfScanTimer); tfScanTimer = setTimeout(scanAndUpdateUserDict, 1200); }
+function scanAndUpdateUserDict(){
+  if(!editor||!curDocId) return;
+  const text = plain(editor.getData());
+  const toks = extractTokens(text);
+  const freq = {};
+  [...toks.ko, ...toks.ja, ...toks.en].forEach(w=>{ freq[w]=(freq[w]||0)+1; });
+  MEM.docFreq[curDocId] = freq;
+
+  const caps = {ko:400, ja:400, en:400};
+  ['ko','ja','en'].forEach(lang=>{
+    const base = lang==='ko'?DICT_KO_BASE: lang==='ja'?DICT_JA_BASE: DICT_EN_BASE;
+    const set = new Set(MEM.userDict[lang]||[]);
+    const candidates = Object.entries(freq)
+      .filter(([w])=>{
+        const isLang = (lang==='ko'&&/[가-힣]/.test(w)) || (lang==='ja'&&/[\u3040-\u30FF\u4E00-\u9FFF]/.test(w)) || (lang==='en'&&/^[A-Za-z]/.test(w));
+        return isLang && !base.includes(w);
+      })
+      .sort((a,b)=>b[1]-a[1]).slice(0,50);
+    for(const [w] of candidates){ set.add(w); if(set.size>caps[lang]) break; }
+    MEM.userDict[lang] = Array.from(set).slice(0,caps[lang]);
+  });
+  persistMEM();
+}
+function decay(count, lastTs){ const d = daysSince(lastTs); return (count||0) * Math.pow(0.99, d); }
+function scoreWord(word){
+  const g = decay(MEM.acceptCounts[word]||0, MEM.lastUsedAt[word]||0);
+  let docScore = 0;
+  if(curDocId && MEM.perDoc[curDocId]){
+    const pd = MEM.perDoc[curDocId];
+    docScore = 1.2 * decay((pd.acceptCounts[word]||0), (pd.lastUsedAt[word]||0));
+  }
+  const freq = (curDocId && MEM.docFreq[curDocId] && MEM.docFreq[curDocId][word]) ? MEM.docFreq[curDocId][word] : 0;
+  const freqScore = 0.2 * Math.min(5, freq);
+  return g + docScore + freqScore;
+}
+function bump(word){
+  if(!SETTINGS.personalOn) return;
+  MEM.acceptCounts[word] = (MEM.acceptCounts[word]||0)+1;
+  MEM.lastUsedAt[word] = Date.now();
+  if(curDocId){
+    if(!MEM.perDoc[curDocId]) MEM.perDoc[curDocId]={acceptCounts:{}, lastUsedAt:{}};
+    MEM.perDoc[curDocId].acceptCounts[word] = (MEM.perDoc[curDocId].acceptCounts[word]||0)+1;
+    MEM.perDoc[curDocId].lastUsedAt[word] = Date.now();
+  }
+  persistMEM();
+}
+function orderBySmart(list){ if(!SETTINGS.personalOn) return list.slice(); return list.slice().sort((a,b)=>{ const sa=scoreWord(a), sb=scoreWord(b); if(sb!==sa) return sb-sa; return a.localeCompare(b); }); }
+function orderJAByRow(list){
+  return list.slice().sort((a,b)=>{
+    const fa=(a[0]||""), fb=(b[0]||"");
+    const ra=JA_ROWS.findIndex(row=>row.includes(fa));
+    const rb=JA_ROWS.findIndex(row=>row.includes(fb));
+    return (ra<0?99:ra)-(rb<0?99:rb) || a.localeCompare(b);
+  });
+}
+function currentLangFromCaret(){
+  const sel=window.getSelection(); if(!sel||sel.rangeCount===0) return SETTINGS.langPref||"ko";
+  const r=sel.getRangeAt(0).cloneRange(); const node=r.startContainer;
+  if(!node||node.nodeType!==Node.TEXT_NODE) return SETTINGS.langPref||"ko";
+  const s=(node.textContent||"").slice(0,r.startOffset); if(!s) return SETTINGS.langPref||"ko";
+  const ch=s.slice(-1);
+  if(/[가-힣]/.test(ch)) return "ko";
+  if(/[A-Za-z]/.test(ch)) return "en";
+  if(/[\u3040-\u30FF\u4E00-\u9FFF]/.test(ch)) return "ja";
+  return SETTINGS.langPref||"ko";
+}
+function getPrefix(){
+  const sel=window.getSelection(); if(!sel||sel.rangeCount===0) return "";
+  const r=sel.getRangeAt(0).cloneRange();
+  const node=r.startContainer; if(!node||node.nodeType!==Node.TEXT_NODE) return "";
+  const txt=node.textContent||""; const pos=r.startOffset||0;
+  const left=txt.slice(0,pos);
+  const m=left.match(/[\p{L}\p{N}_\-]{1,32}$/u);
+  return m?m[0]:"";
+}
+function filterDict(prefix, lang){
+  if(!SETTINGS.suggestOn) return [];
+  const p=prefix.toLowerCase();
+  let pool=[];
+  if(lang==="ko"){
+    pool = [...new Set([ ...MEM.userDict.ko, ...DICT_KO_BASE ])];
+    const base = pool.filter(w=>w.toLowerCase().startsWith(p));
+    return orderBySmart(base).slice(0,8);
+  }
+  if(lang==="ja"){
+    pool = [...new Set([ ...MEM.userDict.ja, ...DICT_JA_BASE ])];
+    const base = pool.filter(w=> w.startsWith(prefix) || w.toLowerCase().startsWith(p));
+    return orderJAByRow(orderBySmart(base)).slice(0,8);
+  }
+  pool = [...new Set([ ...MEM.userDict.en, ...DICT_EN_BASE ])];
+  const base = pool.filter(w=>w.toLowerCase().startsWith(p));
+  return orderBySmart(base).slice(0,8);
+}
+
+/* ========= VS Code Style Autocomplete ========= */
+let suggestionBox = null;
+let selectedIndex = 0;
+let currentCandidates = [];
+
+function setupAutocomplete() {
+  // 1) DOM 생성
+  if (!suggestionBox) {
+    suggestionBox = document.createElement('div');
+    suggestionBox.id = 'suggestionBox';
+    document.body.appendChild(suggestionBox);
+  }
+
+  const viewDoc = editor.editing.view.document;
+
+  // 2) 키보드 인터셉트
+  viewDoc.on('keydown', (evt, data) => {
+    if (suggestionBox.style.display !== 'block') return;
+
+    if (data.keyCode === 38) { // Up
+      evt.stop(); data.preventDefault();
+      selectedIndex = (selectedIndex > 0) ? selectedIndex - 1 : currentCandidates.length - 1;
+      renderList();
+    } else if (data.keyCode === 40) { // Down
+      evt.stop(); data.preventDefault();
+      selectedIndex = (selectedIndex < currentCandidates.length - 1) ? selectedIndex + 1 : 0;
+      renderList();
+    } else if (data.keyCode === 9 || data.keyCode === 13) { // Tab or Enter
+      evt.stop(); data.preventDefault();
+      applySuggestion(currentCandidates[selectedIndex]);
+    } else if (data.keyCode === 27) { // Esc
+      evt.stop(); data.preventDefault();
+      closeSuggestion();
+    }
+  }, { priority: 'highest' });
+
+  // 3) 타이핑 → 목록 갱신/표시
+  viewDoc.on('keyup', () => {
+    const lg = currentLangFromCaret();
+    $("langGuess").textContent = lg;
+
+    const prefix = getPrefix();
+    if (!prefix || prefix.length < 1) { closeSuggestion(); return; }
+
+    const list = filterDict(prefix, lg);
+    if (list.length > 0) {
+      currentCandidates = list;
+      selectedIndex = 0;
+      showSuggestion(list); // 개선판 호출
+    } else {
+      closeSuggestion();
+    }
+  });
+}
+
+function renderList() {
+  if (!currentCandidates.length) return;
+  let html = '<ul>';
+  currentCandidates.forEach((word, idx) => {
+    const activeClass = (idx === selectedIndex) ? 'active' : '';
+    html += `<li class="${activeClass}" onclick="applySuggestion('${word.replace(/'/g,"&#39;")}')">${word}</li>`;
+  });
+  html += '</ul>';
+  suggestionBox.innerHTML = html;
+}
+
+// 화면에 박스 띄우기 (위치 계산 로직 개선판)
+function showSuggestion(list) {
+  renderList();
+
+  // 1. 박스를 일단 보이게 함 (그래야 좌표 계산 가능)
+  suggestionBox.style.display = 'block';
+
+  try {
+    // 2. CKEditor의 View(가상돔) -> Native DOM(브라우저돔) 변환기
+    const domConverter = editor.editing.view.domConverter;
+    const viewSelection = editor.editing.view.document.selection;
+    const viewRange = viewSelection.getFirstRange();
+
+    if (!viewRange) return;
+
+    // 3. 가상 범위를 브라우저의 실제 Range로 변환
+    const domRange = domConverter.viewRangeToDom(viewRange);
+
+    // 4. 실제 화면상의 좌표(Rect) 추출
+    const rect = domRange.getBoundingClientRect();
+
+    // 5. 좌표가 유효한지 확인 (0이면 실패한 것)
+    if (rect && rect.left !== 0 && rect.top !== 0) {
+      // 스크롤 위치까지 고려해서 절대 좌표 계산
+      const topPos = rect.bottom + window.scrollY + 5;
+      const leftPos = rect.left + window.scrollX;
+
+      suggestionBox.style.top = topPos + 'px';
+      suggestionBox.style.left = leftPos + 'px';
+    } else {
+      // 좌표를 못 찾으면(초기 로딩 등) 일단 숨김
+      suggestionBox.style.display = 'none';
+    }
+  } catch (e) {
+    console.error("좌표 계산 실패:", e);
+    suggestionBox.style.display = 'none';
+  }
+}
+
+function closeSuggestion() {
+  if (suggestionBox) suggestionBox.style.display = 'none';
+  currentCandidates = [];
+  selectedIndex = 0;
+}
+
+function applySuggestion(word) {
+  if (!word) return;
+  const prefix = getPrefix();
+
+  editor.model.change(writer => {
+    const selRange = editor.model.document.selection.getFirstRange();
+    const start = selRange.start;
+    const deleteRange = writer.createRange(start.getShiftedBy(-prefix.length), start);
+    writer.remove(deleteRange);
+    writer.insertText(word, editor.model.document.selection.getFirstPosition());
+  });
+
+  closeSuggestion();
+  bump(word);
+}
+
+/* ========= AI Assistant (mock) ========= */
+const aiBox=$("aiBox");
+function addBubble(text,me){ const div=document.createElement('div'); div.className="bubble "+(me?"me":"ai"); div.textContent=text; aiBox.appendChild(div); aiBox.scrollTop=aiBox.scrollHeight; }
+function addAI(text,fromDiscover=false){
+  addBubble(text,true);
+  const lang = currentLangFromCaret() || SETTINGS.langPref || LANG || "ko";
+  const reply =
+    lang==="ko" ? `좋아! ${fromDiscover?"피드 이슈 기반으로 ":""}친근하고 간결하게 답변할게.\n- 선택 영역이 있으면 요약해서 붙여줄게.\n- "SWOT"라고 말하면 틀을 넣어줄게.` :
+    lang==="ja" ? `了解です！${fromDiscover?"フィードの話題に基づき ":""}丁寧で簡潔に返答します。\n・選択範囲があれば要約します。\n・「SWOT」でテンプレートを挿入します。` :
+    `Got it! ${fromDiscover?"Based on the feed ":""}I'll reply concise & friendly.\n- If there's a selection, I'll summarize it.\n- Say "SWOT" to insert the template.`;
+  addBubble(reply,false);
+}
+$("aiForm").addEventListener("submit",(e)=>{ e.preventDefault(); const v=$("aiInput").value.trim(); if(!v) return; $("aiInput").value=""; addAI(v,false); });
+$("aiToggle").onclick=()=>{ const box=$("aiBox"); if(box.style.display==="none"){ box.style.display="flex"; $("aiToggle").textContent="−"; } else { box.style.display="none"; $("aiToggle").textContent="＋"; } };
+
+/* ========= Tips ========= */
+const tipsKO = ["Tab=자동완성 · Esc=닫기 · ↑/↓=이동","⌘/Ctrl+B=굵게, ⌘/Ctrl+I=기울임","⌘/Ctrl+K=링크, ⌘/Ctrl+Z=되돌리기","Shift+Enter=줄바꿈, Enter=새 문단"];
+const tipsJA = ["Tab/Enter=サジェスト確定 · Esc=閉じる","⌘/Ctrl+B=太字, ⌘/Ctrl+I=斜体","⌘/Ctrl+K=リンク, ⌘/Ctrl+Z=元に戻す","Shift+Enter=改行, Enter=新段落"];
+const tipsEN = ["Tab/Enter=Accept suggestion · Esc=Close","⌘/Ctrl=B=Bold, ⌘/Ctrl=I=Italic","⌘/Ctrl=K=Link, ⌘/Ctrl=Z=Undo","Shift+Enter=Line break, Enter=New paragraph"];
+function rotateTips(){ const arr = LANG==="ja"?tipsJA:LANG==="en"?tipsEN:tipsKO; let i=0; setInterval(()=>{ $("tipText").textContent=arr[i=(i+1)%arr.length]; }, 5000); }
+
+/* ========= Search ========= */
+function resolveSearchTarget(raw){
+  const q = (raw||"").trim();
+  if(!q) return null;
+  const s = q.toLowerCase();
+  const has = (...words)=>words.some(w=> q.includes(w) || s.includes(w));
+  if (has("네이버","naver")) return "https://www.naver.com/";
+  if (has("쿠팡","coupang")) return "https://www.coupang.com/";
+  if (has("아마존","amazon")) return "https://www.amazon.com/";
+  if (has("국가법령정보센터","law.go.kr")) return "https://www.law.go.kr/";
+  try{
+    let url = q;
+    if (!/^https?:\/\//i.test(url) && /^[\w\-]+(\.[\w\-]+)+/.test(url)) url = "https://" + url;
+    const u = new URL(url);
+    if (u.hostname) return u.toString();
+  }catch(_){}
+  return "https://www.google.com/search?q=" + encodeURIComponent(q);
+}
+function openInNewTab(url){ window.open(url, "_blank", "noopener"); }
+const SEARCH_KEY = "th.search.history";
+function getSearchHistory(){ return load(SEARCH_KEY, []); }
+function setSearchHistory(list){ save(SEARCH_KEY, list); }
+function addSearchQuery(q){
+  if(!q) return;
+  const now = Date.now();
+  let list = getSearchHistory().filter(it=>it.q!==q);
+  list.unshift({ q, ts: now });
+  if(list.length>100) list = list.slice(0,100);
+  setSearchHistory(list);
+  renderSearchHistory();
+}
+function deleteSearchQuery(q){ const list = getSearchHistory().filter(it=>it.q!==q); setSearchHistory(list); renderSearchHistory(); }
+function clearSearchHistory(){ setSearchHistory([]); renderSearchHistory(); }
+function renderSearchHistory(){
+  const box = $("searchList");
+  const list = getSearchHistory();
+  if(!list.length){ box.innerHTML = `<div class="doc"><div class="ttl">검색 기록이 없습니다.</div></div>`; return; }
+  box.innerHTML = list.map(it=>{
+    const date = new Date(it.ts).toLocaleString(LANG==="ja"?"ja-JP":LANG==="en"?"en-US":"ko-KR");
+    return `<div class="srow" data-q="${escapeHtml(it.q)}" title="${escapeHtml(it.q)}">
+      <div class="q"><span class="icon">🔍</span><span class="text" style="overflow:hidden;text-overflow:ellipsis">${escapeHtml(it.q)}</span><span class="meta">${date}</span></div>
+      <button class="del" title="삭제">✕</button>
+    </div>`;
+  }).join("");
+  box.querySelectorAll(".srow").forEach(row=>{
+    const q = row.dataset.q;
+    row.addEventListener("click", (e)=>{
+      if(e.target.closest(".del")) return;
+      openSearch(q);
+    }, {passive:true});
+    row.querySelector(".del").addEventListener("click",(e)=>{ e.stopPropagation(); deleteSearchQuery(q); });
+  });
+}
+function openSearch(q){
+  const url = resolveSearchTarget(q);
+  if(url) openInNewTab(url);
+}
+const leftSearchInput = $("leftSearchInput");
+$("leftSearchBtn").addEventListener("click", ()=>{
+  const q = leftSearchInput.value.trim(); if(!q) return;
+  addSearchQuery(q);
+  tabsLeft.forEach(t=>{ t.btn.dataset.active="0"; t.panel.dataset.active="0"; });
+  $("tSearch").dataset.active="1"; $("pSearch").dataset.active="1";
+  openSearch(q);
+  leftSearchInput.value = "";
+});
+leftSearchInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); $("leftSearchBtn").click(); }});
+$("btnClearSearch").addEventListener("click", clearSearchHistory);
+
+/* New Doc */
+$("btnNewDocLeft").onclick=()=>{ newDoc(); if(editor){ editor.setData(""); updateWordCount(); updateTitleBar(); } };
+
+/* Footer dict sync */
+const btnSyncDict = document.createElement("button");
+btnSyncDict.className = "btn";
+btnSyncDict.textContent = t("btn.sync");
+btnSyncDict.title = "문서에서 사용자 사전 동기화";
+btnSyncDict.style.marginLeft = "auto";
+document.querySelector(".status-right")?.appendChild(btnSyncDict);
+btnSyncDict.onclick=()=>{ scanAndUpdateUserDict(); alert(LANG==="en"?'Dictionary synced from document.':LANG==="ja"?'文書から辞書を同期しました。':'문서 내용 기반 사용자 사전을 동기화했어요.'); };
+
+/* Help */
+$("btnHelp").onclick=()=>{ alert('단축키 요약:\\n- Tab/Enter: 자동완성 수락\\n- Esc: 팝업 닫기\\n- ↑/↓: 추천 이동\\n- ⌘/Ctrl+B: 굵게, ⌘/Ctrl+I: 기울임\\n- Shift+Enter: 줄바꿈'); };
+
+/* Settings modal */
+const modal=$("settingsModal"), backdrop=$("backdrop");
+function openSettings(){
+  $("selLang").value = SETTINGS.langPref;
+  $("toggleSuggest").checked = !!SETTINGS.suggestOn;
+  $("togglePersonal").checked = !!SETTINGS.personalOn;
+  $("toggleEye").checked = !!SETTINGS.eyeContactOn;
+  modal.style.display="flex"; backdrop.style.display="block";
+}
+function closeSettings(){ modal.style.display="none"; backdrop.style.display="none"; }
+$("btnSettings").onclick = (e)=>{ e.preventDefault(); openSettings(); };
+$("btnCloseSettings").onclick = closeSettings;
+backdrop.onclick = closeSettings;
+$("btnSettingsReset").onclick=()=>{
+  SETTINGS = Object.assign({}, DEFAULT_SETTINGS);
+  $("selLang").value = SETTINGS.langPref;
+  $("toggleSuggest").checked = SETTINGS.suggestOn;
+  $("togglePersonal").checked = SETTINGS.personalOn;
+  $("toggleEye").checked = SETTINGS.eyeContactOn;
+  setLang(SETTINGS.langPref);
+};
+$("btnSettingsSave").onclick=async ()=>{
+  const prevEye = SETTINGS.eyeContactOn;
+  SETTINGS.langPref = $("selLang").value;
+  SETTINGS.suggestOn = $("toggleSuggest").checked;
+  SETTINGS.personalOn = $("togglePersonal").checked;
+  const newEye = $("toggleEye").checked;
+  setLang(SETTINGS.langPref);
+  $("langGuess").textContent = SETTINGS.langPref;
+  if(newEye && !prevEye){
+    try{ await navigator.mediaDevices.getUserMedia({video:true}); SETTINGS.eyeContactOn = true; alert(t("toast.eye.on")); }
+    catch(err){ SETTINGS.eyeContactOn = false; $("toggleEye").checked = false; alert(t("toast.eye.offDeny")); }
+  }else{ SETTINGS.eyeContactOn = newEye; }
+  save(SETTINGS_KEY, SETTINGS);
+  MEM.langPref = SETTINGS.langPref; persistMEM();
+  closeSettings();
+  alert(t("toast.settingsSaved"));
 };
 
-/* ========= User Token Learning (for personal suggestions & interests) ========= */
-const USER_TOK_KEY = "th.user.tokens";
-function getUserTokens(){
-  try { return JSON.parse(localStorage.getItem(USER_TOK_KEY) || "{}"); }
-  catch { return {}; }}
-function setUserTokens(map){
-  try { localStorage.setItem(USER_TOK_KEY, JSON.stringify(map)); }
-  catch {}
-}
-function trackUserTokens(){
-  if (!settings.personal || !editor) return;
-  const text = (editor.getData() || "").replace(/<[^>]+>/g, " ").toLowerCase();
-  const tokens = text.match(/[\p{L}\p{N}_-]{2,}/gu) || [];
-  const map = getUserTokens();
-  for (const t of tokens) {
-    map[t] = (map[t] || 0) + 1;
-  }
-  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,500);
-  setUserTokens(Object.fromEntries(entries));
-}
-function topInterests(n=3){
-  const map=getUserTokens();
-  const arr=Object.entries(map)
-    .filter(([w])=>w.length>=2 && !/^(the|and|you|with|from|에서|그리고|하는|하기|입니다)$/i.test(w))
-    .sort((a,b)=>b[1]-a[1])
-    .slice(0,n)
-    .map(([w])=>w);
-  return arr;
-}
-
-/* ========= Suggestions / AI Chip ========= */
-const aiChip=$$("aiChip"), suggPopup=$$("suggPopup"), suggList=$$("suggList");
-let suggActive=-1, suggItems=[], suggDebounce=null;
-
-const KO_DICT=["감사합니다","안녕하세요","프로젝트","데이터","분석","결과","요청","확인","부탁드립니다","일정","회의","자료"];
-const EN_DICT=["Thank you","Hello","project","data","analysis","result","request","confirm","please","schedule","meeting","document"];
-const JA_DICT=["ありがとうございます","こんにちは","プロジェクト","データ","分析","結果","要請","確認","お願いします","日程","会議","資料"];
-
-function getPrefix(){
-  if(!editor) return "";
-  try{
-    const model=editor.model;
-    const selection=model.document.selection;
-    const position=selection.getFirstPosition();
-    if(!position) return "";
-    const range=model.createRange(model.createPositionAt(position.parent,0),position);
-    let textBefore="";
-    for(const item of range.getItems()){
-      if(item.is('$text')||item.is('$textProxy')) textBefore+=item.data;
-    }
-    const match=textBefore.match(/[\p{L}\p{N}_-]+$/u);
-    return match?match[0]:"";
-  }catch(e){
-    console.warn("getPrefix failed:",e);
-    const text=(editor?.getData()||"").replace(/<[^>]+>/g," ");
-    const parts=text.split(/\s+/); return parts[parts.length-1]||"";
-  }
-}
-function getLocalSuggestions(prefix){
-  const lang=settings.lang||'ko';
-  const dictBase=lang==='en'?EN_DICT:(lang==='ja'?JA_DICT:KO_DICT);
-  const userMap=getUserTokens();
-  const userWords=Object.keys(userMap).sort((a,b)=>userMap[b]-userMap[a]);
-  const dict=[...userWords, ...dictBase];
-  const p=(prefix||"").toLowerCase();
-  const tag=(I18N[lang]||I18N.ko).suggest.local;
-  return dict.filter(w=>w && (lang==='ko'?w.startsWith(prefix):w.toLowerCase().startsWith(p)))
-             .filter((w,i,self)=>self.indexOf(w)===i)
-             .slice(0,5).map(w=>({kind:"LOCAL",text:w,tag}));
-}
-function applySuggestion(i){
-  const it=suggItems[i]; if(!it||it.kind==='ERR') return;
-  const prefix=getPrefix();
-  const insert=it.text.startsWith(prefix)?it.text.slice(prefix.length):it.text;
-  editor.model.change(writer=>{
-    const selection=editor.model.document.selection;
-    if(selection.isCollapsed && prefix.length>0){
-      const pos=selection.getFirstPosition();
-      const startPos=pos.getShiftedBy(-prefix.length);
-      if(startPos){
-        const rangeBefore=editor.model.createRange(startPos,pos);
-        let textInRange=""; for(const item of rangeBefore.getItems()){ if(item.is('$text')||item.is('$textProxy')) textInRange+=item.data; }
-        if(textInRange===prefix) writer.remove(rangeBefore);
-      }
-    }
-    editor.model.insertContent(writer.createText(insert), editor.model.document.selection);
-  });
-  saveDoc(); closeSuggest();
-
-  if(it.kind==='AI' && SERVER_API_ENDPOINT){
-    const context=(editor?.getData()||"").replace(/<[^>]+>/g," ").trim().slice(-500);
-    fetch(SERVER_API_ENDPOINT+"/log_suggestion",{method:"POST",headers:{"Content-Type":"application/json","Accept-Language":settings.lang||"ko"},body:JSON.stringify({context,chosenSuggestion:it.text,allSuggestions:suggItems.map(x=>x.text)})}).catch(()=>{});
-  }
-}
-function triggerSuggest(){ if(!settings.suggest||!editor) return; clearTimeout(suggDebounce); suggDebounce=setTimeout(openSuggest,350); }
-async function openSuggest(){
-  if(!editor) return closeSuggest();
-  const prefix=getPrefix(); if(!prefix) return closeSuggest();
-  let context=""; try{
-    const sel=editor.model.document.selection;
-    const pos=sel.getFirstPosition();
-    const start=pos.parent.startOffset===0?editor.model.createPositionBefore(pos.parent):editor.model.createPositionAt(pos.parent,0);
-    const range=editor.model.createRange(start,pos);
-    for(const item of range.getItems({shallow:true})){ if(item.is('$text')||item.is('$textProxy')) context+=item.data; }
-    context=context.slice(-500);
-  }catch(e){ context=(editor.getData()||"").replace(/<[^>]+>/g," ").slice(-500); }
-  suggItems=await fetchAiSuggestions(context,prefix);
-  renderSugg(suggItems);
-}
-async function fetchAiSuggestions(context,prefix){
-  const lang=settings.lang||'ko';
-  const tags=(I18N[lang]||I18N.ko).suggest;
-  const est=Math.ceil((context.length+50)/APPROX_CHARS_PER_TOKEN);
-  if(!checkTokenLimitOrWarn(est)) return getLocalSuggestions(prefix);
-  if(SERVER_API_ENDPOINT){
-    try{
-      const r=await fetch(SERVER_API_ENDPOINT+"/suggest_word",{method:"POST",headers:{"Content-Type":"application/json","Accept-Language":lang},body:JSON.stringify({context,prefix})});
-      if(!r.ok) throw new Error("Server "+r.status);
-      const data=await r.json();
-      const resp=(data?.suggestions||[]).filter(s=>s && s!==prefix);
-      if(!resp.length) return getLocalSuggestions(prefix);
-      const consumed=Math.ceil((context.length+(resp.join(" ").length))/APPROX_CHARS_PER_TOKEN); addUsedTokens(consumed);
-      return resp.map(s=>({kind:"AI",text:s,tag:tags.ai}));
-    }catch(e){ return getLocalSuggestions(prefix); }
-  }
-  return getLocalSuggestions(prefix);
-}
-function renderSugg(items){
-  if(!items||!items.length){suggPopup.style.display="none";return;}
-  const lang=settings.lang||'ko';
-  const tags=(I18N[lang]||I18N.ko).suggest;
-  suggList.innerHTML=items.map((it,i)=>`<li data-idx="${i}"><div class="kind">${it.kind}</div><div class="txt">${escapeHtml(it.text)}</div><div class="tag">${it.tag||(it.kind==='AI'?tags.ai:it.kind==='LOCAL'?tags.local:tags.error)}</div></li>`).join("");
-  let rect; try{rect=editor.editing.view.domConverter.viewRangeToDom(editor.editing.view.document.selection.getFirstRange()).getBoundingClientRect();}catch{}
-  const editorRect=$$("editorWrap")?.getBoundingClientRect();
-  if(rect&&editorRect){suggPopup.style.top=`${rect.bottom-editorRect.top + 5}px`;suggPopup.style.left=`${rect.left-editorRect.left}px`;} else {suggPopup.style.top='100px';suggPopup.style.left='50px';}
-  suggPopup.style.display="block"; suggActive=0; setActive(0);
-}
-function setActive(i){const lis=[...suggList.querySelectorAll("li")]; lis.forEach(li=>li.dataset.active="0"); if(lis[i]) lis[i].dataset.active="1";}
-function closeSuggest(){suggPopup.style.display="none";suggActive=-1;suggItems=[];}
-$$("suggClose").onclick=closeSuggest;
-document.addEventListener("keydown",(e)=>{
-  if(suggPopup.style.display!=="block") return;
-  if(e.key==="ArrowDown"){e.preventDefault();suggActive=Math.min(suggActive+1,suggItems.length-1);setActive(suggActive);}
-  else if(e.key==="ArrowUp"){e.preventDefault();suggActive=Math.max(suggActive-1,0);setActive(suggActive);}
-  else if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();applySuggestion(suggActive);}
-  else if(e.key==="Escape"){e.preventDefault();closeSuggest();}
-});
-$$("suggList").addEventListener("click",(e)=>{const li=e.target.closest("li[data-idx]"); if(li) applySuggestion(Number(li.dataset.idx));});
-
-// Ghost hint
-function setGhost(text){const el=$$("ghostSuggest"); if(!el) return; el.textContent=text||""; el.style.display=text?"block":"none";}
-function updateGhostSuggest(){
-  const el=$$("ghostSuggest"); if(!el||!settings.suggest){ if(el) el.style.display="none"; return; }
-  const txt=(editor?editor.getData():"").replace(/<[^>]+>/g," ").trim()||"";
-  const hint=settings.lang==="en"?"e.g., “Summarize today's meeting”":(settings.lang==="ja"?"例: 「今日の会議を要約」":"예: ‘오늘 회의 요약’");
-  if(!txt){ setGhost(hint); } else { setGhost(""); }
-}
-
-/* ========= Right Sidebar (Explore & Feed) ========= */
-function switchSidebarTab(tab){
-  document.querySelectorAll(".sidebar-nav .tab").forEach(t=>{
-    const isActive=t.dataset.tab===tab; t.dataset.active=isActive?"1":"0";
-    if(isActive){ if(tab==='feed') loadFeed(); else if(tab==='topics') loadTopics(); }
-  });
-  document.querySelectorAll(".sidebar-content").forEach(c=>{
-    const contentTab=c.id.toLowerCase().includes('search')?'topics':(c.id.toLowerCase().includes('feed')?'feed':'');
-    c.dataset.active=(contentTab===tab)?"1":"0";
-  });
-}
-document.querySelectorAll(".sidebar-nav .tab").forEach(t=>t.onclick=()=>switchSidebarTab(t.dataset.tab));
-
-function renderSearch(summary,sources){
-  const c=$$("rightSearchResults"); if(!c) return;
-  const lang=settings.lang||'ko';
-  const sourceTitle=lang==='ko'?'출처':(lang==='ja'?'出典':'Sources');
-  const noTitle=lang==='ko'?'제목 없음':(lang==='ja'?'タイトルなし':'Untitled');
-  const noUrl=lang==='ko'?'URL 없음':(lang==='ja'?'URLなし':'No URL');
-  c.innerHTML=`<div class="search-summary">${escapeHtml(summary)}</div>
-  <div class="search-sources"><h4>${sourceTitle}</h4><ul>${
-    (sources||[]).map(s=>`<li><a href="${escapeHtml(s.url||'#')}" target="_blank" rel="noopener noreferrer"><strong>${escapeHtml(s.title||noTitle)}</strong><span> ${escapeHtml(s.url||noUrl)}</span></a></li>`).join("")
-  }</ul></div>`;
-}
-async function internalSearch(q){
-  const s=q.trim(); if(!s) return renderSearch((I18N[settings.lang]||I18N.ko).topics.empty,[]);
-  const lang=settings.lang||'ko';
-  renderSearch(lang==='ko'?`'${s}' 검색 중...`:`Searching for '${s}'...`,[]);
-  switchSidebarTab('topics');
-
-  try{
-    const langParam=lang==='ko'?'&lang=ko':'';
-    const fields='title,url,summary_ko,published_at,provider_name';
-    const res=await fetch(`${FEED_API_ENDPOINT}/v1/global-articles?q=${encodeURIComponent(s)}&limit=5&return_fields=${fields}${langParam}`,{method:"GET"});
-    if(res.ok){
-      const data=await res.json();
-      const docs=data?.documents||data?.articles||data?.items||[];
-      const summary=docs[0]?.summary_ko || (lang==='ko'?`'${s}'에 대한 검색 결과입니다.`:`Search results for '${s}'.`);
-      const sources=docs.map(d=>({title:d.title,url:d.url}));
-      renderSearch(summary,sources);
-      return;
-    }
-    throw new Error("Deepsearch status "+res.status);
-  }catch(e){
-    renderSearch(lang==='ko'?`'${s}'에 대한 기본 결과입니다.`:`Basic results for '${s}'.`,[
-      {title:`${s} 관련 위키백과`,url:`https://ko.wikipedia.org/wiki/${encodeURIComponent(s)}`},
-      {title:`${s} 구글 검색`,url:`https://www.google.com/search?q=${encodeURIComponent(s)}`}
-    ]);
-  }
-}
-async function loadTopics(){
-  const c=$$("rightSearchResults"); if(!c) return;
-  const lang=settings.lang||'ko'; const dict=(I18N[lang]||I18N.ko).topics;
-  c.innerHTML=`<div class="spinner"></div>`;
-  try{
-    const interests=topInterests(5);
-    const base=["AI","IT","클라우드","스타트업","정책","경제","데이터","보안"];
-    const topics=[...interests,...base].filter((v,i,self)=>self.indexOf(v)===i).slice(0,10);
-    if(!topics.length){ c.innerHTML=`<div class="search-summary">${dict.empty}</div>`; return; }
-    c.innerHTML=`<ul>${topics.map(t=>`<li onclick="internalSearch('${escapeHtml(t)}')">${escapeHtml(t)}</li>`).join("")}</ul>`;
-  }catch(e){ c.innerHTML=`<div class="search-summary">${dict.error}: ${e.message}</div>`; }
-}
-async function loadFeed(topic="IT"){
-  const c=$$("rightFeed"); if(!c) return;
-  c.innerHTML=`<div class="spinner"></div>`;
-  const interests=topInterests(3);
-  const q = (settings.personal && interests.length) ? interests.join(" OR ") : topic;
-  const langParam = settings.lang==='ko'?'&lang=ko':'';
-  const fields='title,url,provider_name,image_url,published_at';
-
-  try{
-    const res=await fetch(`${FEED_API_ENDPOINT}/v1/global-articles?q=${encodeURIComponent(q)}&limit=10&sort=latest&return_fields=${fields}${langParam}`,{method:"GET"});
-    if(!res.ok) throw new Error("Deepsearch "+res.status);
-    const data=await res.json();
-    const items=data?.documents||data?.articles||data?.items||[];
-    if(!items.length){ throw new Error("no items"); }
-    c.innerHTML=items.map(it=>`
-      <a href="${escapeHtml(it.url||'#')}" target="_blank" rel="noopener noreferrer" class="feed-item">
-        <img src="${escapeHtml(it.image_url||'https://placehold.co/340x140/cccccc/333333?text=No+Image')}" alt="뉴스 썸네일" loading="lazy">
-        <div class="feed-content">
-          <div class="feed-source">${escapeHtml(it.provider_name||"출처 불명")}</div>
-          <div class="feed-title">${escapeHtml(it.title||"")}</div>
-        </div>
-      </a>`).join("");
-    return;
-  }catch(e){
-    const alt = [
-      {title:"오픈 소스 뉴스 모음(데모)",url:"https://news.ycombinator.com/",provider_name:"Hacker News",image_url:""},
-      {title:"구글 뉴스(키워드)",url:`https://news.google.com/search?q=${encodeURIComponent(q)}`,provider_name:"Google News",image_url:""}
-    ];
-    c.innerHTML=alt.map(it=>`
-      <a href="${escapeHtml(it.url)}" target="_blank" rel="noopener noreferrer" class="feed-item">
-        <img src="${escapeHtml(it.image_url||'https://placehold.co/340x140/cccccc/333333?text=News')}" alt="뉴스 썸네일" loading="lazy">
-        <div class="feed-content">
-          <div class="feed-source">${escapeHtml(it.provider_name)}</div>
-          <div class="feed-title">${escapeHtml(it.title)}</div>
-        </div>
-      </a>`).join("");
-  }
-}
-$$("feedMax")?.addEventListener("click",function(){
-  const r=$$("right"); if(!r) return;
-  if(r.classList.contains("max")) r.classList.remove("max"); else r.classList.add("max");
-});
-
-/* ========= Trend (실검 스타일) ========= */
-const TREND_KEY="th.trend.counts";
-function getTrend(){try{return JSON.parse(localStorage.getItem(TREND_KEY)||'{}')}catch{return{}}}
-function setTrend(m){try{localStorage.setItem(TREND_KEY,JSON.stringify(m));}catch{}}
-function bumpTrend(word){if(!word) return; const m=getTrend(); m[word]=(m[word]||0)+1; setTrend(m);}
-function topTrends(n=8){
-  const m=getTrend();
-  const arr=Object.entries(m).filter(([w])=>w.length>=2).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([w])=>w);
-  const base=["AI","주식","날씨","환율","부동산","축구","야구","아이폰","삼성","넷플릭스"];
-  const merged=[...new Set([...arr,...base])].slice(0,n);
-  return merged;
-}
-const cmdInput=$$("cmdInput");
-const trendWrap=$$("trendWrap");
-cmdInput.addEventListener("focus",()=>{
-  const trends=topTrends();
-  if(!trends.length){trendWrap.style.display="none";return;}
-  trendWrap.innerHTML=trends.map(t=>`<div class="row" data-q="${escapeHtml(t)}">🔎 ${escapeHtml(t)}</div>`).join("");
-  trendWrap.style.top="44px"; trendWrap.style.left="8px"; trendWrap.style.right="auto"; trendWrap.style.display="block";
-});
-cmdInput.addEventListener("blur",()=>setTimeout(()=>trendWrap.style.display="none",150));
-trendWrap.addEventListener("click",(e)=>{
-  const row=e.target.closest(".row[data-q]"); if(!row) return;
-  const q=row.dataset.q; cmdInput.value=q; bumpTrend(q);
-  internalSearch(q);
-  switchSidebarTab('feed');
-  loadFeed(q);
-});
-
-/* ========= Command Bar ========= */
-function setupCommandBar(){
-  const cmdSend=$$("cmdSend");
-  async function handle(){
-    const v=(cmdInput.value||"").trim(); if(!v) return;
-    bumpTrend(v);
-    openChat(); await sendChat(v); cmdInput.value="";
-  }
-  cmdSend.onclick=handle;
-  cmdInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();handle();}});
-  $$("cmdSuggestions").addEventListener('click',(e)=>{
-    const b=e.target.closest?.(".chip"); if(!b) return;
-    const lang=settings.lang||"ko";
-    if(b.dataset.cmd==="create_doc"){
-      const tpl=lang==="ko"?"<h1>새 문서 템플릿</h1><p>여기에 내용을 입력하세요.</p>":(lang==="ja"?"<h1>新規文書テンプレート</h1><p>ここに内容を入力してください。</p>":"<h1>New Document Template</h1><p>Start writing here.</p>");
-      editor.setData(tpl); saveDoc();
-    }else if(b.dataset.cmd==="edit_doc"){
-      const prompt=lang==="ko"?"이 문서 문장 다듬어줘":(lang==="ja"?"この文書の文章を整えてください":"Refine the sentences in this document");
-      openChat(); sendChat(prompt);
-    }
-  });
-}
-
-/* ========= Chat ========= */
-const THREADS_KEY="th.threads";
-function threads(){try{return JSON.parse(localStorage.getItem(THREADS_KEY)||"[]")}catch{return[]}}
-function saveThreads(a){localStorage.setItem(THREADS_KEY,JSON.stringify(a||[]))}
-let chatHistory=[], threadId=null;
-
-function renderThreads(){
-  const box=$$("chatThreads"); if(!box) return;
-  const list=threads().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
-  const newThreadText=(settings.lang||"ko")==="ko"?"새 스레드":(settings.lang==="ja"?"新規スレッド":"New Thread");
-  box.innerHTML=(list.map(t=>`<div class="threadRow" data-id="${t.id}" data-active="${t.id===threadId?'1':'0'}"><div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">${escapeHtml(t.title||newThreadText)}</div><div style="color:#888;font-size:.8rem">${new Date(t.updatedAt||t.createdAt).toLocaleDateString()}</div></div>`).join(""))||'<div class="sys" style="margin:8px" data-i18n="chat.noThreads">스레드 없음</div>';
-  if(!list.length) applyI18n();
-  box.onclick=(e)=>{const row=e.target.closest?.(".threadRow"); if(!row) return; if(row.getAttribute("data-id")!==threadId) openThread(row.getAttribute("data-id"));};
-}
-function newThread(){
-  const id="t_"+Date.now();
-  const title=(settings.lang||"ko")==="ko"?"새 스레드":(settings.lang==="ja"?"新規スレッド":"New Thread");
-  const row={id,title,createdAt:Date.now(),updatedAt:Date.now(),history:[]};
-
-  saveThreads([row, ...threads()]);
-  threadId = id;
-  chatHistory = [];
-  renderThreads();
-
-  const titleEl = $$("threadTitleInput");
-  if (titleEl) titleEl.value = row.title;
-
-  const bodyEl = $$("chatBody");
-  if (bodyEl) bodyEl.innerHTML = "";
-}
-function openThread(id){
-  const list=threads(); const t=list.find(x=>x.id===id); if(!t) return;
-  threadId=id; chatHistory=t.history||[]; $$("chatBody").innerHTML="";
-  chatHistory.forEach(m=>addBubble(m.content,m.role==="user",m.role==="system",true));
-  if($$("threadTitleInput")) $$("threadTitleInput").value=t.title||"";
-  renderThreads();
-  $$("chatBody").scrollTop=$$("chatBody").scrollHeight;
-}
-function persistThread(){
-  if(!threadId) return; const list=threads(); const idx=list.findIndex(x=>x.id===threadId); if(idx<0) return;
-  const title=($$("threadTitleInput")?.value.trim())|| (list[idx].title|| (settings.lang==='ko'?'새 스레드':(settings.lang==='en'?'New Thread':'新規スレッド')));
-  list[idx]={...list[idx],title,updatedAt:Date.now(),history:chatHistory.slice(-200)}; saveThreads(list); renderThreads();
-}
-$$("renameThread")?.addEventListener("click",persistThread);
-$$("deleteThread")?.addEventListener("click",()=>{
-  if(!threadId) return;
-  const currentTitle=threads().find(t=>t.id===threadId)?.title || "새 스레드";
-  const confirmMsg=settings.lang==="ko"?`'${currentTitle}' 스레드를 삭제할까요?`:`Delete thread '${currentTitle}'?`;
-  if(confirm(confirmMsg)){ saveThreads(threads().filter(x=>x.id!==threadId)); const next=threads()[0]; if(next) openThread(next.id); else newThread(); }
-});
-
-const chatDock=$$("chatDock"), chatInput=$$("chatInput");
-function openChat(){chatDock.style.display="flex"; chatDock.setAttribute("aria-hidden","false"); if(!threadId) newThread(); $$("chatInput")?.focus();}
-function closeChat(){chatDock.style.display="none"; chatDock.setAttribute("aria-hidden","true");}
-$$("chatBtn")?.addEventListener("click",openChat);
-$$("chatClose")?.addEventListener("click",closeChat);
-$$("btnChatPlus")?.addEventListener("click",(e)=>{e.stopPropagation(); const m=$$("chatPlusMenu"); if(m) m.style.display=m.style.display==="block"?"none":"block";});
-document.addEventListener("click",()=>{const m=$$("chatPlusMenu"); if(m) m.style.display="none";});
-
-function addBubble(text,me=false,isErr=false,skipPersist=false){
-  const b=document.createElement("div"); b.className="bubble "+(me?"me":(isErr?"sys":"ai")); b.textContent=text;
-  $$("chatBody").appendChild(b); $$("chatBody").scrollTop=$$("chatBody").scrollHeight;
-  if(!skipPersist){chatHistory.push({role:me?"user":(isErr?"system":"assistant"),content:text}); persistThread();}
-  return b;
-}
-async function typeOut(b,text,delay=4){
-  b.textContent=""; for(let i=0;i<text.length;i++){ if(!document.body.contains(b)) return; b.textContent+=text[i]; if(i%3===0) await sleep(delay); }
-  $$("chatBody").scrollTop=$$("chatBody").scrollHeight;
-}
-$$("chatBody")?.addEventListener("click",(e)=>{const t=e.target.closest?.(".bubble.ai"); if(!t) return; $$("chatInput").value=t.textContent; $$("chatInput").focus();});
-
-async function sendChat(msg){
-  const est=Math.ceil((msg.length+150)/APPROX_CHARS_PER_TOKEN);
-  if(!checkTokenLimitOrWarn(est)){addBubble((I18N[settings.lang]||I18N.ko).limit.hit(settings.lang==="ko"?"자정":"midnight"),false,true); return;}
-  addBubble(msg,true);
-  const holder=addBubble("...",false);
-  if(SERVER_API_ENDPOINT){
-    try{
-      const r=await fetch(SERVER_API_ENDPOINT+"/ask",{method:"POST",headers:{"Content-Type":"application/json","Accept-Language":settings.lang||"ko"},body:JSON.stringify({question:msg,id:threadId||""})});
-      if(!r.ok){const t=await r.text(); throw new Error("Server Error: "+r.status+" "+t);}
-      const data=await r.json(); const reply=(data&&data.answer)?data.answer:"(AI Response Error)";
-      const actual=Math.ceil((msg.length+reply.length)/APPROX_CHARS_PER_TOKEN); addUsedTokens(actual);
-      await typeOut(holder,reply); const plan=(data&&data.plan)||'Gemini'; updateChatUI(plan);
-      chatHistory.push({role:"assistant",content:holder.textContent}); persistThread();
-    }catch(e){
-      const err=(I18N[settings.lang]||I18N.ko).error.serverConnect; await typeOut(holder,err+" "+e.message,0); holder.classList.add("sys"); updateChatUI("offline");
-    }
-  }else{ await typeOut(holder,"Server address not configured.",0); holder.classList.add("sys"); updateChatUI("offline"); }
-}
-$$("chatForm")?.addEventListener("submit",(e)=>{e.preventDefault(); const t=$$("chatInput").value.trim(); if(!t) return; $$("chatInput").value=""; sendChat(t);});
-$$("btnAttach")?.addEventListener("click",()=>$$("filePick").click());
-$$("filePick")?.addEventListener("change",(e)=>{const f=e.target.files?.[0]; if(!f) return; addBubble("File Received: "+f.name+" ("+Math.round(f.size/1024)+"KB)",false,true);});
-
-/* footer location */
-(function(){
-  const locEl=$$("loc"); if(!locEl) return;
-  fetch("https://ipapi.co/json").then(r=>{if(!r.ok) throw new Error("ipapi "+r.status); return r.json();})
-  .then(a=>{ if(a && a.city){ locEl.textContent="📍 "+a.city+", "+a.country_name; } else { throw new Error("no city"); } })
-  .catch(()=>{ locEl.textContent="📍 위치 확인 불가"; });
-})();
-
-/* gaze cursor */
-function setupGazeCursor(){ const g=$$("gaze"); if(g) g.style.display=settings.gaze?"block":"none"; }
-document.addEventListener("mousemove",(e)=>{ const g=$$("gaze"); if(g && g.style.display==="block"){ g.style.left=e.clientX+"px"; g.style.top=e.clientY+"px"; }});
-
-/* shortcuts */
-document.addEventListener("keydown",(e)=>{ if((e.ctrlKey||e.metaKey)&&String(e.key||"").toLowerCase()==="k"){e.preventDefault(); $$("cmdInput")?.focus(); $$("cmdInput")?.select();}});
-
-/* init */
-(async function(){
-  loadSettings(); applyI18n();
-  try{await initEditor("");}catch(e){return;}
-  const last=store.current(); if(last && store.get(last)) openDoc(last); else newDoc(); renderList();
-  setupCommandBar(); setupGazeCursor(); updateGhostSuggest(); renderThreads();
-  if(settings.mode==='research') switchSidebarTab("feed");
-  checkTokenLimitOrWarn(0);
-})();
+/* Init */
+translateDOM();
+renderDiscover();
+renderFiles(); renderTemplates(); renderLibrary(); renderSearchHistory();
+rotateTips();
+setMode("discover");
 </script>
 </body>
 </html>
