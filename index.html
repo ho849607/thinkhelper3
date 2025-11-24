@@ -1,248 +1,1840 @@
-
 <!DOCTYPE html>
 <html lang="ko" data-theme="light">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>ThinkHelper 2.1 — Workspace & Discover</title>
+  <title>ThinkHelper — Workspace & Discover (GitHub Demo)</title>
   <link rel="icon" href="data:,"/>
-
-  <!-- CKEditor -->
+  <!-- Libs (CDN) -->
   <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script>
-  <!-- Optional helpers -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 
   <style>
-    :root{--bg:#f6f8fb;--fg:#0b1020;--muted:#6a7691;--panel:#fff;--card:#f2f5ff;--border:#d6deee;--hover:#e9effe;--accent:#2563eb;--touch:48px}
-    :root[data-theme="dark"]{--bg:#0b1020;--fg:#f1f5ff;--muted:#a8b4cf;--panel:#0f172a;--card:#101a30;--border:#273453;--hover:#16213b;--accent:#60a5fa}
+    :root{
+      --bg:#f6f8fb;--fg:#0b1020;--muted:#6a7691;
+      --panel:#fff;--card:#f2f5ff;--border:#d6deee;
+      --hover:#e9effe;--accent:#2563eb;--touch:48px
+    }
+    :root[data-theme="dark"]{
+      --bg:#0b1020;--fg:#f1f5ff;--muted:#a8b4cf;
+      --panel:#0f172a;--card:#101a30;--border:#273453;
+      --hover:#16213b;--accent:#60a5fa
+    }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;display:flex;flex-direction:column;min-height:100vh;overflow:hidden}
-    .topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(8px + env(safe-area-inset-top,0)) 12px 10px;background:var(--panel);border-bottom:1px solid var(--border)}
+    body{
+      margin:0;background:var(--bg);color:var(--fg);
+      font-family:-apple-system,Segoe UI,Roboto,
+        Apple SD Gothic Neo,Noto Sans KR,sans-serif;
+      display:flex;flex-direction:column;
+      min-height:100vh;overflow:hidden
+    }
+
+    /* Topbar */
+    .topbar{
+      position:sticky;top:0;z-index:50;
+      display:flex;align-items:center;justify-content:space-between;
+      gap:8px;padding:calc(8px + env(safe-area-inset-top,0)) 12px 10px;
+      background:var(--panel);border-bottom:1px solid var(--border)
+    }
     .brand{display:flex;align-items:center;gap:10px;font-weight:900}
-    .logo{width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,#60a5fa,#34d399)}
+    .logo{width:18px;height:18px;border-radius:4px;
+      background:linear-gradient(135deg,#60a5fa,#34d399)}
     .modes{display:flex;gap:8px}
-    .tab{border:1px solid var(--border);background:var(--card);padding:.55rem .9rem;border-radius:10px;font-weight:800;cursor:pointer;min-height:var(--touch)}
-    .tab[aria-selected="true"]{background:var(--panel);outline:2px solid var(--accent)}
+    .tab{
+      border:1px solid var(--border);background:var(--card);
+      padding:.55rem .9rem;border-radius:10px;
+      font-weight:800;cursor:pointer;min-height:var(--touch)
+    }
+    .tab[aria-selected="true"]{
+      background:var(--panel);outline:2px solid var(--accent)
+    }
     .actions{display:flex;gap:8px;align-items:center}
-    .iconbtn,.btn{border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:10px;padding:.55rem .9rem;font-weight:800;cursor:pointer;min-height:var(--touch)}
+    .iconbtn,.btn{
+      border:1px solid var(--border);background:var(--card);
+      color:var(--fg);border-radius:10px;
+      padding:.55rem .9rem;font-weight:800;
+      cursor:pointer;min-height:var(--touch)
+    }
     .iconbtn:hover,.btn:hover{background:var(--hover)}
+
     main{flex:1;min-height:0}
-    #workspace{height:100%;display:grid;grid-template-columns:280px 1fr 320px;gap:12px;padding:12px;overflow:hidden}
-    aside#left,aside#right,#center{background:var(--panel);border:1px solid var(--border);border-radius:12px;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+
+    /* Workspace grid */
+    #workspace{
+      height:100%;
+      display:grid;
+      grid-template-columns:280px 1fr 320px;
+      gap:12px;padding:12px;overflow:hidden
+    }
+    aside#left,aside#right,#center{
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:12px;min-height:0;
+      display:flex;flex-direction:column;overflow:hidden
+    }
+
+    /* Left column */
     #left{padding:10px}
-    .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
-    .tabs button{border:1px solid var(--border);background:var(--card);border-radius:8px;padding:.5rem .7rem;font-weight:800;cursor:pointer;min-height:40px}
-    .tabs button[data-active="1"]{background:var(--panel);color:var(--accent)}
     .left-search{display:flex;gap:8px;margin:6px 0 10px}
-    .left-search input{flex:1;border:1px solid var(--border);background:var(--card);border-radius:10px;padding:.6rem .8rem;font-size:.95rem}
+    .left-search input{
+      flex:1;border:1px solid var(--border);background:var(--card);
+      border-radius:10px;padding:.6rem .8rem;font-size:.95rem
+    }
+    .tabs{
+      display:grid;grid-template-columns:repeat(4,1fr);
+      gap:6px;margin-bottom:8px
+    }
+    .tabs button{
+      border:1px solid var(--border);background:var(--card);
+      border-radius:8px;padding:.5rem .7rem;font-weight:800;
+      cursor:pointer;min-height:40px
+    }
+    .tabs button[data-active="1"]{
+      background:var(--panel);color:var(--accent)
+    }
     .panel{flex:1;overflow:auto;display:none}
     .panel[data-active="1"]{display:block}
-    .panel-head{display:flex;justify-content:space-between;align-items:center;margin:6px 0 8px}
-    .doc{display:flex;justify-content:space-between;align-items:center;padding:.55rem .7rem;border:1px solid var(--border);border-radius:8px;background:var(--card);margin-bottom:6px;cursor:pointer}
+    .panel-head{
+      display:flex;justify-content:space-between;align-items:center;
+      margin:6px 0 8px
+    }
+
+    .doc{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:.55rem .7rem;border:1px solid var(--border);
+      border-radius:8px;background:var(--card);
+      margin-bottom:6px;cursor:pointer
+    }
     .doc:hover{background:var(--hover)}
-    .doc .ttl{font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .doc .date{color:var(--muted);font-size:.82rem;margin-left:8px;white-space:nowrap}
-    .tmpl{display:grid;grid-template-columns:1fr;gap:8px}
-    .card{border:1px solid var(--border);background:var(--card);border-radius:12px;padding:.9rem;cursor:pointer}
-    .card:hover{background:var(--hover)}
-    .slist{display:flex;flex-direction:column;gap:2px;padding-bottom:52px}
-    .srow{display:flex;align-items:center;gap:8px;padding:.55rem .7rem;border-radius:8px;border:1px solid var(--border);background:var(--card);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .srow:hover{background:var(--hover)}
-    .srow .q{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
-    .srow .meta{color:var(--muted);font-size:.82rem;margin-left:6px;white-space:nowrap}
-    .srow .del{margin-left:auto;border:none;background:transparent;cursor:pointer;border-radius:8px;padding:.25rem .4rem;display:none}
-    .srow:hover .del{display:block}
-    .sfooter{position:sticky;bottom:0;background:var(--panel);padding:8px;border-top:1px dashed var(--border);display:flex;justify-content:flex-end}
+    .doc .ttl{
+      font-weight:800;min-width:0;overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap
+    }
+    .doc .date{
+      color:var(--muted);font-size:.82rem;margin-left:8px;white-space:nowrap
+    }
+    .doc-main{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+    .doc-actions{
+      display:flex;
+      gap:4px;
+      margin-left:8px;
+      flex-shrink:0;
+      opacity:0;
+      transition:opacity .15s;
+    }
+    .doc:hover .doc-actions{
+      opacity:1;
+    }
+    .doc-actions .icon-mini{
+      border:none;
+      background:transparent;
+      color:var(--muted);
+      cursor:pointer;
+      font-size:.8rem;
+      padding:2px 4px;
+      border-radius:6px;
+    }
+    .doc-actions .icon-mini:hover{
+      background:var(--hover);
+      color:var(--fg);
+    }
+
+    /* search history rows */
+    #searchList .srow{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:.5rem .6rem;border:1px solid var(--border);
+      border-radius:8px;background:var(--card);
+      margin-bottom:6px;cursor:pointer
+    }
+    #searchList .srow:hover{background:var(--hover)}
+    #searchList .srow .meta{
+      color:var(--muted);font-size:.8rem;margin-left:6px
+    }
+    #searchList .srow .del{
+      border:none;background:transparent;color:var(--muted);
+      cursor:pointer;font-size:.8rem
+    }
+
+    /* Center / editor */
     #center{padding:0}
     #center-inner{display:flex;flex-direction:column;height:100%}
-    .ck-sticky-panel .ck-toolbar{position:sticky;top:0;z-index:5}
-    .editor-wrap{flex:1;min-height:0;overflow:auto;padding:10px}
-    .ck-editor__editable_inline{min-height:60vh!important;background:#fff;color:#222;border-radius:8px;box-shadow:none !important}
-    [data-theme="dark"] .ck-editor__editable_inline{color:#ffe7b3;background:#0b1327}
-    .doc-title{font-weight:900;font-size:1.05rem;padding:10px;color:var(--muted);border-bottom:1px dashed var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .editor-wrap{
+      flex:1;min-height:0;overflow:auto;padding:10px;
+      position:relative; /* 자동완성 위치 기준 */
+    }
+    .ck-editor__editable_inline{
+      min-height:60vh!important;background:#fff;
+      color:#222;border-radius:8px
+    }
+    [data-theme="dark"] .ck-editor__editable_inline{
+      color:#ffe7b3;background:#0b1327
+    }
+    .doc-title{
+      font-weight:900;font-size:1.05rem;padding:10px;
+      color:var(--muted);border-bottom:1px dashed var(--border);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+    }
+
+    /* Right / AI */
     #right{padding:10px}
     .ai-head{display:flex;justify-content:space-between;align-items:center}
-    .ai-box{flex:1;overflow:auto;margin-top:8px;display:flex;flex-direction:column;gap:8px}
-    .bubble{max-width:85%;padding:.9rem 1rem;border:1px solid var(--border);border-radius:14px;background:var(--card);line-height:1.6;white-space:pre-wrap}
-    .me{margin-left:auto;background:#143763;color:#fff;border-color:#143763}
-    .ai{margin-right:auto;border-color:#314264;background:#122142;color:#fff}
+    .ai-box{
+      flex:1;overflow:auto;margin-top:8px;
+      display:flex;flex-direction:column;gap:8px
+    }
+    .bubble{
+      max-width:85%;padding:.9rem 1rem;
+      border:1px solid var(--border);border-radius:14px;
+      background:var(--card);line-height:1.6;white-space:pre-wrap
+    }
+    .me{
+      margin-left:auto;background:#143763;
+      color:#fff;border-color:#143763
+    }
+    .ai{
+      margin-right:auto;border-color:#314264;
+      background:#122142;color:#fff
+    }
     .ai-form{display:flex;gap:8px;margin-top:auto}
-    .ai-form textarea{flex:1;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);padding:.7rem .9rem;min-height:64px;resize:vertical}
+    .ai-form textarea{
+      flex:1;border:1px solid var(--border);border-radius:10px;
+      background:var(--card);color:var(--fg);
+      padding:.7rem .9rem;min-height:64px;resize:vertical
+    }
     .ai-form button{min-width:92px}
-    #discover{display:none;padding:12px;height:100%;overflow:auto}
-    #discover[data-active="1"]{display:block}
-    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-    .news{border:1px solid var(--border);background:var(--panel);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
-    .news img{width:100%;height:160px;object-fit:cover;background:var(--border)}
-    .news .meta{font-size:.82rem;color:var(--muted);padding:6px 10px 0}
-    .news .title{padding:6px 10px 6px;font-weight:900}
-    .news .desc{padding:0 10px 10px;color:var(--muted);font-size:.92rem}
-    .news .actions{margin-top:auto;display:flex;gap:6px;padding:8px;border-top:1px dashed var(--border)}
-    .news .actions button{flex:1}
-    footer{padding:8px 12px calc(8px + env(safe-area-inset-bottom,0));border-top:1px solid var(--border);background:var(--panel);font-size:.95rem;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
-    .status-left,.status-right{display:flex;gap:12px;align-items:center}
-    .tip{color:var(--muted)}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:80}
-    .modal{position:fixed;inset:0;display:none;z-index:90;align-items:center;justify-content:center}
-    .modal-inner{width:min(640px,92vw);max-height:80vh;overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px}
-    .modal h3{margin:.2rem 0 0.6rem}
-    .row{display:flex;gap:10px;align-items:center;margin:8px 0}
-    .row label{flex:1}
-    .sep{height:1px;background:var(--border);margin:10px 0}
-    .row .btnbar{display:flex;gap:8px}
-    #suggestionBox{position:absolute;display:none;z-index:9999;background:var(--panel);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);min-width:150px;max-width:240px;overflow:hidden;font-family:monospace,sans-serif}
+
+    /* Autocomplete popup */
+    #suggestionBox{
+      position:absolute;display:none;z-index:9999;
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);
+      min-width:160px;max-width:260px;overflow:hidden;
+      font-family:monospace,sans-serif;font-size:.85rem
+    }
     #suggestionBox ul{list-style:none;margin:0;padding:4px 0}
-    #suggestionBox li{padding:6px 12px;cursor:pointer;font-size:.9rem;color:var(--fg);display:flex;justify-content:space-between}
-    #suggestionBox li.active{background:#007AFF;color:#fff}
+    #suggestionBox li{
+      padding:6px 12px;cursor:pointer;
+      display:flex;justify-content:space-between;color:var(--fg)
+    }
+    #suggestionBox li.active{
+      background:#007AFF;color:#fff
+    }
     #suggestionBox li:hover:not(.active){background:var(--hover)}
-    #suggestionBox li .sub{font-size:.75rem;opacity:.7;margin-left:8px}
-    @media (max-width:1024px){ #workspace{grid-template-columns:240px 1fr 300px} .grid{grid-template-columns:repeat(2,1fr)} }
-    @media (max-width:820px){ #workspace{grid-template-columns:220px 1fr} #right{display:none} .grid{grid-template-columns:1fr} }
-    @media (max-width:480px){ .modes{gap:6px} .tab,.iconbtn,.btn{border-radius:12px} #workspace{grid-template-columns:1fr} #left{display:none} #right{display:none} .ck-editor__editable_inline{min-height:50vh!important} .topbar{gap:6px} .brand div:last-child{font-size:1rem} .quickbar{position:fixed;bottom:0;left:0;right:0;z-index:60;display:flex;gap:8px;padding:8px calc(12px + env(safe-area-inset-left,0)) calc(8px + env(safe-area-inset-bottom,0)) calc(12px + env(safe-area-inset-right,0));background:var(--panel);border-top:1px solid var(--border)} .quickbar .btn{flex:1} footer{padding-bottom:calc(56px + env(safe-area-inset-bottom,0))} }
-    @media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto;animation:none!important;transition:none!important} }
+
+    .pill{
+      display:inline-flex;align-items:center;
+      padding:0 .4em;border-radius:999px;
+      border:1px dashed var(--border);background:var(--card);
+      font-size:.85em;cursor:pointer;user-select:none;margin:0 1px
+    }
+
+    footer{
+      padding:8px 12px calc(8px + env(safe-area-inset-bottom,0));
+      border-top:1px solid var(--border);background:var(--panel);
+      font-size:.95rem;display:flex;flex-wrap:wrap;
+      gap:12px;justify-content:space-between
+    }
+    .status-left,.status-right{
+      display:flex;gap:12px;align-items:center
+    }
+    .tip{color:var(--muted)}
+
+    /* --- Discover: 텍스트 전용 Google News 스타일 레이아웃 --- */
+    #discover{
+      padding:12px;
+      height:100%;
+      overflow:auto;
+      background:var(--bg);
+    }
+    .discover-header{
+      display:flex;justify-content:space-between;align-items:flex-end;
+      margin:4px 0 12px
+    }
+    .discover-title{
+      font-size:1.2rem;font-weight:900
+    }
+    .discover-meta{
+      font-size:.85rem;color:var(--muted)
+    }
+
+    /* 메인/사이드 2단 레이아웃 */
+    #discoverGrid{
+      display:grid;
+      grid-template-columns:minmax(0,2.2fr) minmax(0,1.1fr);
+      gap:18px;
+      align-items:flex-start;
+    }
+    .discover-col{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    /* 텍스트 전용 뉴스 카드 */
+    .news-card{
+      border:1px solid var(--border);background:var(--panel);
+      border-radius:16px;
+      box-shadow:0 8px 24px rgba(15,23,42,.04);
+      padding:10px 14px 8px;
+      display:flex;
+      flex-direction:column;
+      cursor:pointer;
+    }
+    .news-card.hero{
+      padding:14px 16px 10px;
+    }
+    .news-body{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .news-meta{
+      font-size:.78rem;color:var(--muted);
+    }
+    .news-title{
+      font-weight:900;margin-bottom:2px;font-size:1rem;
+      line-height:1.5;
+    }
+    .news-card.hero .news-title{
+      font-size:1.1rem;
+    }
+    .news-desc{
+      color:var(--muted);font-size:.9rem;line-height:1.6;
+      max-height:3.8em;overflow:hidden;
+    }
+    .news-card.hero .news-desc{
+      max-height:none;
+    }
+    .news-card.compact{
+      padding:8px 10px 6px;
+    }
+    .news-card.compact .news-title{
+      font-size:.95rem;
+    }
+    .news-actions{
+      margin-top:6px;
+      display:flex;
+      gap:6px;
+      padding-top:6px;
+      border-top:1px dashed var(--border);
+    }
+    .news-actions .btn{
+      flex:1;text-align:center;font-size:.88rem;
+    }
+
+    /* Google News 안내 카드 */
+    .google-login-card{
+      margin:24px auto 12px;
+      max-width:520px;
+      border-radius:14px;
+      border:1px dashed var(--border);
+      padding:12px 14px;
+      background:var(--card);
+    }
+    .google-login-card h4{
+      margin:0 0 4px;
+      font-size:.95rem;
+      font-weight:800;
+    }
+    .google-login-card p{
+      margin:0 0 8px;
+      font-size:.85rem;
+      color:var(--muted);
+    }
+    .google-login-card .btn{
+      font-size:.85rem;
+    }
+
+    /* 반응형(디스커버리) */
+    @media (max-width:900px){
+      #discoverGrid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    /* Settings modal */
+    .modal{
+      position:fixed;inset:0;display:none;
+      align-items:center;justify-content:center;
+      background:rgba(0,0,0,.25);z-index:120
+    }
+    .modal[open]{display:flex}
+    .modal-card{
+      width:min(560px,92vw);max-height:90vh;overflow:auto;
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:16px;padding:16px 16px 14px
+    }
+    .row{
+      display:flex;gap:8px;align-items:center;
+      justify-content:space-between;
+      border:1px dashed var(--border);
+      border-radius:10px;padding:8px 10px;margin-top:6px
+    }
+    .row-label{
+      flex:1;font-size:.9rem;font-weight:600
+    }
+    .select{
+      border:1px solid var(--border);background:var(--card);
+      color:var(--fg);border-radius:8px;padding:.45rem .7rem
+    }
+    .switch{
+      appearance:none;width:40px;height:22px;border-radius:999px;
+      background:#cbd5e1;position:relative;outline:0;
+      cursor:pointer;border:1px solid var(--border)
+    }
+    .switch:checked{background:#3b82f6}
+    .switch::after{
+      content:"";position:absolute;top:2px;left:2px;
+      width:18px;height:18px;border-radius:50%;
+      background:#fff;transition:left .18s
+    }
+    .switch:checked::after{left:20px}
+
+    /* Quickbar (mobile bottom) */
+    .quickbar{
+      position:fixed;bottom:0;left:0;right:0;z-index:80;
+      display:flex;gap:8px;padding:8px 12px;
+      background:var(--panel);border-top:1px solid var(--border)
+    }
+    .quickbar .btn{flex:1}
+    .quickbar .btn.active{background:var(--accent);color:#fff}
+
+    /* Responsive workspace */
+    @media (max-width:1024px){
+      #workspace{grid-template-columns:240px 1fr 0}
+      #right{display:none}
+    }
+    @media (max-width:820px){
+      #workspace{grid-template-columns:220px 1fr}
+    }
+    @media (max-width:480px){
+      .topbar{display:none}
+      #workspace{
+        display:block;grid-template-columns:1fr;
+        padding:0;height:calc(100vh - 56px - env(safe-area-inset-bottom,0))
+      }
+      #left{
+        border-radius:0;border-left:none;border-right:none;
+        border-top:none;border-bottom:1px solid var(--border)
+      }
+      #center{
+        height:100%;display:flex;flex-direction:column;border-radius:0;border:none
+      }
+      .editor-wrap{
+        height:100%;overflow:auto;padding:10px
+      }
+      footer{padding-bottom:56px}
+    }
   </style>
 </head>
 <body>
   <div class="topbar">
-    <div class="brand"><div class="logo"></div><div data-i18n="brand">ThinkHelper</div></div>
+    <div class="brand"><div class="logo"></div><div id="i_brand">ThinkHelper</div></div>
     <div class="modes" role="tablist" aria-label="Main modes">
-      <button class="tab" id="tabDiscover" role="tab" aria-selected="true" data-i18n="tab.discover">📰 디스커버</button>
-      <button class="tab" id="tabWorkspace" role="tab" aria-selected="false" data-i18n="tab.work">📝 작업실</button>
+      <button class="tab" id="tabDiscover" role="tab" aria-selected="true"></button>
+      <button class="tab" id="tabWorkspace" role="tab" aria-selected="false"></button>
     </div>
     <div class="actions">
-      <button class="iconbtn" id="btnTheme" data-i18n-title="tip.theme" title="다크/라이트 전환(⌘/Ctrl+J)">🌓</button>
-      <button class="iconbtn" id="btnHelp" data-i18n-title="tip.help" title="도움말/단축키">❓</button>
-      <button class="iconbtn" id="btnSettings" data-i18n-title="tip.settings" title="환경설정">⚙️</button>
+      <button class="iconbtn" id="btnTheme" title="Theme">🌓</button>
+      <button class="iconbtn" id="btnSettings" title="Settings">⚙️</button>
     </div>
   </div>
+
+  <!-- Discover -->
   <section id="discover" data-active="1" aria-label="Discover feed">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0 12px">
-      <h3 style="margin:0" data-i18n="insight.today">오늘의 인사이트</h3>
-      <div class="toolbar-hint" data-i18n="insight.hint">관심사 설정 후 더 정확한 피드가 보여요.</div>
+    <div class="discover-header">
+      <div>
+        <div class="discover-title" id="i_discover_title"></div>
+        <div class="discover-meta" id="discoverMeta"></div>
+      </div>
     </div>
-    <div id="apiNotice" style="display:none;border:1px dashed var(--border);border-radius:10px;padding:8px;margin:0 0 10px;color:var(--muted)">
-      <span data-i18n="insight.apiNotice">실시간 뉴스 API 실패, 샘플 피드를 표시합니다.</span>
-      <span> </span>
-      <a href="https://news.google.com/?hl=ko&gl=KR&ceid=KR:ko" target="_blank" rel="noopener" data-i18n="insight.openGnews">Google 뉴스 열기</a>
+    <div id="discoverGrid"></div>
+
+    <div class="google-login-card">
+      <h4 id="i_google_card_title"></h4>
+      <p id="i_google_card_body"></p>
+      <button class="btn" id="btnGoogleNews"></button>
     </div>
-    <div class="grid" id="discoverGrid"></div>
   </section>
+
+  <!-- Workspace -->
   <main id="workspace" style="display:none" aria-label="Workspace">
+    <!-- Left -->
     <aside id="left" aria-label="문서/템플릿/라이브러리/검색기록">
-      <div class="tabs">
-        <button id="tFiles" data-active="1" data-i18n="left.files">🗂️ 파일</button>
-        <button id="tTmpl" data-active="0" data-i18n="left.templates">🎨 템플릿</button>
-        <button id="tLib"  data-active="0" data-i18n="left.library">📚 라이브러리</button>
-        <button id="tSearch" data-active="0" data-i18n="left.search">🔎 검색기록</button>
-      </div>
       <div class="left-search" role="search">
-        <input id="leftSearchInput" type="search" placeholder="검색어를 입력하세요..." aria-label="검색어 입력"/>
-        <button class="btn" id="leftSearchBtn">검색</button>
+        <input id="leftSearchInput" type="search" aria-label="search"/>
+        <button class="btn" id="leftSearchBtn"></button>
       </div>
+      <div class="tabs">
+        <button id="tFiles"  data-active="1"></button>
+        <button id="tTmpl"   data-active="0"></button>
+        <button id="tLib"    data-active="0"></button>
+        <button id="tSearch" data-active="0"></button>
+      </div>
+
       <div id="pFiles" class="panel" data-active="1">
         <div class="panel-head">
-          <b>내 파일</b>
-          <button class="btn" id="btnNewDocLeft">＋ 새 문서</button>
+          <b id="i_myfiles"></b>
+          <button class="btn" id="btnNewDocLeft"></button>
         </div>
         <div id="fileList"></div>
       </div>
+
       <div id="pTmpl" class="panel" data-active="0">
-        <div class="panel-head"><b>템플릿</b></div>
-        <div class="tmpl" id="tmplList"></div>
+        <div class="panel-head"><b id="i_templates"></b></div>
+        <div id="tmplList"></div>
       </div>
+
       <div id="pLib" class="panel" data-active="0">
-        <div class="panel-head"><b>라이브러리</b></div>
+        <div class="panel-head"><b id="i_library"></b></div>
         <div id="libList"></div>
       </div>
+
       <div id="pSearch" class="panel" data-active="0">
-        <div class="panel-head"><b>검색기록</b></div>
+        <div class="panel-head"><b id="i_search_history"></b></div>
         <div id="searchList" class="slist"></div>
-        <div class="sfooter">
-          <button class="btn" id="btnClearSearch">🗑️ 기록 지우기</button>
+        <div style="position:sticky;bottom:0;background:var(--panel);padding:8px;border-top:1px dashed var(--border);display:flex;justify-content:flex-end">
+          <button class="btn" id="btnClearSearch"></button>
         </div>
       </div>
     </aside>
-    <section id="center" aria-label="에디터">
-      <div class="doc-title" id="docTitleBar">무제</div>
+
+    <!-- Center -->
+    <section id="center" aria-label="Editor">
+      <div class="doc-title" id="docTitleBar"></div>
       <div id="center-inner">
         <div class="editor-wrap">
           <div id="editor"></div>
+          <!-- Suggestion popup (에디터 기준 위치) -->
+          <div id="suggestionBox" role="listbox" aria-label="Suggestions"></div>
         </div>
       </div>
     </section>
-    <aside id="right" aria-label="AI 어시스턴트">
+
+    <!-- Right: AI -->
+    <aside id="right" aria-label="AI assistant">
       <div class="ai-head">
-        <b data-i18n="ai.title">🤖 AI 도우미</b>
-        <button class="iconbtn" id="aiToggle" data-i18n="ai.toggle" title="접기/펼치기">−</button>
+        <b id="i_ai_assistant"></b>
+        <button class="iconbtn" id="aiToggle" title="toggle">−</button>
       </div>
-      <div class="ai-box" id="aiBox">
-        <div class="bubble ai" data-i18n="ai.welcome">안녕! 필요한 템플릿을 넣어주거나, 선택한 텍스트를 요약해줄게.</div>
-      </div>
+      <div class="ai-box" id="aiBox"></div>
       <form class="ai-form" id="aiForm">
-        <textarea id="aiInput" data-i18n-placeholder="ai.placeholder" placeholder="예) 선택 부분 요약해줘 / SWOT 틀 넣어줘"></textarea>
-        <button class="btn" type="submit" data-i18n="ai.send">전송</button>
+        <textarea id="aiInput"></textarea>
+        <button class="btn" type="submit" id="i_send_btn"></button>
       </form>
     </aside>
   </main>
+
+  <!-- 모바일 하단 퀵바 -->
   <div class="quickbar" id="quickbar" style="display:none">
-    <button class="btn" id="qbDiscover" data-i18n="tab.discover">📰 디스커버</button>
-    <button class="btn" id="qbWorkspace" data-i18n="tab.work">📝 작업실</button>
-    <button class="btn" id="qbNew" data-i18n="btn.new">＋ 새 문서</button>
-  </div>
-  <footer>
-    <div class="status-left">
-      <span>© <span data-i18n="brand">ThinkHelper</span></span>
-      <span id="wordCount" data-i18n-prefix="status.words.prefix">Words: </span>
-      <span id="docState" data-i18n="status.saved">문서 상태: 저장됨</span>
-    </div>
-    <div class="status-right">
-      <span class="tip" id="tip">💡 <span id="tipText">Tab=자동완성 · Esc=닫기 · ↑/↓=이동</span></span>
-      <span id="aiStatus">AI: <span id="net" data-i18n="net.online">온라인</span></span>
-      <span id="langDisp" data-i18n-prefix="status.lang">언어: <b id="langGuess">ko</b></span>
-    </div>
-  </footer>
-  <div class="modal-backdrop" id="backdrop"></div>
-  <div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-    <div class="modal-inner">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h3 id="settingsTitle" data-i18n="settings.title">환경설정</h3>
-        <button class="iconbtn" id="btnCloseSettings" data-i18n-title="settings.closeTip" title="닫기">✕</button>
-      </div>
-      <div class="sep"></div>
-      <div class="row"><label for="selLang" data-i18n="settings.lang">기본 언어</label>
-        <select id="selLang" style="padding:.45rem .6rem;border:1px solid var(--border);border-radius:8px;background:var(--card)">
-          <option value="ko">한국어 (ko)</option>
-          <option value="ja">日本語 (ja)</option>
-          <option value="en">English (en)</option>
-        </select>
-      </div>
-      <div class="row"><label for="toggleSuggest" data-i18n="settings.suggest">추천어(자동완성) 사용</label><input id="toggleSuggest" type="checkbox"/></div>
-      <div class="row"><label for="togglePersonal" data-i18n="settings.personal">맞춤형 추천(학습 반영) 사용</label><input id="togglePersonal" type="checkbox"/></div>
-      <div class="row"><label for="toggleEye" data-i18n="settings.eye">아이컨택 모드(카메라 접근) 사용</label><input id="toggleEye" type="checkbox"/></div>
-      <div class="sep"></div>
-      <div class="row">
-        <label data-i18n="settings.learnData">학습 데이터</label>
-        <div class="btnbar">
-          <button class="btn" id="btnMemExport" data-i18n="settings.backup">💾 백업 내보내기</button>
-          <button class="btn" id="btnMemImport" data-i18n="settings.restore">📥 가져오기</button>
-          <button class="btn" id="btnMemReset" data-i18n="settings.reset">🗑️ 초기화</button>
-        </div>
-      </div>
-      <div class="sep"></div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn" id="btnSettingsReset" data-i18n="settings.default">기본값</button>
-        <button class="btn" id="btnSettingsSave" data-i18n="settings.save">저장</button>
-      </div>
-    </div>
+    <button class="btn" id="qbDiscover"></button>
+    <button class="btn" id="qbWorkspace"></button>
+    <button class="btn" id="qbAI"></button>
   </div>
 
+  <!-- Footer -->
+  <footer>
+    <div class="status-left">
+      <span>© ThinkHelper</span>
+      <span id="wordCount" data-count="0"></span>
+      <span id="docState"></span>
+    </div>
+    <div class="status-right">
+      <span class="tip" id="tip"></span>
+      <span id="uiLangIndicator"></span>
+    </div>
+  </footer>
+
 <script>
-/* (JS identical to the version you approved; omitted here for brevity in README block) */
+/* =============== GitHub Demo: no backend, all client-side only =============== */
+
+/* ================= i18n 사전 ================= */
+const I18N = {
+  ko:{
+    discover:"디스커버", workspace:"작업실", search_btn:"검색",
+    search_ph:"검색어를 입력하세요...", my_files:"내 파일", templates:"템플릿",
+    library:"라이브러리", search_hist:"검색 기록", new_doc:"＋ 새 문서",
+    no_docs:"문서 없음", discover_title:"오늘의 인사이트 (GitHub Demo)",
+    ai_assistant:"AI 도우미 (데모 모드)", ai_input_ph:"서버 없는 데모라 답변은 고정 메시지로 나와요.",
+    send:"전송", tip:"💡 Tab/Enter=자동완성 · Esc=닫기 · ↑/↓=이동",
+    words:"단어 수", saved:"문서 상태: 저장됨",
+    settings:"환경설정", lang_mode:"언어 모드", opt_auto:"자동 감지", opt_fixed:"수동 선택",
+    manual_lang:"수동 언어 (일본어 → 영어 → 한국어)",
+    suggest:"추천어(자동완성)", personal:"맞춤형 추천", eye:"아이컨택 모드", save:"저장",
+    ai_hi:"안녕! GitHub Pages 데모라 AI 서버 연동은 꺼져 있고, 문서 편집/자동완성/PII 마스킹만 동작해.",
+    quick_discover:"📰 디스커버", quick_ws:"📝 작업실", quick_ai:"🤖 AI 도우미",
+    lang_indicator:"UI 언어",
+    google_card_title:"GitHub Demo: 샘플 뉴스",
+    google_card_body:"실제 뉴스 API 대신, 데모용 샘플 뉴스를 보여줍니다.",
+    google_news_btn:"Google 뉴스 열기",
+    doc_rename:"이름 바꾸기",
+    doc_delete:"삭제",
+    rename_doc_prompt:"새 문서 제목을 입력하세요.",
+    delete_doc_confirm:"이 문서를 삭제할까요?"
+  },
+  en:{
+    discover:"Discover", workspace:"Workspace", search_btn:"Search",
+    search_ph:"Type to search...", my_files:"My files", templates:"Templates",
+    library:"Library", search_hist:"Search history", new_doc:"＋ New Doc",
+    no_docs:"No documents", discover_title:"Today’s insights (GitHub Demo)",
+    ai_assistant:"AI Assistant (Demo mode)", ai_input_ph:"Backend is disabled on GitHub Pages; replies are static.",
+    send:"Send", tip:"💡 Tab/Enter=complete · Esc=close · ↑/↓=move",
+    words:"Words", saved:"Document state: saved",
+    settings:"Settings", lang_mode:"Language mode", opt_auto:"Auto detect", opt_fixed:"Manual",
+    manual_lang:"Manual language (Japanese → English → Korean)",
+    suggest:"Autocomplete", personal:"Personalized suggestions", eye:"Eye-contact mode", save:"Save",
+    ai_hi:"Hi! This is a GitHub Pages demo – AI backend is disabled. Editor/autocomplete/PII masking still work.",
+    quick_discover:"📰 Discover", quick_ws:"📝 Workspace", quick_ai:"🤖 AI Assistant",
+    lang_indicator:"UI language",
+    google_card_title:"GitHub Demo: Sample news",
+    google_card_body:"Real news APIs are disabled; showing local sample articles instead.",
+    google_news_btn:"Open Google News",
+    doc_rename:"Rename",
+    doc_delete:"Delete",
+    rename_doc_prompt:"Enter a new title for this document.",
+    delete_doc_confirm:"Delete this document?"
+  },
+  ja:{
+    discover:"ディスカバー", workspace:"ワークスペース", search_btn:"検索",
+    search_ph:"検索語を入力...", my_files:"マイファイル", templates:"テンプレート",
+    library:"ライブラリ", search_hist:"検索履歴", new_doc:"＋ 新規ドキュメント",
+    no_docs:"ドキュメントなし", discover_title:"今日のインサイト（GitHub デモ）",
+    ai_assistant:"AIアシスタント（デモ）", ai_input_ph:"GitHub Pages ではサーバーがないため、固定メッセージのみ表示されます。",
+    send:"送信", tip:"💡 Tab/Enter=補完 · Esc=閉じる · ↑/↓=移動",
+    words:"Words", saved:"文書状態: 保存済み",
+    settings:"設定", lang_mode:"言語モード", opt_auto:"自動検出", opt_fixed:"手動",
+    manual_lang:"手動言語（日本語 → 英語 → 韓国語）",
+    suggest:"オートコンプリート", personal:"パーソナライズ候補", eye:"アイコンタクトモード", save:"保存",
+    ai_hi:"こんにちは！ここは GitHub Pages デモのため、AI サーバー連携は無効です。エディタと補完機能だけ動きます。",
+    quick_discover:"📰 ディス커バー", quick_ws:"📝 ワークスペース", quick_ai:"🤖 AIアシスタント",
+    lang_indicator:"UI 言語",
+    google_card_title:"GitHub デモ: サンプルニュース",
+    google_card_body:"実際のニュース API の代わりに、ローカルのサンプルニュースを表示しています。",
+    google_news_btn:"Google ニュースを開く",
+    doc_rename:"名前を変更",
+    doc_delete:"削除",
+    rename_doc_prompt:"新しいドキュメント名を入力してください。",
+    delete_doc_confirm:"このドキュメントを削除しますか？"
+  }
+};
+
+// 문서/템플릿 제목 i18n (id 기준)
+const DOC_TITLES = {
+  report_ko: {
+    ko: "보고서 포맷 (한국어)",
+    en: "Report template (Korean)",
+    ja: "レポートフォーマット（韓国語）"
+  },
+  self_intro_ko: {
+    ko: "자기소개서 (한국어)",
+    en: "Self-introduction (Korean)",
+    ja: "自己紹介文（韓国語）"
+  },
+  email_en: {
+    ko: "Formal Email (영어)",
+    en: "Formal Email (English)",
+    ja: "フォーマルメール（英語）"
+  },
+  resume: {
+    ko: "이력서 기본 구성",
+    en: "Resume structure",
+    ja: "履歴書の基本構成"
+  },
+  portfolio: {
+    ko: "포트폴리오 가이드",
+    en: "Portfolio guide",
+    ja: "ポートフォリオガイド"
+  },
+  cover_letter: {
+    ko: "Cover Letter (영어)",
+    en: "Cover Letter (English)",
+    ja: "カバーレター（英語）"
+  }
+};
+
+/* ================= 유틸/상태 ================= */
+const $ = id => document.getElementById(id);
+
+function escapeHtml(s){
+  return (s==null?"":String(s))
+    .replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+}
+function plain(html){
+  return (html || "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function load(k,def){try{return JSON.parse(localStorage.getItem(k)||"null")??def}catch{ return def }}
+
+/* ================= 설정 ================= */
+const SETTINGS_KEY="th.settings";
+let SETTINGS = Object.assign(
+  { uiLangMode:"auto", uiLangPref:"ja", langMode:"auto", langPref:"ja",
+    suggestOn:true, personalOn:true, eyeMode:false },
+  load(SETTINGS_KEY,{})
+);
+if(!SETTINGS.uiLangMode){ SETTINGS.uiLangMode = SETTINGS.langMode; }
+if(!SETTINGS.uiLangPref){ SETTINGS.uiLangPref = SETTINGS.langPref; }
+
+let AUTO_LANG = "ko";
+
+/* GitHub용: IP API 안 쓰고 navigator.language만 사용 */
+async function detectLangFromIP(){
+  const nav = (navigator.language||"en").slice(0,2).toLowerCase();
+  if(nav.startsWith("ja")) return "ja";
+  if(nav.startsWith("ko")) return "ko";
+  return "en";
+}
+function getUILang(){
+  return (SETTINGS.uiLangMode==="fixed") ? SETTINGS.uiLangPref : AUTO_LANG;
+}
+function t(key){
+  const L = I18N[getUILang()] || I18N.en;
+  return L[key] || key;
+}
+
+/* Untitled 타이틀 언어별 처리 */
+function localizedUntitledTitle(){
+  const lang = getUILang();
+  return lang==="en" ? "Untitled" : (lang==="ja" ? "無題" : "무제");
+}
+
+function getTitleByLangKey(langKey){
+  const map = DOC_TITLES[langKey];
+  if(!map) return "";
+  const lang = getUILang();
+  return map[lang] || map.en || map.ko || map.ja || "";
+}
+
+function displayTitleForDoc(rawTitle, doc){
+  const lang = getUILang();
+
+  if (doc && doc.langKey && DOC_TITLES[doc.langKey]) {
+    const localized = getTitleByLangKey(doc.langKey);
+    if(localized) return localized;
+  }
+
+  const name = (rawTitle || "").trim();
+  if (!name || /^(무제|Untitled|無題)$/i.test(name)) {
+    return localizedUntitledTitle();
+  }
+  return name;
+}
+
+/* ================= UI 텍스트 적용 ================= */
+function applyI18N(){
+  const lang = getUILang();
+  document.documentElement.lang = lang;
+
+  $("tabDiscover").textContent = t("discover");
+  $("tabWorkspace").textContent = t("workspace");
+  $("leftSearchBtn").textContent = t("search_btn");
+  $("leftSearchInput").placeholder = t("search_ph");
+  $("tFiles").textContent = t("my_files");
+  $("tTmpl").textContent  = t("templates");
+  $("tLib").textContent   = t("library");
+  $("tSearch").textContent= t("search_hist");
+  $("btnNewDocLeft").textContent = t("new_doc");
+  $("i_myfiles").textContent = t("my_files");
+  $("i_templates").textContent = t("templates");
+  $("i_library").textContent = t("library");
+  $("i_search_history").textContent = t("search_hist");
+  $("btnClearSearch").textContent = "🗑️ " + t("search_hist");
+  $("i_discover_title").textContent = t("discover_title");
+
+  $("i_ai_assistant").textContent = t("ai_assistant");
+  $("aiInput").placeholder = t("ai_input_ph");
+  $("i_send_btn").textContent = t("send");
+
+  $("wordCount").textContent = `${t("words")}: 0`;
+  $("docState").textContent = t("saved");
+  $("tip").textContent = t("tip");
+  $("uiLangIndicator").textContent =
+    `${t("lang_indicator")}: ${lang}${SETTINGS.uiLangMode==="fixed"?"(fixed)":"(auto)"}`;
+
+  $("qbDiscover").textContent = t("quick_discover");
+  $("qbWorkspace").textContent = t("quick_ws");
+  $("qbAI").textContent = t("quick_ai");
+
+  $("i_settings_title").textContent = t("settings");
+  $("i_lang_mode_label").textContent = t("lang_mode");
+  $("i_opt_auto").textContent = t("opt_auto");
+  $("i_opt_fixed").textContent = t("opt_fixed");
+  $("i_manual_lang_label").textContent = t("manual_lang");
+  $("i_autocomplete_label").textContent = t("suggest");
+  $("i_personal_label").textContent = t("personal");
+  $("i_eyemode_label").textContent = t("eye");
+  $("btnSettingsSave").textContent = t("save");
+
+  $("i_google_card_title").textContent = t("google_card_title");
+  $("i_google_card_body").textContent  = t("google_card_body");
+  $("btnGoogleNews").textContent       = t("google_news_btn");
+
+  const box = $("aiBox");
+  box.innerHTML = `<div class="bubble ai">${escapeHtml(t("ai_hi"))}</div>`;
+
+  if(!$("docTitleBar").textContent)
+    $("docTitleBar").textContent = displayTitleForDoc("");
+
+  renderDiscover(); // 샘플 뉴스로 렌더
+}
+
+/* ================= 레이아웃 전환 ================= */
+const discover = $("discover"), workspace = $("workspace");
+function isMobile(){ return matchMedia("(max-width: 480px)").matches; }
+
+function setMode(m){
+  const disc = (m==="discover");
+  discover.style.display = disc ? "block" : "none";
+  workspace.style.display = disc ? "none" : (isMobile() ? "block" : "grid");
+
+  if(isMobile()){
+    $("quickbar").style.display = "flex";
+    $("qbDiscover").classList.toggle("active", disc);
+    $("qbWorkspace").classList.toggle("active", !disc);
+    $("qbAI").classList.toggle("active", false);
+  }else{
+    $("quickbar").style.display = "none";
+  }
+}
+$("tabDiscover").onclick=()=>setMode("discover");
+$("tabWorkspace").onclick=()=>setMode("workspace");
+$("btnTheme").onclick=()=>{
+  const root=document.documentElement;
+  root.dataset.theme = root.dataset.theme==="dark"?"light":"dark";
+};
+$("qbDiscover").onclick=()=>setMode("discover");
+$("qbWorkspace").onclick=()=>setMode("workspace");
+
+/* ================= 좌측 패널 (파일/검색/템플릿/라이브러리) ================= */
+const DB = {
+  filesKey:"th.files",
+  fileKey:id=>"th.file."+id,
+  list(){return load(this.filesKey,[])},
+  saveList(a){save(this.filesKey,a)},
+  get(id){return load(this.fileKey(id),null)},
+  set(id,o){save(this.fileKey(id),o)},
+  remove(id){localStorage.removeItem(this.fileKey(id))}
+};
+
+let curDocId = null;
+
+function newDoc(initialTitle="", meta = {}){
+  const now = Date.now();
+  const id = "doc_"+now;
+  const langKey = meta.langKey || null;
+  const title =
+    (initialTitle && initialTitle.trim()) ||
+    localizedUntitledTitle();
+
+  const full = {
+    id, title,
+    html:"",
+    createdAt:now,
+    updatedAt:now,
+    langKey
+  };
+  DB.set(id, full);
+
+  const list = DB.list().filter(x=>x.id!==id);
+  const metaRow = {
+    id,
+    title,
+    createdAt:now,
+    updatedAt:now,
+    langKey
+  };
+  DB.saveList([metaRow, ...list]);
+
+  curDocId = id;
+  renderFiles();
+  updateTitleBar();
+  return id;
+}
+
+function renderFiles(){
+  const box = $("fileList");
+  const list = DB.list().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  const no = `<div class="doc"><div class="ttl">${t("no_docs")}</div></div>`;
+
+  box.innerHTML = list.length ? list.map(it=>`
+    <div class="doc" data-id="${it.id}" title="${escapeHtml(t("doc_rename"))}">
+      <div class="doc-main">
+        <div class="ttl">${escapeHtml(displayTitleForDoc(it.title, it))}</div>
+        <div class="date">${
+          new Date(it.updatedAt||it.createdAt||Date.now())
+            .toLocaleDateString(
+              getUILang()==="ja"?"ja-JP":
+              getUILang()==="en"?"en-US":"ko-KR"
+            )
+        }</div>
+      </div>
+      <div class="doc-actions">
+        <button class="icon-mini doc-delete" title="${escapeHtml(t("doc_delete"))}">🗑️</button>
+      </div>
+    </div>
+  `).join("") : no;
+
+  box.querySelectorAll(".doc").forEach(row=>{
+    const id = row.dataset.id;
+    if(!id) return;
+
+    row.addEventListener("click", ()=>openDoc(id), { passive:true });
+
+    row.addEventListener("dblclick", e=>{
+      e.stopPropagation();
+      renameDoc(id);
+    });
+
+    const ttl = row.querySelector(".ttl");
+    if(ttl){
+      ttl.addEventListener("dblclick", e=>{
+        e.stopPropagation();
+        renameDoc(id);
+      });
+    }
+
+    const btnDelete = row.querySelector(".doc-delete");
+    if(btnDelete){
+      btnDelete.addEventListener("click", e=>{
+        e.stopPropagation();
+        deleteDoc(id);
+      });
+    }
+  });
+}
+
+function openDoc(id){
+  const d=DB.get(id); if(!d||!editor) return;
+  curDocId=id;
+  editor.setData(d.html||"");
+  updateWordCount();
+  updateTitleBar();
+}
+
+function renameDoc(id){
+  const d = DB.get(id);
+  if(!d) return;
+
+  const currentTitle = d.title || "";
+  const newTitle = prompt(t("rename_doc_prompt"), currentTitle);
+  if(newTitle == null) return;
+  const trimmed = newTitle.trim();
+  if(!trimmed) return;
+
+  d.title = trimmed;
+  DB.set(id, d);
+
+  DB.saveList(
+    DB.list().map(x =>
+      x.id === id ? { ...x, title: d.title, langKey: d.langKey } : x
+    )
+  );
+
+  if(curDocId === id){
+    updateTitleBar();
+  }
+  renderFiles();
+}
+
+function deleteDoc(id){
+  const d = DB.get(id);
+  const name = displayTitleForDoc(d?.title || "", d);
+
+  const ok = confirm(t("delete_doc_confirm") + "\n\n" + name);
+  if(!ok) return;
+
+  DB.remove(id);
+
+  DB.saveList(
+    DB.list().filter(x => x.id !== id)
+  );
+
+  if(curDocId === id){
+    curDocId = null;
+    if(editor){
+      editor.setData("");
+      updateWordCount();
+    }
+    $("docTitleBar").textContent = localizedUntitledTitle();
+  }
+
+  renderFiles();
+}
+
+$("btnNewDocLeft").onclick=()=>{
+  const id = newDoc();
+  if(editor){
+    editor.setData("");
+    updateWordCount();
+    saveDoc();
+  }
+};
+
+/* ---- 탭 전환 ---- */
+function activateTab(tabId){
+  ["tFiles","tTmpl","tLib","tSearch"].forEach(id=>{
+    $(id).dataset.active = (id===tabId)?"1":"0";
+  });
+  ["pFiles","pTmpl","pLib","pSearch"].forEach(id=>{
+    $(id).dataset.active =
+      ( (tabId==="tFiles" && id==="pFiles") ||
+        (tabId==="tTmpl"  && id==="pTmpl") ||
+        (tabId==="tLib"   && id==="pLib") ||
+        (tabId==="tSearch"&& id==="pSearch")) ? "1" : "0";
+  });
+}
+$("tFiles").onclick = ()=>activateTab("tFiles");
+$("tTmpl").onclick  = ()=>activateTab("tTmpl");
+$("tLib").onclick   = ()=>activateTab("tLib");
+$("tSearch").onclick= ()=>activateTab("tSearch");
+
+/* ---- 검색 기록 ---- */
+const SEARCH_KEY="th.search.history";
+const getSearchHistory=()=>load(SEARCH_KEY,[]);
+const setSearchHistory=v=>save(SEARCH_KEY,v);
+
+function resolveSearchTarget(raw){
+  const q=(raw||"").trim(); if(!q) return null;
+  try{
+    let url=q;
+    if(!/^https?:\/\//i.test(url)&&/^[\w\-]+(\.[\w\-]+)+/.test(url)) url="https://"+url;
+    const u=new URL(url); if(u.hostname) return u.toString();
+  }catch(_){}
+  const lang=getUILang();
+  const hl=lang==="ja"?"ja":lang==="en"?"en":"ko";
+  const gl=lang==="ja"?"JP":lang==="en"?"US":"KR";
+  const ceid=`${gl}:${hl}`;
+  return `https://news.google.com/search?q=${encodeURIComponent(q)}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
+}
+function renderSearchHistory(){
+  const box=$("searchList"); const list=getSearchHistory();
+  if(!list.length){
+    box.innerHTML=`<div class="doc"><div class="ttl">${t("search_hist")}: 0</div></div>`;
+    return;
+  }
+  box.innerHTML = list.map(it=>`
+    <div class="srow" data-q="${escapeHtml(it.q)}">
+      <div>
+        <div class="ttl">${escapeHtml(it.q)}</div>
+        <div class="meta">${
+          new Date(it.ts||Date.now())
+            .toLocaleString(
+              getUILang()==="ja"?"ja-JP":
+              getUILang()==="en"?"en-US":"ko-KR"
+            )
+        }</div>
+      </div>
+      <button class="del" aria-label="delete">🗑️</button>
+    </div>
+  `).join("");
+
+  box.querySelectorAll(".srow").forEach(row=>{
+    const q=row.dataset.q;
+    row.addEventListener("click",(e)=>{
+      if(e.target.closest(".del")) return;
+      const url=resolveSearchTarget(q);
+      if(url) window.open(url,"_blank","noopener,noreferrer");
+    },{passive:true});
+    row.querySelector(".del").addEventListener("click",(e)=>{
+      e.stopPropagation();
+      setSearchHistory(getSearchHistory().filter(it=>it.q!==q));
+      renderSearchHistory();
+    });
+  });
+}
+$("leftSearchBtn").addEventListener("click", ()=>{
+  const q=$("leftSearchInput").value.trim(); if(!q) return;
+  const now=Date.now();
+  const list=[{q,ts:now},...getSearchHistory().filter(it=>it.q!==q)].slice(0,100);
+  setSearchHistory(list); renderSearchHistory();
+  const url=resolveSearchTarget(q);
+  if(url) window.open(url,"_blank","noopener,noreferrer");
+  $("leftSearchInput").value="";
+});
+$("leftSearchInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    e.preventDefault(); $("leftSearchBtn").click();
+  }
+});
+
+/* ---- 템플릿 & 라이브러리 ---- */
+const TEMPLATE_LIST = [
+  {
+    id:"report_ko",
+    title:"보고서 포맷 (한국어)",
+    body:"<h2>보고서 제목</h2><h3>1. 개요</h3><p></p><h3>2. 분석</h3><p></p><h3>3. 결론 및 제언</h3><p></p>"
+  },
+  {
+    id:"self_intro_ko",
+    title:"자기소개서 (한국어)",
+    body:"<h2>자기소개서</h2><h3>1. 성장 과정</h3><p></p><h3>2. 성격의 장단점</h3><p></p><h3>3. 지원 동기 및 포부</h3><p></p>"
+  },
+  {
+    id:"email_en",
+    title:"Formal Email (English)",
+    body:"<p>Dear [Name],</p><p></p><p>Best regards,<br/>[Your Name]</p>"
+  }
+];
+const LIBRARY_LIST = [
+  {
+    id:"resume",
+    title:"이력서 기본 구성",
+    body:"<h2>이력서</h2><ul><li>개인 정보</li><li>학력</li><li>경력</li><li>프로젝트</li><li>기술 스택</li></ul>"
+  },
+  {
+    id:"portfolio",
+    title:"포트폴리오 가이드",
+    body:"<h2>포트폴리오</h2><p>1. 나의 한 줄 소개<br/>2. 대표 프로젝트 3개<br/>3. 사용 기술 및 역할<br/>4. 성과와 회고</p>"
+  },
+  {
+    id:"cover_letter",
+    title:"Cover Letter (EN)",
+    body:"<h2>Cover Letter</h2><p>To whom it may concern,</p><p></p><p>Sincerely,<br/>[Your Name]</p>"
+  }
+];
+
+function renderTemplates(){
+  const box=$("tmplList");
+  box.innerHTML = TEMPLATE_LIST.map(t=>{
+    const localized = getTitleByLangKey(t.id) || t.title;
+    return `
+      <div class="doc" data-id="${t.id}">
+        <div class="doc-main">
+          <div class="ttl">${escapeHtml(localized)}</div>
+        </div>
+      </div>`;
+  }).join("");
+  box.querySelectorAll(".doc").forEach(d=>{
+    const id=d.dataset.id;
+    const item=TEMPLATE_LIST.find(x=>x.id===id);
+    if(!item) return;
+    d.onclick=()=>{
+      setMode("workspace");
+      const title = getTitleByLangKey(item.id) || item.title;
+      const docId=newDoc(title,{langKey:item.id});
+      if(editor){
+        editor.setData(item.body);
+        updateWordCount();
+        saveDoc();
+        buildUserDictFromDoc();
+      }
+    };
+  });
+}
+function renderLibrary(){
+  const box=$("libList");
+  box.innerHTML = LIBRARY_LIST.map(t=>{
+    const localized = getTitleByLangKey(t.id) || t.title;
+    return `
+      <div class="doc" data-id="${t.id}">
+        <div class="doc-main">
+          <div class="ttl">${escapeHtml(localized)}</div>
+        </div>
+      </div>`;
+  }).join("");
+  box.querySelectorAll(".doc").forEach(d=>{
+    const id=d.dataset.id;
+    const item=LIBRARY_LIST.find(x=>x.id===id);
+    if(!item) return;
+    d.onclick=()=>{
+      setMode("workspace");
+      const title = getTitleByLangKey(item.id) || item.title;
+      const docId=newDoc(title,{langKey:item.id});
+      if(editor){
+        editor.setData(item.body);
+        updateWordCount();
+        saveDoc();
+        buildUserDictFromDoc();
+      }
+    };
+  });
+}
+
+/* ================= CKEditor + 단어수 ================= */
+let editor=null, isApplyingPill=false, pillMaskTimer=null;
+ClassicEditor.create($("editor"),{ placeholder:"" })
+.then(ed=>{
+  editor=ed;
+  editor.model.document.on('change:data', ()=>{
+    if(!isApplyingPill) schedulePillMask();
+    saveDoc(); updateWordCount(); updateTitleBar();
+    buildUserDictFromDoc();
+  });
+  setupAutocomplete();
+}).catch(console.error);
+
+function saveDoc(){
+  if(!editor||!curDocId) return;
+  const d=DB.get(curDocId); if(!d) return;
+  const html=editor.getData(); if(d.html===html) return;
+  d.html=html; d.updatedAt=Date.now();
+  const txt=plain(html);
+  const isUntitled = !d.title || /^(무제|Untitled|無題)$/i.test((d.title||"").trim());
+  if(isUntitled){
+    d.title = (txt.split(" ").slice(0,8).join(" ") || localizedUntitledTitle());
+  }
+  DB.set(curDocId,d);
+  DB.saveList(
+    DB.list().map(x =>
+      x.id === curDocId
+        ? { ...x, createdAt: d.createdAt, updatedAt: d.updatedAt, title: d.title, langKey:d.langKey }
+        : x
+    )
+  );
+
+  $("docState").textContent=t("saved");
+}
+function updateWordCount(){
+  const count=(plain(editor?editor.getData():"")
+    .split(/\s+/).filter(Boolean).length||0);
+  $("wordCount").textContent=`${t("words")}: ${count}`;
+}
+function updateTitleBar(){
+  const d = curDocId ? DB.get(curDocId) : null;
+  $("docTitleBar").textContent = displayTitleForDoc(d?.title||"", d||undefined);
+}
+
+/* ================= PII Pill ================= */
+const RE_EMAIL_G=/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+const RE_PHONE_G=/01[016789]-?\d{3,4}-?\d{4}/g;
+const RE_IDNUM_G=/\d{6}-\d{7}/g;
+function pillLabel(type){
+  const ko={email:"이메일",phone:"연락처",id:"주민번호",secret:"민감 정보"};
+  return ko[type]||ko.secret;
+}
+function applyPillMasking(html){
+  if(!html) return "";
+  try{
+    const parser=new DOMParser();
+    const doc=parser.parseFromString(html,"text/html");
+    doc.querySelectorAll("span[data-pill-type]").forEach(s=>{
+      const v=s.getAttribute("data-pill-value")||s.textContent||"";
+      s.replaceWith(doc.createTextNode(v));
+    });
+    let out=doc.body.innerHTML;
+    out=out.replace(RE_EMAIL_G,m=>
+      `<span class="pill" data-pill-type="email" data-pill-value="${m}" data-hidden="1">${pillLabel("email")}</span>`);
+    out=out.replace(RE_PHONE_G,m=>
+      `<span class="pill" data-pill-type="phone" data-pill-value="${m}" data-hidden="1">${pillLabel("phone")}</span>`);
+    out=out.replace(RE_IDNUM_G,m=>
+      `<span class="pill" data-pill-type="id" data-pill-value="${m}" data-hidden="1">${pillLabel("id")}</span>`);
+    return out;
+  }catch{ return html; }
+}
+function schedulePillMask(){
+  if(!editor) return;
+  clearTimeout(pillMaskTimer);
+  pillMaskTimer=setTimeout(applyPillMaskToEditor,300);
+}
+function applyPillMaskToEditor(){
+  if(!editor) return;
+  const html=editor.getData();
+  const masked=applyPillMasking(html);
+  if(masked!==html){
+    isApplyingPill=true;
+    editor.setData(masked);
+    isApplyingPill=false;
+  }
+}
+document.addEventListener("click",(e)=>{
+  const pill=e.target.closest?.(".pill"); if(!pill) return;
+  const value=pill.getAttribute("data-pill-value")||pill.textContent||"";
+  const hidden=pill.getAttribute("data-hidden")!=="0";
+  if(hidden){ pill.setAttribute("data-hidden","0"); pill.textContent=value; }
+  else{ pill.setAttribute("data-hidden","1");
+        pill.textContent=pillLabel(pill.getAttribute("data-pill-type")||"secret"); }
+},{capture:true});
+
+/* ================= 자동완성 ================= */
+let suggestionBox=null, selectedIndex=0, currentCandidates=[];
+let suppressUntil=0, lastKeyContext="";
+
+const USER_DICT_KEY = "th.user.dict";
+const rawDict = load(USER_DICT_KEY, []) || [];
+const cleaned = rawDict.map(w => (w || "").replace(/&nbsp;/gi, " "));
+const userDict = new Set(cleaned);
+save(USER_DICT_KEY, [...userDict]);
+
+const DICT_KO_BASE=[
+  "분석","연구","결과","방법","과정","결론","참고","출처","데이터","요약",
+  "쟁점","법리","판례","대법원","알고리즘","오프라인","캐시","비동기",
+  "서론","본론","마무리","개요","문제점","해결책","전략","시장","비즈니스",
+  "온디바이스","모델","파라미터","실험","검증","리스크","기회","요약정리"
+];
+const DICT_EN_BASE=[
+  "analysis","baseline","benchmark","context","dataset","embedding",
+  "evaluation","feature","insight","latency","model","optimize","pipeline",
+  "summary","template","outline","introduction","conclusion","limitation",
+  "opportunity","risk","motivation","experiments","results","discussion",
+  "on-device","deployment","architecture","parameters","ablation","appendix"
+];
+const DICT_JA_BASE=[
+  "がいよう","けんさく","せつめい","さいご","ようけん","ほぞん",
+  "れんけい","かいせつ","まとめ","じゅよう","かいはつ","けいかく",
+  "もんだい","かいけつ","ストーリー","オンデバイス","モデル"
+];
+
+function currentTypingLang(){
+  if(SETTINGS.langMode==="fixed") return SETTINGS.langPref || "ja";
+  if(!editor) return "ko";
+
+  const txt = plain(editor.getData());
+  if(!txt) return "ko";
+
+  const ch = txt.slice(-1);
+  if(/[\u3040-\u30FF\u4E00-\u9FFF]/.test(ch)) return "ja";
+  if(/[A-Za-z]/.test(ch) && !/[가-힣]/.test(ch)) return "en";
+  if(/[가-힣]/.test(ch)) return "ko";
+  return "other";
+}
+
+function buildUserDictFromDoc(){
+  if(!editor) return;
+  const text = plain(editor.getData());
+  if(!text) return;
+
+  text.split(/\s+/).forEach(w=>{
+    const token = w.trim();
+    if(token.length>=2 && token.length<=64){
+      userDict.add(token);
+    }
+  });
+
+  text.split(/[\.!?。\n]/).forEach(s=>{
+    const sent = s.trim();
+    if(sent.length>=6 && sent.length<=80){
+      userDict.add(sent);
+    }
+  });
+
+  saveUserDict();
+}
+function saveUserDict(){
+  save(USER_DICT_KEY, [...userDict]);
+}
+
+function filterDict(prefix, lang){
+  if(!SETTINGS.suggestOn) return [];
+  const p = prefix.toLowerCase();
+
+  let base = [];
+  if(lang==="ja") base = DICT_JA_BASE;
+  else if(lang==="en") base = DICT_EN_BASE;
+  else if(lang==="ko") base = DICT_KO_BASE;
+
+  const baseMatches = base.filter(w=>w.toLowerCase().startsWith(p));
+
+  const userMatches = [...userDict].filter(w=>{
+    const lw = w.toLowerCase();
+    return lw.startsWith(p) &&
+           !baseMatches.some(b=>b.toLowerCase()===lw);
+  });
+
+  return [...baseMatches, ...userMatches].slice(0,8);
+}
+
+function getPrefix(){
+  if(!editor) return "";
+  const txt = plain(editor.getData());
+  const m = txt.match(/[\p{L}\p{N}_\-]{1,32}$/u);
+  return m ? m[0] : "";
+}
+
+function closeSuggestion(){
+  if(!suggestionBox) suggestionBox=$("suggestionBox");
+  suggestionBox.style.display='none';
+  currentCandidates=[]; selectedIndex=0;
+}
+function renderList(){
+  if(!currentCandidates.length){ closeSuggestion(); return; }
+  suggestionBox.innerHTML=`<ul>${
+    currentCandidates.map((w,i)=>`<li class="${i===selectedIndex?'active':''}"
+      data-w="${w.replace(/"/g,'&quot;')}">${escapeHtml(w)}</li>`).join("")
+  }</ul>`;
+  suggestionBox.querySelectorAll("li").forEach(li=>{
+    li.addEventListener("mousedown",e=>{
+      e.preventDefault(); applySuggestion(li.dataset.w);
+    });
+  });
+}
+function showSuggestion(){
+  if(!suggestionBox) suggestionBox = $("suggestionBox");
+  suggestionBox.style.display = "block";
+
+  try{
+    if(!editor){
+      closeSuggestion();
+      return;
+    }
+
+    const editableEl = editor.ui.view.editable.element;
+    const wrap = editableEl.closest(".editor-wrap") || editableEl.parentElement;
+    const wrapRect = wrap.getBoundingClientRect();
+
+    const sel = window.getSelection();
+    if(sel && sel.rangeCount > 0){
+      const range = sel.getRangeAt(0).cloneRange();
+      range.collapse(false);
+
+      const rect = range.getBoundingClientRect();
+
+      const offsetY = 4;
+      const offsetX = 0;
+
+      suggestionBox.style.top  = (rect.bottom - wrapRect.top + offsetY) + "px";
+      suggestionBox.style.left = (rect.left   - wrapRect.left + offsetX) + "px";
+    }else{
+      suggestionBox.style.top  = "8px";
+      suggestionBox.style.left = "8px";
+    }
+  }catch(e){
+    console.error(e);
+    suggestionBox.style.top  = "8px";
+    suggestionBox.style.left = "8px";
+  }
+
+  renderList();
+}
+
+function applySuggestion(word){
+  if(!word) return;
+  const prefix=getPrefix();
+  editor.model.change(writer=>{
+    const selRange=editor.model.document.selection.getFirstRange();
+    const start=selRange.start;
+    const del=writer.createRange(start.getShiftedBy(-prefix.length), start);
+    writer.remove(del);
+    writer.insertText(word, editor.model.document.selection.getFirstPosition());
+  });
+  suppressUntil = performance.now()+250;
+  closeSuggestion();
+}
+function setupAutocomplete(){
+  if(!suggestionBox) suggestionBox=$("suggestionBox");
+  const viewDoc = editor.editing.view.document;
+
+  viewDoc.on('keydown',(evt,data)=>{
+    if(suggestionBox.style.display!=='block') return;
+    const k=data.keyCode;
+    if(k===38||k===40||k===9||k===13||k===27){
+      evt.stop(); data.preventDefault();
+      suppressUntil = performance.now()+320;
+      if(k===38){
+        selectedIndex = (selectedIndex>0)?
+          selectedIndex-1:currentCandidates.length-1; renderList();
+      }else if(k===40){
+        selectedIndex = (selectedIndex<currentCandidates.length-1)?
+          selectedIndex+1:0; renderList();
+      }else if(k===9 || k===13){
+        applySuggestion(currentCandidates[selectedIndex]||"");
+      }else if(k===27){
+        closeSuggestion();
+      }
+    }
+  }, { priority:'highest' });
+
+  viewDoc.on('keyup', ()=>{
+    const now = performance.now();
+    if(now < suppressUntil) return;
+
+    const prefix = getPrefix();
+    if(!prefix){ closeSuggestion(); lastKeyContext = ""; return; }
+    const lang = currentTypingLang();
+
+    const list = filterDict(prefix, lang);
+    const ctx = `${lang}|${prefix}|${list.join(',')}`;
+    if(list.length){
+      if(ctx !== lastKeyContext){
+        currentCandidates = list;
+        if(selectedIndex >= list.length) selectedIndex = 0;
+        showSuggestion();
+        lastKeyContext = ctx;
+      }else{
+        showSuggestion();
+      }
+    }else{
+      closeSuggestion(); lastKeyContext = "";
+    }
+  });
+}
+
+/* ================= Discover: GitHub용 샘플 뉴스 ================= */
+function newsLocale(){
+  const l = getUILang();
+  return l==="ja"?"ja-JP":l==="en"?"en-US":"ko-KR";
+}
+
+/* 실제 API 대신, 로컬 샘플 데이터 */
+const NEWS_SAMPLE = [
+  {
+    title:"ThinkHelper GitHub Demo 시작",
+    desc:"GitHub Pages에서 바로 실행되는 온디바이스 워크스페이스 & 디스커버 실험 버전입니다.",
+    source:"ThinkHelper",
+    pubDate:"2025-01-01T09:00:00Z",
+    link:"https://thinkhelper.store"
+  },
+  {
+    title:"오프라인/로컬 친화형 AI 문서도구",
+    desc:"클라우드 의존도를 낮추고, 개인화 학습과 PII 보호를 동시에 잡는 온디바이스 패턴 학습 구조를 실험 중입니다.",
+    source:"ThinkHelper Lab",
+    pubDate:"2025-01-02T09:00:00Z",
+    link:"https://thinkhelper.store"
+  },
+  {
+    title:"뉴스 API 없이도 UX 검증하기",
+    desc:"실제 API 없이도 UX, 플로우, 자동완성, PII 마스킹 등 핵심 기능을 GitHub 데모에서 먼저 검증할 수 있습니다.",
+    source:"Product Notes",
+    pubDate:"2025-01-03T09:00:00Z",
+    link:"https://github.com"
+  },
+  {
+    title:"템플릿/라이브러리 기반 글쓰기 연습",
+    desc:"보고서, 자기소개서, 포트폴리오 가이드 등 템플릿을 불러와 바로 편집하며 자기 글쓰기 패턴을 학습시킬 수 있습니다.",
+    source:"ThinkHelper Docs",
+    pubDate:"2025-01-04T09:00:00Z",
+    link:"https://github.com"
+  },
+  {
+    title:"PII Pill 마스킹으로 개인정보 보호",
+    desc:"이메일, 전화번호, 주민번호 형식을 감지해 pill로 마스킹하고, 클릭 시 토글 가능한 구조를 제공합니다.",
+    source:"Security Note",
+    pubDate:"2025-01-05T09:00:00Z",
+    link:"https://github.com"
+  },
+  {
+    title:"자동완성 딕셔너리의 실시간 학습",
+    desc:"사용자가 쓰는 단어와 문장이 자동완성 딕셔너리에 축적되어, 점점 더 나에게 맞는 제안을 보여줍니다.",
+    source:"UX Lab",
+    pubDate:"2025-01-06T09:00:00Z",
+    link:"https://github.com"
+  }
+];
+
+async function loadDailyNews(){
+  return NEWS_SAMPLE;
+}
+
+function renderDiscoverCards(list){
+  const grid = $("discoverGrid");
+  if(!list.length){
+    grid.innerHTML = "<p>샘플 뉴스를 찾을 수 없습니다.</p>";
+    return;
+  }
+
+  const items = list.map((it,idx)=>({...it,__idx:idx}));
+  const mainItems = items.slice(0,4);
+  const sideItems = items.slice(4,10);
+
+  let mainHTML = "";
+  if(mainItems[0]){
+    const first = mainItems[0];
+    mainHTML += `
+      <article class="news-card hero" data-idx="${first.__idx}">
+        <div class="news-body">
+          <div class="news-meta">
+            ${escapeHtml(first.source || "")}
+            ${first.pubDate ? " · " + escapeHtml(new Date(first.pubDate).toLocaleDateString(newsLocale())) : ""}
+          </div>
+          <div class="news-title">${escapeHtml(first.title || "")}</div>
+          <div class="news-desc">${escapeHtml(first.desc || "")}</div>
+        </div>
+        <div class="news-actions">
+          <button class="btn btn-view">🔗 원문보기</button>
+          <button class="btn btn-newdoc">✍️ 새 글쓰기</button>
+        </div>
+      </article>
+    `;
+  }
+
+  if(mainItems.length>1){
+    mainHTML += mainItems.slice(1).map(item=>`
+      <article class="news-card main" data-idx="${item.__idx}">
+        <div class="news-body">
+          <div class="news-meta">
+            ${escapeHtml(item.source || "")}
+            ${item.pubDate ? " · " + escapeHtml(new Date(item.pubDate).toLocaleDateString(newsLocale())) : ""}
+          </div>
+          <div class="news-title">${escapeHtml(item.title || "")}</div>
+          <div class="news-desc">${escapeHtml(item.desc || "")}</div>
+        </div>
+        <div class="news-actions">
+          <button class="btn btn-view">🔗 원문보기</button>
+          <button class="btn btn-newdoc">✍️ 새 글쓰기</button>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  let sideHTML = "";
+  if(sideItems.length){
+    sideHTML = sideItems.map(item=>`
+      <article class="news-card compact" data-idx="${item.__idx}">
+        <div class="news-body">
+          <div class="news-meta">
+            ${escapeHtml(item.source || "")}
+            ${item.pubDate ? " · " + escapeHtml(new Date(item.pubDate).toLocaleDateString(newsLocale())) : ""}
+          </div>
+          <div class="news-title">${escapeHtml(item.title || "")}</div>
+          <div class="news-desc">${escapeHtml(item.desc || "")}</div>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  grid.innerHTML = `
+    <div class="discover-col discover-main">
+      ${mainHTML}
+    </div>
+    <div class="discover-col discover-side">
+      ${sideHTML}
+    </div>
+  `;
+
+  grid.querySelectorAll(".news-card").forEach(card=>{
+    const idx = Number(card.dataset.idx);
+    const item = list[idx];
+    if(!item) return;
+
+    card.addEventListener("click", (e)=>{
+      if(e.target.closest(".btn")) return;
+      if(item.link) window.open(item.link, "_blank", "noopener");
+    });
+
+    const btnView = card.querySelector(".btn-view");
+    if(btnView){
+      btnView.onclick = (e)=>{
+        e.stopPropagation();
+        if(item.link) window.open(item.link, "_blank", "noopener");
+      };
+    }
+
+    const btnNew = card.querySelector(".btn-newdoc");
+    if(btnNew){
+      btnNew.onclick = (e)=>{
+        e.stopPropagation();
+        setMode("workspace");
+        const docId = newDoc(`새 글: ${item.title}`);
+        if(editor){
+          editor.setData(
+            `<h2>${escapeHtml(item.title)}</h2>` +
+            (item.link ? `<p><a href="${escapeHtml(item.link)}" target="_blank" rel="noopener">원문 보기</a></p>` : "") +
+            (item.desc ? `<p>${escapeHtml(item.desc)}</p>` : "") +
+            `<p></p>`
+          );
+          updateWordCount();
+          saveDoc();
+        }
+      };
+    }
+  });
+}
+
+async function renderDiscover(){
+  const now = new Date();
+  $("discoverMeta").textContent = now.toLocaleString(newsLocale());
+  const list = await loadDailyNews();
+  renderDiscoverCards(list);
+}
+
+$("btnGoogleNews").onclick = ()=>{
+  const lang=getUILang();
+  const hl=lang==="ja"?"ja":lang==="en"?"en":"ko";
+  const gl=lang==="ja"?"JP":lang==="en"?"US":"KR";
+  const ceid=`${gl}:${hl}`;
+  const url=`https://news.google.com/topstories?hl=${encodeURIComponent(hl)}&gl=${encodeURIComponent(gl)}&ceid=${encodeURIComponent(ceid)}`;
+  window.open(url,"_blank","noopener");
+};
+
+/* ================= AI (GitHub 데모: 서버 없이 고정 답변) ================= */
+async function callGemini(messages){
+  const lang = getUILang();
+  if(lang==="ko"){
+    return "⚠️ GitHub Pages 데모 모드라 실제 Gemini/OpenAI 서버와는 연결되어 있지 않습니다.\n\n- 오른쪽 AI 창은 대화 로그만 저장\n- 실제 추론/요약/번역은 서버 버전에서 동작해요.\n\n코드 레벨에서 백엔드 URL만 연결하면 바로 실서비스로 전환 가능합니다.";
+  }else if(lang==="ja"){
+    return "⚠️ ここは GitHub Pages デモのため、実際の Gemini / OpenAI サーバーとは接続していません。\n\n・右側の AI ウィンドウはログ表示のみ\n・本番環境ではサーバー URL を設定するだけで推論/要約/翻訳が有効になります。";
+  }
+  return "⚠️ This is a GitHub Pages demo. There is no live Gemini/OpenAI backend attached.\n\n- The right AI pane only logs your prompts\n- In production, you would plug in your own /api/gemini endpoint here.";
+}
+function addBubble(text, me, html=false){
+  const div=document.createElement('div');
+  div.className="bubble "+(me?"me":"ai");
+  if(html){ div.innerHTML = text; } else { div.textContent = text; }
+  $("aiBox").appendChild(div);
+  $("aiBox").scrollTop=$("aiBox").scrollHeight;
+}
+let chatHistory=[];
+function getSelectedEditorText(){
+  try{
+    const sel=window.getSelection();
+    if(!sel||sel.rangeCount===0) return "";
+    const range=sel.getRangeAt(0);
+    return range?.toString?.().trim()||"";
+  }catch{return "";}
+}
+function addAI(input){
+  const selected = getSelectedEditorText();
+  const prompt = selected ? `[${t("ai_assistant")}]\n${selected}\n\n[Request]\n${input}` : input;
+  addBubble(prompt,true);
+  chatHistory.push({ role:"user", content: prompt });
+  (async()=>{
+    const reply = await callGemini(chatHistory);
+    const html = escapeHtml(reply)
+      .replace(/\bhttps:\/\/[^\s)]+/g,m=>`<a href="${m}" target="_blank" rel="noopener noreferrer">${m}</a>`);
+    addBubble(html,false,true);
+    chatHistory.push({ role:"assistant", content: reply });
+  })();
+}
+$("aiForm").addEventListener("submit",(e)=>{
+  e.preventDefault();
+  const v=$("aiInput").value.trim(); if(!v) return;
+  $("aiInput").value="";
+  addAI(v);
+});
+$("aiInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter" && !e.shiftKey){
+    e.preventDefault();
+    $("aiForm").requestSubmit();
+  }
+});
+$("aiToggle").onclick=()=>{
+  const box=$("aiBox");
+  if(box.style.display==="none"){
+    box.style.display="flex"; $("aiToggle").textContent="−";
+  }else{
+    box.style.display="none"; $("aiToggle").textContent="＋";
+  }
+};
+
+/* ================= Settings Modal DOM 추가 ================= */
+const settingsModalHtml = `
+  <div class="modal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <b id="i_settings_title"></b>
+      <button class="iconbtn" id="btnCloseSettings">✕</button>
+    </div>
+
+    <div class="row">
+      <div class="row-label" id="i_lang_mode_label"></div>
+      <div>
+        <select id="selLangMode" class="select">
+          <option id="i_opt_auto"  value="auto"></option>
+          <option id="i_opt_fixed" value="fixed"></option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label" id="i_manual_lang_label"></div>
+      <div>
+        <select id="selLangFixed" class="select">
+          <option value="ja">日本語</option>
+          <option value="en">English</option>
+          <option value="ko">한국어</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label" id="i_autocomplete_label"></div>
+      <input id="swSuggest" type="checkbox" class="switch"/>
+    </div>
+
+    <div class="row">
+      <div class="row-label" id="i_personal_label"></div>
+      <input id="swPersonal" type="checkbox" class="switch"/>
+    </div>
+
+    <div class="row">
+      <div class="row-label" id="i_eyemode_label"></div>
+      <input id="swEye" type="checkbox" class="switch"/>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+      <button class="btn" id="btnSettingsSave"></button>
+    </div>
+  </div>
+`;
+const modalDiv = document.createElement("div");
+modalDiv.className = "modal";
+modalDiv.id = "settingsModal";
+modalDiv.setAttribute("aria-modal","true");
+modalDiv.setAttribute("role","dialog");
+modalDiv.innerHTML = settingsModalHtml;
+document.body.appendChild(modalDiv);
+
+/* ================= Settings 열기/저장 ================= */
+function openSettings(){
+  $("settingsModal").setAttribute("open","");
+  $("selLangMode").value = SETTINGS.uiLangMode;
+  $("selLangFixed").value = SETTINGS.uiLangPref;
+  $("swSuggest").checked = !!SETTINGS.suggestOn;
+  $("swPersonal").checked = !!SETTINGS.personalOn;
+  $("swEye").checked = !!SETTINGS.eyeMode;
+  $("selLangFixed").disabled = (SETTINGS.uiLangMode!=="fixed");
+}
+function closeSettings(){ $("settingsModal").removeAttribute("open"); }
+
+const btnSettings = $("btnSettings");
+if(btnSettings) btnSettings.onclick=openSettings;
+
+const btnCloseSettings = $("btnCloseSettings");
+if(btnCloseSettings) btnCloseSettings.onclick=closeSettings;
+
+const selLangModeEl = $("selLangMode");
+if(selLangModeEl){
+  selLangModeEl.onchange=()=>{
+    $("selLangFixed").disabled = (selLangModeEl.value!=="fixed");
+  };
+}
+const btnSettingsSave = $("btnSettingsSave");
+if(btnSettingsSave){
+  btnSettingsSave.onclick=()=>{
+    const selLangMode = $("selLangMode");
+    const selLangFixed = $("selLangFixed");
+    const swSuggest = $("swSuggest");
+    const swPersonal = $("swPersonal");
+    const swEye = $("swEye");
+
+    SETTINGS.uiLangMode = selLangMode ? selLangMode.value : SETTINGS.uiLangMode;
+    SETTINGS.uiLangPref = selLangFixed ? selLangFixed.value : SETTINGS.uiLangPref;
+    SETTINGS.langMode   = SETTINGS.uiLangMode;
+    SETTINGS.langPref   = SETTINGS.uiLangPref;
+    SETTINGS.suggestOn  = swSuggest ? swSuggest.checked : SETTINGS.suggestOn;
+    SETTINGS.personalOn = swPersonal ? swPersonal.checked : SETTINGS.personalOn;
+    SETTINGS.eyeMode    = swEye ? swEye.checked : SETTINGS.eyeMode;
+
+    save(SETTINGS_KEY, SETTINGS);
+    applyI18N();
+    renderFiles();
+    renderSearchHistory();
+    renderTemplates();
+    renderLibrary();
+    closeSettings();
+  };
+}
+
+/* ================= 초기 렌더 ================= */
+(async function boot(){
+  AUTO_LANG = (SETTINGS.uiLangMode==="auto")
+    ? await detectLangFromIP()
+    : SETTINGS.uiLangPref;
+  applyI18N();
+  renderFiles();
+  renderSearchHistory();
+  renderTemplates();
+  renderLibrary();
+  setMode("discover");
+})();
 </script>
 </body>
 </html>
-````
-
-> **Note**: In your repo, the `index.html` above should include the full JavaScript block (same as the last approved version). For readability, this README excerpt elides the JS at the end—use the complete file content from this canvas section.
