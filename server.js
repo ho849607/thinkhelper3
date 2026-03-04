@@ -1,197 +1,128 @@
-// server.js — ThinkHelper Brain (Node/Express)
-// Endpoints:
-//  - POST /observe { doc_id, text }
-//  - GET  /suggest?prefix=&doc_id=&top_n=8
-//  - POST /accept  { doc_id, word }
-//
-// 특징:
-//  - ko/en 토큰화, 불용어 제외
-//  - 문서별 빈도(doc_freq) + 전역 수락강화(accept_counts)
-//  - 시간 감쇠(decay) 점수 + 문맥 점수(context)로 정렬
-//  - JSON 파일(persistence): brain_data.json
-//  - CORS/JSON 제한/간단 rate-limit(옵션)
-
-import express from "express";
-import fs from "fs/promises";
-import path from "path";
-import cors from "cors";
-
-const PORT = process.env.PORT || 5500;
-const DATA_FILE = process.env.BRAIN_FILE || "brain_data.json";
-
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+dotenv.config();
 const app = express();
+const port = process.env.PORT || 5500;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 app.use(cors());
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json());
+app.use(express.static(__dirname));
+app.use((req,res,next)=>{res.setHeader('Cache-Control','no-store');next();});
+app.get('/',(req,res)=>{res.sendFile(path.join(__dirname,'index.html'));});
 
-/* ----------------- Tiny in-memory rate limit (optional) ----------------- */
-const hits = new Map();
-app.use((req, res, next) => {
-  const ip = req.ip || req.headers["x-forwarded-for"] || "local";
-  const now = Date.now();
-  const win = 10_000; // 10s 윈도우
-  const rec = hits.get(ip) || [];
-  const recent = rec.filter((t) => now - t < win);
-  recent.push(now);
-  hits.set(ip, recent);
-  if (recent.length > 80) return res.status(429).json({ error: "Too Many Requests" });
-  next();
-});
-
-/* ----------------- Storage layer ----------------- */
-const defaultMemory = () => ({
-  accept_counts: {},       // { word: count }
-  last_used_at: {},        // { word: timestamp(ms) }
-  doc_freq: {},            // { doc_id: { word: count } }
-  user_dict: { ko: [], en: [] }, // per-lang dictionary
-});
-
-let MEMORY = defaultMemory();
-
-async function loadMemory() {
-  try {
-    const raw = await fs.readFile(DATA_FILE, "utf-8");
-    MEMORY = { ...defaultMemory(), ...JSON.parse(raw) };
-  } catch {
-    MEMORY = defaultMemory();
-  }
-}
-async function saveMemory() {
-  try {
-    await fs.writeFile(DATA_FILE, JSON.stringify(MEMORY, null, 2), "utf-8");
-  } catch (e) {
-    console.error("saveMemory failed:", e);
-  }
-}
-
-/* ----------------- Tokenization & utils ----------------- */
-const STOP_KO = new Set(["그리고","그러나","하지만","또는","있다","하는","에서","으로","에게","입니다"]);
-const STOP_EN = new Set(["the","and","for","with","that","this","from","have","are","not"]);
-
-function extractTokens(text = "") {
-  const ko = (text.match(/[가-힣]{2,}/g) || []).filter((w) => !STOP_KO.has(w));
-  const en = (text.match(/[A-Za-z]{3,}/g) || [])
-    .map((w) => w.toLowerCase())
-    .filter((w) => !STOP_EN.has(w));
-  return { ko, en };
-}
-
-function count(arr) {
-  const m = Object.create(null);
-  for (const w of arr) m[w] = (m[w] || 0) + 1;
-  return m;
-}
-
-function nowMs() { return Date.now(); }
-
-function decayScore(count, lastTsMs) {
-  if (!count) return 0;
-  if (!lastTsMs) return count;
-  const days = (nowMs() - lastTsMs) / 86_400_000; // ms -> days
-  return count * Math.pow(0.99, Math.max(0, days));
-}
-
-/* ----------------- Core scoring ----------------- */
-function calcScore(word, docId) {
-  const gCount = MEMORY.accept_counts[word] || 0;
-  const lastTs = MEMORY.last_used_at[word] || 0;
-  const globalScore = decayScore(gCount, lastTs);
-
-  let contextScore = 0;
-  if (docId && MEMORY.doc_freq[docId]) {
-    const f = MEMORY.doc_freq[docId][word] || 0;
-    contextScore = f * 2.0; // 문맥 가중치
-  }
-  return globalScore + contextScore;
-}
-
-/* ----------------- Endpoints ----------------- */
-
-// Observe: 문서 스캔 -> doc_freq 업데이트 + user_dict 후보 반영
-app.post("/observe", async (req, res) => {
-  try {
-    const { doc_id, text } = req.body || {};
-    if (!doc_id || typeof text !== "string") {
-      return res.status(400).json({ error: "doc_id and text are required" });
+app.post('/api/chat',async(req,res)=>{
+  const{message,model='gemini',history=[]}=req.body;
+  if(!message)return res.status(400).json({error:'message required'});
+  try{
+    if(model==='claude'){
+      const KEY=process.env.CLAUDE_API_KEY;
+      if(!KEY)throw new Error('CLAUDE_API_KEY not in .env');
+      const messages=[...history.filter(m=>['user','assistant'].includes(m.role)).map(m=>({role:m.role,content:m.content})),{role:'user',content:message}];
+      const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':KEY,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:process.env.CLAUDE_MODEL||'claude-sonnet-4-20250514',max_tokens:1024,system:'You are ThinkHelper AI. Answer in Korean.',messages})});
+      if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error('Claude error('+r.status+'): '+e?.error?.message);}
+      const d=await r.json();
+      return res.json({text:d.content?.[0]?.text||''});
     }
+    const KEY=process.env.GEMINI_API_KEY;
+    if(!KEY)throw new Error('GEMINI_API_KEY not in .env');
+    const mdl=process.env.GEMINI_MODEL||'gemini-2.0-flash';
+    const url='https://generativelanguage.googleapis.com/v1beta/models/'+mdl+':generateContent?key='+KEY;
+    const contents=[...history.filter(m=>['user','assistant'].includes(m.role)).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]})),{role:'user',parts:[{text:message}]}];
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents,systemInstruction:{parts:[{text:'You are ThinkHelper AI. Answer in Korean.'}]},generationConfig:{temperature:0.7,maxOutputTokens:1024}})});
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error('Gemini error('+r.status+'): '+e?.error?.message);}
+    const d=await r.json();
+    return res.json({text:d.candidates?.[0]?.content?.parts?.[0]?.text||''});
+  }catch(e){console.error('[/api/chat]',e?.message);return res.status(500).json({error:e?.message});}
+});
 
-    const toks = extractTokens(text);
-    const all = [...toks.ko, ...toks.en];
-    MEMORY.doc_freq[doc_id] = count(all);
-
-    // 2회 이상 등장 단어를 사용자 사전에 반영(중복 제거)
-    for (const lang of ["ko", "en"]) {
-      const freq = count(toks[lang]);
-      const candidates = Object.entries(freq)
-        .filter(([, c]) => c >= 2)
-        .map(([w]) => w);
-
-      const set = new Set([...(MEMORY.user_dict[lang] || []), ...candidates]);
-      // 상한선(예: 800) 관리하고 싶으면 여기서 slice
-      MEMORY.user_dict[lang] = Array.from(set);
+app.post('/api/grok',async(req,res)=>{
+  const{message,history=[]}=req.body;
+  if(!message)return res.status(400).json({error:'message required'});
+  try{
+    const BASE=process.env.LMSTUDIO_BASE_URL||process.env.LM_STUDIO_BASE_URL||'http://127.0.0.1:1234';
+    let MODEL=process.env.LMSTUDIO_MODEL||process.env.GROK_MODEL||'';
+    if(!MODEL){
+      try{
+        const mr=await fetch(BASE+'/v1/models',{signal:AbortSignal.timeout(3000)});
+        if(mr.ok){const md=await mr.json();MODEL=md.data?.[0]?.id||'';}
+      }catch(e){console.warn('[LM Studio] detect failed:',e.message);}
     }
-
-    await saveMemory();
-    res.json({ ok: true, learned: { ko: toks.ko.length, en: toks.en.length } });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "observe failed" });
-  }
+    if(!MODEL){MODEL='mistral-7b-grok';}
+    console.log('[LM Studio] model:',MODEL);
+    const messages=[{role:'system',content:'You are ThinkHelper AI. Answer in Korean.'},...history.filter(m=>['user','assistant'].includes(m.role)).map(m=>({role:m.role,content:m.content})),{role:'user',content:message}];
+    const r=await fetch(BASE+'/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,messages,temperature:0.7,max_tokens:1024,stream:false})});
+    if(!r.ok){const t=await r.text().catch(()=>'');throw new Error('LM Studio error('+r.status+'): '+t);}
+    const d=await r.json();
+    return res.json({text:d.choices?.[0]?.message?.content||''});
+  }catch(e){console.error('[/api/grok]',e?.message);return res.status(500).json({error:'LM Studio failed: '+e?.message});}
 });
 
-// Suggest: 접두사+문맥 기반 정렬 반환
-app.get("/suggest", (req, res) => {
-  try {
-    const prefixRaw = String(req.query.prefix || "");
-    const doc_id = req.query.doc_id ? String(req.query.doc_id) : undefined;
-    const topN = Math.min(50, Math.max(1, parseInt(req.query.top_n || "8", 10)));
-
-    if (!prefixRaw) return res.json([]);
-
-    const lang = /[가-힣]/.test(prefixRaw) ? "ko" : "en";
-    const prefix = prefixRaw.toLowerCase();
-
-    const dict = MEMORY.user_dict[lang] || [];
-    const cands = dict.filter((w) => w.toLowerCase().startsWith(prefix));
-
-    // 점수순 정렬 → 사전순 tie-break
-    cands.sort((a, b) => {
-      const sa = calcScore(a, doc_id);
-      const sb = calcScore(b, doc_id);
-      if (sb !== sa) return sb - sa;
-      return a.localeCompare(b);
-    });
-
-    res.json(cands.slice(0, topN));
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "suggest failed" });
-  }
+app.get('/api/search',async(req,res)=>{
+  const query=req.query.q;
+  if(!query)return res.status(400).json({error:'query required'});
+  try{
+    const GKEY=process.env.GEMINI_API_KEY;
+    const SKEY=process.env.SERPER_API_KEY;
+    let webResults=[];
+    if(SKEY){
+      try{
+        const sr=await fetch('https://google.serper.dev/search',{method:'POST',headers:{'Content-Type':'application/json','X-API-KEY':SKEY},body:JSON.stringify({q:query,gl:'kr',hl:'ko',num:5})});
+        if(sr.ok){const sd=await sr.json();webResults=(sd.organic||[]).map(r=>({title:r.title,link:r.link,snippet:r.snippet||''}));}
+      }catch(e){console.warn('[search] Serper error:',e.message);}
+    }
+    let aiAnswer='';
+    if(GKEY){
+      const mdl=process.env.GEMINI_MODEL||'gemini-2.0-flash';
+      const url='https://generativelanguage.googleapis.com/v1beta/models/'+mdl+':generateContent?key='+GKEY;
+      const ctx=webResults.length>0?'Search results:\n'+webResults.map((r,i)=>(i+1)+'. '+r.title+'\n'+r.snippet).join('\n')+'\n\nQuestion: '+query:query;
+      const sysPrompt='You are ThinkHelper search AI. Answer in Korean.\nFor flights ONLY respond:\n```json\n{"type":"flight_info","query":"route","summary":"s","best_price":"p","price_suggestion":"a","flights":[{"airline":"a","duration":"t","price":"p","booking_link":"https://www.skyscanner.co.kr"}]}\n```\nFor stocks ONLY respond:\n```json\n{"type":"stock_info","stock_name":"n","current_price":"p","change":"+0.00%","link":"https://finance.naver.com"}\n```';
+      const gr=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:ctx}]}],systemInstruction:{parts:[{text:sysPrompt}]},generationConfig:{temperature:0.5,maxOutputTokens:1024}})});
+      if(gr.ok){const gd=await gr.json();aiAnswer=gd.candidates?.[0]?.content?.parts?.[0]?.text||'';}
+    }
+    return res.json({answer:aiAnswer,results:webResults});
+  }catch(e){console.error('[/api/search]',e?.message);return res.status(500).json({error:e?.message});}
 });
 
-// Accept: 단어 수락 → 강화 학습(수락횟수 + 마지막 사용시간)
-app.post("/accept", async (req, res) => {
-  try {
-    const { word } = req.body || {};
-    if (!word) return res.status(400).json({ error: "word is required" });
-
-    MEMORY.accept_counts[word] = (MEMORY.accept_counts[word] || 0) + 1;
-    MEMORY.last_used_at[word] = nowMs();
-
-    await saveMemory();
-    res.json({ ok: true, word, count: MEMORY.accept_counts[word] });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "accept failed" });
-  }
+app.get('/api/news',async(req,res)=>{
+  const category=req.query.category||'AI tech news';
+  try{
+    const GKEY=process.env.GEMINI_API_KEY;
+    const SKEY=process.env.SERPER_API_KEY;
+    let articles=[];
+    if(SKEY){
+      const sr=await fetch('https://google.serper.dev/news',{method:'POST',headers:{'Content-Type':'application/json','X-API-KEY':SKEY},body:JSON.stringify({q:category,gl:'kr',hl:'ko',num:6})});
+      if(sr.ok){const sd=await sr.json();articles=(sd.news||[]).map(r=>({title:r.title,link:r.link,source:r.source,date:r.date||'',imageUrl:r.imageUrl||''}));}
+    }else if(GKEY){
+      const mdl=process.env.GEMINI_MODEL||'gemini-2.0-flash';
+      const url='https://generativelanguage.googleapis.com/v1beta/models/'+mdl+':generateContent?key='+GKEY;
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:category+' latest news 6 items, respond ONLY as JSON array: [{"title":"title","source":"source","date":"date","link":"#","imageUrl":""}]'}]}],generationConfig:{temperature:0.5,maxOutputTokens:1024}})});
+      if(r.ok){
+        const d=await r.json();
+        const text=d.candidates?.[0]?.content?.parts?.[0]?.text||'[]';
+        const match=text.match(/\[[\s\S]*\]/);
+        if(match){try{articles=JSON.parse(match[0]);}catch{}}
+      }
+    }
+    return res.json({articles});
+  }catch(e){console.error('[/api/news]',e?.message);return res.status(500).json({error:e?.message});}
 });
 
-/* ----------------- Health & Static ----------------- */
-app.get("/healthz", (_req, res) => res.json({ ok: true }));
-app.use(express.static("public")); // public/index.html, index.js 등
+app.get('/api/status',(req,res)=>{
+  res.json({status:'ok',gemini:!!process.env.GEMINI_API_KEY,claude:!!process.env.CLAUDE_API_KEY,lm_base:process.env.LMSTUDIO_BASE_URL||'http://127.0.0.1:1234',lm_model:process.env.LMSTUDIO_MODEL||process.env.GROK_MODEL||'auto'});
+});
 
-/* ----------------- Boot ----------------- */
-await loadMemory();
-app.listen(PORT, () => {
-  console.log(`ThinkHelper Brain server running on http://localhost:${PORT}`);
-  console.log(`Storage: ${path.resolve(DATA_FILE)}`);
+app.get(/.*/,(req,res)=>{res.sendFile(path.join(__dirname,'index.html'));});
+
+app.listen(port,()=>{
+  console.log('\n=== ThinkHelper Server ===');
+  console.log('URL      : http://localhost:'+port);
+  console.log('Gemini   : '+(process.env.GEMINI_API_KEY?'OK':'ERROR - set GEMINI_API_KEY in .env'));
+  console.log('Claude   : '+(process.env.CLAUDE_API_KEY?'OK':'not set (optional)'));
+  console.log('LM Studio: '+(process.env.LMSTUDIO_BASE_URL||'http://127.0.0.1:1234'));
+  console.log('LM Model : '+(process.env.LMSTUDIO_MODEL||process.env.GROK_MODEL||'auto-detect'));
+  console.log('=========================\n');
 });
